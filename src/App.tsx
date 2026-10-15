@@ -31,7 +31,7 @@ type Screen =
 type MeState =
   | { status: 'loading' }
   | { status: 'offline'; error?: string }
-  | { status: 'ready'; user: User; profile: Profile | null };
+  | { status: 'ready'; user: User; profile: Profile | null; needsPassword: boolean };
 
 const ALL_SUBJECTS = Object.keys(SUBJECTS) as Subject[];
 /** โจทย์สำรองสำหรับ Sudden Death (ถ้าใช้หมดจะวนกลับมาใช้ข้อเดิม) */
@@ -67,8 +67,7 @@ export default function App() {
   const refreshMe = useCallback(async () => {
     if (!supabase) return;
     try {
-      const { user, profile } = await loadMe();
-      setMe({ status: 'ready', user, profile });
+      setMe({ status: 'ready', ...(await loadMe()) });
     } catch (e) {
       setMe({ status: 'offline', error: e instanceof Error ? e.message : String(e) });
     }
@@ -79,13 +78,16 @@ export default function App() {
     refreshMe();
     // กลับมาจากหน้า Google / ยืนยันอีเมล / ออกจากระบบ -> โหลดผู้ใช้ใหม่
     const { data } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'SIGNED_IN' || event === 'USER_UPDATED' || event === 'SIGNED_OUT') setTimeout(refreshMe, 0);
+      // กดลิงก์ลืมรหัสผ่านในอีเมล -> พาไปหน้าบัญชีเพื่อตั้งรหัสใหม่
+      if (event === 'PASSWORD_RECOVERY') setScreen({ name: 'account' });
+      if (['SIGNED_IN', 'USER_UPDATED', 'SIGNED_OUT', 'PASSWORD_RECOVERY'].includes(event)) setTimeout(refreshMe, 0);
     });
     return () => data.subscription.unsubscribe();
   }, [refreshMe]);
 
   const profile = me.status === 'ready' ? me.profile : null;
   const guest = me.status === 'ready' ? isGuest(me.user) : true;
+  const needsPassword = me.status === 'ready' && me.needsPassword;
 
   /** บันทึกผลเกมแล้วอัปเดต XP บนการ์ดโปรไฟล์ */
   const saveGame = async (record: GameRecord) => {
@@ -159,7 +161,15 @@ export default function App() {
   if (me.status === 'loading') return <LoadingScreen message="กำลังโหลดโปรไฟล์..." onCancel={() => setMe({ status: 'offline' })} />;
 
   if (screen.name === 'account' && me.status === 'ready') {
-    return <AccountScreen user={me.user} profile={me.profile} onBack={goHome} onChanged={refreshMe} />;
+    return (
+      <AccountScreen
+        user={me.user}
+        profile={me.profile}
+        needsPassword={me.needsPassword}
+        onBack={goHome}
+        onChanged={refreshMe}
+      />
+    );
   }
 
   if (me.status === 'ready' && !me.profile) {
@@ -183,7 +193,7 @@ export default function App() {
           error={screen.name === 'start' ? (screen.error ?? (me.status === 'offline' ? me.error ?? null : null)) : null}
           onStart={start}
           onPlaySample={playSample}
-          profileSlot={profile && <ProfileCard profile={profile} guest={guest} onOpen={openAccount} />}
+          profileSlot={profile && <ProfileCard profile={profile} guest={guest} needsPassword={needsPassword} onOpen={openAccount} />}
         />
       );
     case 'loading':

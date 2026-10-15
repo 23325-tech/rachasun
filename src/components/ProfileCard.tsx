@@ -4,10 +4,11 @@ import { levelFromXp } from '../lib/level';
 interface Props {
   profile: Profile;
   guest: boolean;
+  needsPassword: boolean;
   onOpen: () => void;
 }
 
-export function ProfileCard({ profile, guest, onOpen }: Props) {
+export function ProfileCard({ profile, guest, needsPassword, onOpen }: Props) {
   const lv = levelFromXp(profile.xp);
   return (
     <button type="button" className="profile-card" onClick={onOpen} aria-label="เปิดหน้าบัญชี">
@@ -26,7 +27,9 @@ export function ProfileCard({ profile, guest, onOpen }: Props) {
           {lv.current}/{lv.needed} XP
         </span>
       </span>
-      <span className={`profile-card__cta ${guest ? 'is-guest' : ''}`}>{guest ? '💾 สมัคร' : '👤'}</span>
+      <span className={`profile-card__cta ${guest || needsPassword ? 'is-guest' : ''}`}>
+        {guest ? '💾 สมัคร' : needsPassword ? '🔑 ตั้งรหัส' : '👤'}
+      </span>
     </button>
   );
 }

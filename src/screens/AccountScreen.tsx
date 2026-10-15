@@ -8,6 +8,7 @@ import {
   loginWithGoogle,
   logout,
   registerWithEmail,
+  sendPasswordReset,
   setPassword,
   updateProfile,
   type Profile,
@@ -18,6 +19,7 @@ import { NicknameForm } from '../components/NicknameForm';
 interface Props {
   user: User | null;
   profile: Profile | null;
+  needsPassword: boolean;
   onBack: () => void;
   /** โหลดข้อมูลผู้ใช้ใหม่หลังสมัคร/ล็อกอิน/แก้โปรไฟล์ */
   onChanged: () => Promise<void>;
@@ -25,7 +27,7 @@ interface Props {
 
 type Tab = 'register' | 'login';
 
-export function AccountScreen({ user, profile, onBack, onChanged }: Props) {
+export function AccountScreen({ user, profile, needsPassword, onBack, onChanged }: Props) {
   const guest = isGuest(user);
   const [tab, setTab] = useState<Tab>(profile ? 'register' : 'login');
   const [email, setEmail] = useState('');
@@ -177,6 +179,26 @@ export function AccountScreen({ user, profile, onBack, onChanged }: Props) {
             </button>
           </form>
 
+          {tab === 'login' && (
+            <button
+              type="button"
+              className="link-btn forgot-link"
+              disabled={busy}
+              onClick={() => {
+                if (!email.trim()) {
+                  setError('ใส่อีเมลก่อน แล้วกด "ลืมรหัสผ่าน" อีกครั้ง');
+                  return;
+                }
+                run(
+                  () => sendPasswordReset(email),
+                  `ส่งลิงก์ตั้งรหัสผ่านใหม่ไปที่ ${email} แล้ว 📬 เปิดลิงก์ในอีเมลบนเครื่องนี้ แล้วตั้งรหัสผ่านใหม่`,
+                );
+              }}
+            >
+              ลืมรหัสผ่าน / ยังไม่ได้ตั้งรหัสผ่าน?
+            </button>
+          )}
+
           <div className="divider">หรือ</div>
           <button
             type="button"
@@ -193,11 +215,21 @@ export function AccountScreen({ user, profile, onBack, onChanged }: Props) {
             className="account__form"
             onSubmit={(e) => {
               e.preventDefault();
-              if (!busy) run(() => setPassword(password), 'ตั้งรหัสผ่านเรียบร้อย ✅');
+              if (!busy)
+                run(async () => {
+                  await setPassword(password);
+                  setPw('');
+                  await onChanged();
+                }, 'ตั้งรหัสผ่านเรียบร้อย ✅ ใช้เข้าสู่ระบบเครื่องอื่นได้แล้ว');
             }}
           >
+            {needsPassword && (
+              <p className="form-warning">
+                🔑 ยืนยันอีเมลแล้ว แต่ยังไม่ได้ตั้งรหัสผ่าน ตั้งตอนนี้เพื่อใช้เข้าสู่ระบบจากเครื่องอื่น
+              </p>
+            )}
             <label className="field">
-              <span className="field__label">ตั้ง / เปลี่ยนรหัสผ่าน</span>
+              <span className="field__label">{needsPassword ? 'ตั้งรหัสผ่าน (อย่างน้อย 6 ตัว)' : 'เปลี่ยนรหัสผ่าน'}</span>
               <input
                 className="field__input"
                 type="password"
@@ -208,7 +240,11 @@ export function AccountScreen({ user, profile, onBack, onChanged }: Props) {
                 onChange={(e) => setPw(e.target.value)}
               />
             </label>
-            <button type="submit" className="btn btn--ghost btn--block" disabled={busy}>
+            <button
+              type="submit"
+              className={`btn btn--block ${needsPassword ? 'btn--primary' : 'btn--ghost'}`}
+              disabled={busy}
+            >
               บันทึกรหัสผ่าน
             </button>
           </form>

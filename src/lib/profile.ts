@@ -24,14 +24,22 @@ function client() {
   return supabase;
 }
 
-/** ให้มี session เสมอ (ถ้ายังไม่มีจะเข้าแบบแขก) แล้วคืน user กับโปรไฟล์ (null ถ้ายังไม่ได้ตั้งชื่อ) */
-export async function loadMe(): Promise<{ user: User; profile: Profile | null }> {
+/**
+ * ให้มี session เสมอ (ถ้ายังไม่มีจะเข้าแบบแขก) แล้วคืน user กับโปรไฟล์ (null ถ้ายังไม่ได้ตั้งชื่อ)
+ * needsPassword = ผูกอีเมลแล้วแต่ยังไม่ได้ตั้งรหัสผ่าน (กรณีเปิด Confirm email)
+ */
+export async function loadMe(): Promise<{ user: User; profile: Profile | null; needsPassword: boolean }> {
   const sb = await ensureSession();
   const { data } = await sb.auth.getUser();
   const user = data.user!;
   const { data: profile, error } = await sb.from('profiles').select('*').eq('id', user.id).maybeSingle();
   if (error) throw new Error(`โหลดโปรไฟล์ไม่สำเร็จ: ${error.message}`);
-  return { user, profile: profile as Profile | null };
+  let needsPassword = false;
+  if (!isGuest(user) && user.email) {
+    const { data: st } = await sb.rpc('my_account_status');
+    needsPassword = (st as { has_password: boolean }[] | null)?.[0]?.has_password === false;
+  }
+  return { user, profile: profile as Profile | null, needsPassword };
 }
 
 function friendlyDbError(message: string): string {
@@ -136,6 +144,12 @@ export async function setPassword(password: string): Promise<void> {
 /** เข้าสู่ระบบบัญชีที่มีอยู่ (ความก้าวหน้าของแขกในเครื่องนี้จะไม่ถูกรวม) */
 export async function loginWithEmail(email: string, password: string): Promise<void> {
   const { error } = await client().auth.signInWithPassword({ email: email.trim(), password });
+  if (error) throw new Error(friendlyAuthError(error.message));
+}
+
+/** ส่งลิงก์ตั้งรหัสผ่านใหม่ไปที่อีเมล กดแล้วจะกลับมาที่แอพในสถานะล็อกอิน (event PASSWORD_RECOVERY) */
+export async function sendPasswordReset(email: string): Promise<void> {
+  const { error } = await client().auth.resetPasswordForEmail(email.trim(), { redirectTo: window.location.origin });
   if (error) throw new Error(friendlyAuthError(error.message));
 }
 
