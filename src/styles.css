@@ -782,6 +782,298 @@ button {
   font-size: 0.88rem;
 }
 
+/* ---------- โปรไฟล์ / XP ---------- */
+.profile-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 12px;
+  text-align: left;
+  background: var(--card);
+  border: var(--border);
+  border-radius: 18px;
+  box-shadow: 0 4px 0 var(--ink);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.profile-card:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 var(--ink);
+}
+.profile-card__avatar {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  font-size: 1.8rem;
+  border-radius: 14px;
+  background: #efe9ff;
+  border: 2.5px solid var(--ink);
+}
+.profile-card__body {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+.profile-card__row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.profile-card__name {
+  min-width: 0;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.profile-card__xp {
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+}
+.profile-card__cta {
+  flex: none;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 6px 10px;
+  border-radius: 12px;
+  border: 2px solid var(--ink);
+  background: #efe9ff;
+}
+.profile-card__cta.is-guest {
+  background: var(--primary);
+}
+.lv-badge {
+  flex: none;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: var(--bg-1);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border: 2px solid var(--ink);
+}
+.xp-bar {
+  display: block;
+  height: 10px;
+  border-radius: 999px;
+  background: #efe9ff;
+  border: 2px solid var(--ink);
+  overflow: hidden;
+}
+.xp-bar__fill {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #ffcc00, #ff9f1c);
+  transform-origin: left center;
+  transition: transform 0.8s cubic-bezier(0.2, 1, 0.3, 1);
+}
+.xp-badge {
+  display: grid;
+  gap: 6px;
+  justify-items: center;
+  text-align: center;
+  background: var(--card);
+  border: var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 12px 16px;
+}
+.xp-badge .xp-bar {
+  width: 100%;
+}
+.xp-badge--error {
+  background: #ffe1e6;
+  font-size: 0.9rem;
+}
+.xp-badge__gain {
+  font-size: 1.6rem;
+  font-weight: 600;
+  color: var(--primary-dark);
+  -webkit-text-stroke: 1px var(--ink);
+}
+.xp-badge__levelup {
+  font-weight: 600;
+  color: var(--bg-1);
+}
+.xp-badge__meta {
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+}
+
+/* ---------- ฟอร์ม / หน้าบัญชี ---------- */
+.setup__hero {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  color: #fff;
+  text-align: center;
+  padding-top: 18px;
+}
+.setup__login {
+  margin: 0;
+  text-align: center;
+  color: #fff;
+}
+.link-btn {
+  border: 0;
+  background: none;
+  padding: 0;
+  font: inherit;
+  font-weight: 600;
+  color: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.setup__login .link-btn {
+  color: var(--primary);
+}
+.nick-form,
+.account__form {
+  display: grid;
+  gap: 14px;
+}
+.nick-form__preview {
+  justify-self: center;
+  display: grid;
+  place-items: center;
+  width: 84px;
+  height: 84px;
+  font-size: 3rem;
+  border-radius: 24px;
+  background: #efe9ff;
+  border: var(--border);
+  box-shadow: var(--shadow);
+}
+.field {
+  display: grid;
+  gap: 6px;
+}
+.field__label {
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--ink-soft);
+}
+.field__input {
+  width: 100%;
+  font: inherit;
+  font-size: 1.1rem;
+  padding: 10px 14px;
+  border: var(--border);
+  border-radius: 14px;
+  background: #fff;
+  color: var(--ink);
+  outline: none;
+}
+.field__input:focus {
+  box-shadow: 0 0 0 4px rgba(106, 61, 240, 0.25);
+}
+.field__input.is-invalid {
+  border-color: var(--bad-dark);
+}
+.field__hint {
+  font-size: 0.78rem;
+  color: var(--ink-soft);
+}
+.field__hint.is-error {
+  color: var(--bad-dark);
+  font-weight: 500;
+}
+.avatar-grid {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: 6px;
+}
+.avatar-opt {
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  font-size: 1.4rem;
+  border: 2px solid var(--ink);
+  border-radius: 12px;
+  background: #fff;
+  cursor: pointer;
+  padding: 0;
+}
+.avatar-opt.is-active {
+  background: var(--primary);
+  box-shadow: 0 0 0 3px var(--bg-1);
+}
+.form-error,
+.form-notice {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 2.5px solid var(--ink);
+  overflow-wrap: anywhere;
+}
+.form-error {
+  background: #ffe1e6;
+}
+.form-notice {
+  background: #d8fbe9;
+}
+.account__profile {
+  justify-items: center;
+  text-align: center;
+}
+.account__profile .stats {
+  width: 100%;
+}
+.account__avatar {
+  font-size: 3.2rem;
+  line-height: 1;
+}
+.account__name {
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+.account__badge {
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+  overflow-wrap: anywhere;
+}
+.account__hint {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--ink-soft);
+}
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--ink-soft);
+  font-size: 0.85rem;
+}
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  height: 2px;
+  background: #e4dcff;
+}
+.google-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.google-btn__g {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: conic-gradient(#ea4335 0 25%, #fbbc05 0 50%, #34a853 0 75%, #4285f4 0);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
 /* ---------- เลือกโหมด (หน้าแรก) ---------- */
 .mode-switch {
   display: grid;

@@ -1,4 +1,5 @@
 import type { BattlePlayer } from '../game/battle';
+import { XpBadge, type XpState } from '../components/XpBadge';
 
 const MEDAL: Record<number, string> = { 1: '🥇', 2: '🥈', 3: '🥉' };
 
@@ -7,6 +8,9 @@ interface Props {
   meId: string;
   onReplay: () => void;
   onHome: () => void;
+  xp: XpState;
+  guest: boolean;
+  onRegister: () => void;
 }
 
 function headline(rank: number, total: number, sharedFirst: boolean) {
@@ -16,7 +20,7 @@ function headline(rank: number, total: number, sharedFirst: boolean) {
   return { emoji: '💪', title: 'แก้มือรอบหน้า!' };
 }
 
-export function BattleResultScreen({ players, meId, onReplay, onHome }: Props) {
+export function BattleResultScreen({ players, meId, onReplay, onHome, xp, guest, onRegister }: Props) {
   const sorted = [...players].sort((a, b) => (a.rank ?? 99) - (b.rank ?? 99) || b.score - a.score);
   const me = players.find((p) => p.id === meId)!;
   const myRank = me.rank ?? players.length;
@@ -32,6 +36,8 @@ export function BattleResultScreen({ players, meId, onReplay, onHome }: Props) {
           อันดับ {myRank} จาก {players.length}
         </div>
       </header>
+
+      <XpBadge xp={xp} guest={guest} onRegister={onRegister} />
 
       <ol className="ranking">
         {sorted.map((p) => (

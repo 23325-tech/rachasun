@@ -1,0 +1,235 @@
+import { useState } from 'react';
+import type { User } from '@supabase/supabase-js';
+import {
+  displayName,
+  isGuest,
+  linkGoogle,
+  loginWithEmail,
+  loginWithGoogle,
+  logout,
+  registerWithEmail,
+  setPassword,
+  updateProfile,
+  type Profile,
+} from '../lib/profile';
+import { levelFromXp } from '../lib/level';
+import { NicknameForm } from '../components/NicknameForm';
+
+interface Props {
+  user: User | null;
+  profile: Profile | null;
+  onBack: () => void;
+  /** โหลดข้อมูลผู้ใช้ใหม่หลังสมัคร/ล็อกอิน/แก้โปรไฟล์ */
+  onChanged: () => Promise<void>;
+}
+
+type Tab = 'register' | 'login';
+
+export function AccountScreen({ user, profile, onBack, onChanged }: Props) {
+  const guest = isGuest(user);
+  const [tab, setTab] = useState<Tab>(profile ? 'register' : 'login');
+  const [email, setEmail] = useState('');
+  const [password, setPw] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const [notice, setNotice] = useState('');
+  const [editing, setEditing] = useState(false);
+
+  const run = async (fn: () => Promise<unknown>, success?: string) => {
+    setBusy(true);
+    setError('');
+    setNotice('');
+    try {
+      await fn();
+      if (success) setNotice(success);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const submitEmail = () =>
+    run(async () => {
+      if (tab === 'register') {
+        const r = await registerWithEmail(email, password);
+        if (r === 'confirm_email') {
+          setNotice(`ส่งอีเมลยืนยันไปที่ ${email} แล้ว 📬 กดลิงก์ในอีเมล แล้วกลับมาตั้งรหัสผ่านที่หน้านี้`);
+          return;
+        }
+        setNotice('สมัครสำเร็จ! ความก้าวหน้าทั้งหมดถูกบันทึกในบัญชีแล้ว 🎉');
+      } else {
+        await loginWithEmail(email, password);
+      }
+      await onChanged();
+    });
+
+  const lv = profile ? levelFromXp(profile.xp) : null;
+
+  return (
+    <div className="screen account">
+      <header className="quiz__top">
+        <button type="button" className="icon-btn" onClick={onBack} aria-label="กลับ">
+          ←
+        </button>
+        <div className="quiz__progress">บัญชีของฉัน</div>
+      </header>
+
+      {profile && lv && (
+        <section className="settings-card account__profile">
+          <div className="account__avatar">{profile.avatar}</div>
+          <div className="account__name">{displayName(profile)}</div>
+          <div className="account__badge">{guest ? '👤 แขก' : `✅ ${user?.email ?? 'สมาชิก'}`}</div>
+          <div className="stats">
+            <div className="stat">
+              <div className="stat__num">Lv {lv.level}</div>
+              <div className="stat__label">{profile.xp.toLocaleString()} XP</div>
+            </div>
+            <div className="stat">
+              <div className="stat__num">{profile.games_played}</div>
+              <div className="stat__label">เกมที่เล่น</div>
+            </div>
+            <div className="stat">
+              <div className="stat__num">{profile.wins}</div>
+              <div className="stat__label">ดวลชนะ</div>
+            </div>
+          </div>
+          {!editing ? (
+            <button type="button" className="btn btn--ghost btn--block" onClick={() => setEditing(true)}>
+              ✏️ แก้ชื่อ / อวตาร
+            </button>
+          ) : (
+            <NicknameForm
+              initialNickname={profile.nickname}
+              initialAvatar={profile.avatar}
+              submitLabel="บันทึก"
+              onSubmit={async (nickname, avatar) => {
+                await updateProfile(profile.id, { nickname, avatar });
+                await onChanged();
+                setEditing(false);
+              }}
+            />
+          )}
+        </section>
+      )}
+
+      {guest ? (
+        <section className="settings-card">
+          <div className="segmented" role="tablist">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={tab === 'register'}
+              className={`segmented__opt ${tab === 'register' ? 'is-active' : ''}`}
+              onClick={() => setTab('register')}
+            >
+              สมัครสมาชิก
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={tab === 'login'}
+              className={`segmented__opt ${tab === 'login' ? 'is-active' : ''}`}
+              onClick={() => setTab('login')}
+            >
+              เข้าสู่ระบบ
+            </button>
+          </div>
+
+          <p className="account__hint">
+            {tab === 'register'
+              ? '💾 สมัครเพื่อเก็บ XP และสถิติไว้ถาวร เล่นต่อได้ทุกเครื่อง (XP ที่เล่นแบบแขกมาแล้วติดไปด้วย)'
+              : '⚠️ ถ้าเข้าสู่ระบบบัญชีอื่น XP ที่เล่นแบบแขกในเครื่องนี้จะไม่ถูกรวม'}
+          </p>
+
+          <form
+            className="account__form"
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (!busy) submitEmail();
+            }}
+          >
+            <label className="field">
+              <span className="field__label">อีเมล</span>
+              <input
+                className="field__input"
+                type="email"
+                autoComplete="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </label>
+            <label className="field">
+              <span className="field__label">รหัสผ่าน (อย่างน้อย 6 ตัว)</span>
+              <input
+                className="field__input"
+                type="password"
+                autoComplete={tab === 'register' ? 'new-password' : 'current-password'}
+                required
+                minLength={6}
+                value={password}
+                onChange={(e) => setPw(e.target.value)}
+              />
+            </label>
+            <button type="submit" className="btn btn--primary btn--block" disabled={busy}>
+              {busy ? 'กำลังดำเนินการ...' : tab === 'register' ? 'สมัครสมาชิก' : 'เข้าสู่ระบบ'}
+            </button>
+          </form>
+
+          <div className="divider">หรือ</div>
+          <button
+            type="button"
+            className="btn btn--ghost btn--block google-btn"
+            disabled={busy}
+            onClick={() => run(tab === 'register' && profile ? linkGoogle : loginWithGoogle)}
+          >
+            <span className="google-btn__g">G</span> {tab === 'register' ? 'สมัครด้วย Google' : 'เข้าสู่ระบบด้วย Google'}
+          </button>
+        </section>
+      ) : (
+        <section className="settings-card">
+          <form
+            className="account__form"
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (!busy) run(() => setPassword(password), 'ตั้งรหัสผ่านเรียบร้อย ✅');
+            }}
+          >
+            <label className="field">
+              <span className="field__label">ตั้ง / เปลี่ยนรหัสผ่าน</span>
+              <input
+                className="field__input"
+                type="password"
+                autoComplete="new-password"
+                minLength={6}
+                required
+                value={password}
+                onChange={(e) => setPw(e.target.value)}
+              />
+            </label>
+            <button type="submit" className="btn btn--ghost btn--block" disabled={busy}>
+              บันทึกรหัสผ่าน
+            </button>
+          </form>
+          <button
+            type="button"
+            className="btn btn--ghost btn--block"
+            disabled={busy}
+            onClick={() =>
+              run(async () => {
+                await logout();
+                await onChanged();
+              })
+            }
+          >
+            🚪 ออกจากระบบ
+          </button>
+        </section>
+      )}
+
+      {notice && <p className="form-notice">{notice}</p>}
+      {error && <p className="form-error">😵 {error}</p>}
+    </div>
+  );
+}

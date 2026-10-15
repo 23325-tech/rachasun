@@ -1,4 +1,4 @@
-import { useState, type CSSProperties } from 'react';
+import { useState, type CSSProperties, type ReactNode } from 'react';
 import type { Difficulty, Subject, Track } from '../types';
 import { SUBJECTS } from '../data/subjects';
 import { BOT_LEVELS, type BotLevel } from '../game/bots';
@@ -41,6 +41,8 @@ interface Props {
   error: string | null;
   onStart: (settings: GameSettings) => void;
   onPlaySample: (settings: GameSettings) => void;
+  /** การ์ดโปรไฟล์ (ถ้ามี) แสดงใต้ชื่อแอพ */
+  profileSlot?: ReactNode;
 }
 
 function Segmented<T extends string | number>({
@@ -75,7 +77,7 @@ function Segmented<T extends string | number>({
   );
 }
 
-export function StartScreen({ initial, error, onStart, onPlaySample }: Props) {
+export function StartScreen({ initial, error, onStart, onPlaySample, profileSlot }: Props) {
   const [s, setS] = useState<GameSettings>(initial);
   const set = <K extends keyof GameSettings>(key: K, value: GameSettings[K]) => setS((prev) => ({ ...prev, [key]: value }));
 
@@ -94,6 +96,8 @@ export function StartScreen({ initial, error, onStart, onPlaySample }: Props) {
           <p className="home__tagline">ฝึกสมองวันละนิด แล้วไปแข่งกับเพื่อน!</p>
         </div>
       </header>
+
+      {profileSlot}
 
       <div className="mode-switch" role="tablist" aria-label="เลือกโหมด">
         <button

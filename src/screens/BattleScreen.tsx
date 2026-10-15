@@ -24,13 +24,19 @@ import { DIFFICULTY_LABEL, SUBJECTS } from '../data/subjects';
 
 export const ME_ID = 'me';
 
+/** ผลงานของผู้เล่น (ใช้คำนวณ XP) */
+export interface MyBattleStats {
+  rounds: number;
+  correct: Record<Question['difficulty'], number>;
+}
+
 interface Props {
   questions: Question[];
   /** จำนวนข้อปกติ (ข้อที่เกินจากนี้คือ Sudden Death) */
   questionCount: number;
   initialPlayers: BattlePlayer[];
   bots: Bot[];
-  onFinish: (players: BattlePlayer[]) => void;
+  onFinish: (players: BattlePlayer[], myStats: MyBattleStats) => void;
   onQuit: () => void;
 }
 
@@ -78,8 +84,9 @@ export function BattleScreen({ questions, questionCount, initialPlayers, bots, o
   }, [round]);
 
   // ref ล่าสุดสำหรับใช้ใน timer callback
-  const stateRef = useRef({ players, myAnswer, botPlan, limitMs, round });
-  stateRef.current = { players, myAnswer, botPlan, limitMs, round };
+  const stateRef = useRef({ players, myAnswer, botPlan, limitMs, round, q });
+  stateRef.current = { players, myAnswer, botPlan, limitMs, round, q };
+  const myStatsRef = useRef<MyBattleStats>({ rounds: 0, correct: { easy: 0, medium: 0, hard: 0 } });
   const timersRef = useRef<number[]>([]);
   const later = (fn: () => void, ms: number) => timersRef.current.push(window.setTimeout(fn, ms));
   useEffect(() => () => timersRef.current.forEach(clearTimeout), []);
@@ -99,6 +106,8 @@ export function BattleScreen({ questions, questionCount, initialPlayers, bots, o
     for (const p of alivePlayers(s.players)) {
       if (p.id === ME_ID) {
         const a = s.myAnswer ?? { correct: false, timeMs: s.limitMs, timedOut: true, given: null };
+        myStatsRef.current.rounds++;
+        if (a.correct) myStatsRef.current.correct[s.q.difficulty]++;
         answers.push({
           playerId: p.id,
           correct: a.correct,
@@ -139,7 +148,7 @@ export function BattleScreen({ questions, questionCount, initialPlayers, bots, o
 
     const meNowOut = result.players.find((p) => p.id === ME_ID)!.rank !== null;
     if (result.outcome.gameOver) {
-      later(() => onFinish(result.players), (BANG_AT + 1800) * speed);
+      later(() => onFinish(result.players, myStatsRef.current), (BANG_AT + 1800) * speed);
     } else if (meNowOut && spectateRef.current === 'no') {
       later(() => setSpectate('asking'), BANG_AT + 900);
     }
@@ -218,7 +227,7 @@ export function BattleScreen({ questions, questionCount, initialPlayers, bots, o
       if (res.outcome.gameOver) break;
       r++;
     }
-    onFinish(ps);
+    onFinish(ps, myStatsRef.current);
   };
 
   const answer = (correct: boolean, given: number | string) => {

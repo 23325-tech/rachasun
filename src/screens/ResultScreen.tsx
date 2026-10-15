@@ -1,12 +1,16 @@
 import type { AnswerResult, Question } from '../types';
 import { SUBJECTS } from '../data/subjects';
 import { MathText } from '../components/MathText';
+import { XpBadge, type XpState } from '../components/XpBadge';
 
 interface Props {
   questions: Question[];
   results: AnswerResult[];
   onReplay: () => void;
   onHome: () => void;
+  xp: XpState;
+  guest: boolean;
+  onRegister: () => void;
 }
 
 function rankFor(accuracy: number) {
@@ -16,7 +20,7 @@ function rankFor(accuracy: number) {
   return { emoji: '🌱', title: 'ฝึกอีกนิดนะ!' };
 }
 
-export function ResultScreen({ questions, results, onReplay, onHome }: Props) {
+export function ResultScreen({ questions, results, onReplay, onHome, xp, guest, onRegister }: Props) {
   const total = results.reduce((s, r) => s + r.points, 0);
   const correct = results.filter((r) => r.correct).length;
   const accuracy = results.length ? correct / results.length : 0;
@@ -31,6 +35,8 @@ export function ResultScreen({ questions, results, onReplay, onHome }: Props) {
         <h1 className="result__title">{rank.title}</h1>
         <div className="result__score">{total.toLocaleString()} คะแนน</div>
       </header>
+
+      <XpBadge xp={xp} guest={guest} onRegister={onRegister} />
 
       <div className="stats">
         <div className="stat">
