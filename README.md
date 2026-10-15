@@ -1,4 +1,4 @@
-# Quiz Battle
+# Brain Gym
 
 เว็บแอพ PWA ฝึกทำโจทย์และแข่งกับเพื่อน (Vite + React + TypeScript)
 

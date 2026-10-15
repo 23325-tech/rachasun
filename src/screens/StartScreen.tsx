@@ -18,9 +18,9 @@ export function StartScreen({ onStart }: { onStart: (subject: SubjectFilter, cou
     <div className="screen start">
       <header className="start__hero">
         <div className="start__logo" aria-hidden>
-          🎯
+          🧠
         </div>
-        <h1 className="start__title">Quiz Battle</h1>
+        <h1 className="start__title">Brain Gym</h1>
         <p className="start__subtitle">ฝึกโจทย์ให้ไว แล้วไปแข่งกับเพื่อน!</p>
       </header>
 
