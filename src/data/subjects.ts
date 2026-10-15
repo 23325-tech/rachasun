@@ -1,11 +1,11 @@
 import type { Difficulty, Subject } from '../types';
 
-export const SUBJECTS: Record<Subject, { name: string; emoji: string; color: string }> = {
-  math: { name: 'คณิตศาสตร์', emoji: '📐', color: '#ff5d73' },
-  physics: { name: 'ฟิสิกส์', emoji: '⚡', color: '#3d8bff' },
-  chemistry: { name: 'เคมี', emoji: '🧪', color: '#22c58b' },
-  biology: { name: 'ชีววิทยา', emoji: '🧬', color: '#ff9f1c' },
-  english: { name: 'ภาษาอังกฤษ', emoji: '🔤', color: '#b05cff' },
+export const SUBJECTS: Record<Subject, { name: string; emoji: string; color: string; topics: string }> = {
+  math: { name: 'คณิตศาสตร์', emoji: '📐', color: '#ff5d73', topics: 'พีชคณิต · แคลคูลัส · เรขาคณิต' },
+  physics: { name: 'ฟิสิกส์', emoji: '⚡', color: '#3d8bff', topics: 'กลศาสตร์ · ไฟฟ้า · คลื่น' },
+  chemistry: { name: 'เคมี', emoji: '🧪', color: '#22c58b', topics: 'ปริมาณสาร · กรด-เบส · พันธะ' },
+  biology: { name: 'ชีววิทยา', emoji: '🧬', color: '#ff9f1c', topics: 'เซลล์ · พันธุกรรม · ร่างกาย' },
+  english: { name: 'ภาษาอังกฤษ', emoji: '🔤', color: '#b05cff', topics: 'Grammar · Vocab · Reading' },
 };
 
 export const DIFFICULTY_LABEL: Record<Difficulty, string> = {

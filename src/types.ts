@@ -17,6 +17,8 @@ interface QuestionBase {
   explanation: string;
   /** กำหนดเวลาเฉพาะข้อนี้ (วินาที) ถ้าไม่ใส่จะคำนวณจากวิชา+ความยาก */
   timeLimitSec?: number;
+  /** sample = โจทย์ตัวอย่างในเครื่อง, bank = คลังโจทย์บน Supabase (รายงานข้อผิดได้) */
+  source?: 'sample' | 'bank';
 }
 
 export interface McqQuestion extends QuestionBase {

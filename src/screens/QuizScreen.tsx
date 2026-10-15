@@ -9,6 +9,7 @@ import { MathText } from '../components/MathText';
 import { TimerBar } from '../components/TimerBar';
 import { ChoiceList } from '../components/ChoiceList';
 import { FillAnswerInput } from '../components/FillAnswerInput';
+import { ReportPanel } from '../components/ReportPanel';
 
 interface Props {
   questions: Question[];
@@ -142,6 +143,7 @@ export function QuizScreen({ questions, onFinish, onQuit }: Props) {
             <span className="reveal-sheet__label">💡 คำอธิบาย</span>
             <MathText text={q.explanation} />
           </div>
+          {q.source === 'bank' && <ReportPanel key={q.id} questionId={q.id} />}
           <button type="button" className="btn btn--primary btn--block btn--big" onClick={next}>
             {isLast ? 'ดูผลลัพธ์ 🏆' : 'ข้อต่อไป ➜'}
           </button>
