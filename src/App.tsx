@@ -17,6 +17,9 @@ import { ProfileSetupScreen } from './screens/ProfileSetupScreen';
 import { AccountScreen } from './screens/AccountScreen';
 import { ProfileCard } from './components/ProfileCard';
 import type { XpState } from './components/XpBadge';
+import { OnlineMenuScreen } from './screens/OnlineMenuScreen';
+import { LobbyScreen } from './screens/LobbyScreen';
+import { createRoom, joinRoom, leaveRoom, type RoomSettings } from './lib/rooms';
 
 type Screen =
   | { name: 'start'; error: string | null }
@@ -25,7 +28,9 @@ type Screen =
   | { name: 'quiz'; questions: Question[]; runId: number }
   | { name: 'result'; questions: Question[]; results: AnswerResult[] }
   | { name: 'battle'; questions: Question[]; questionCount: number; players: BattlePlayer[]; bots: Bot[]; runId: number }
-  | { name: 'battleResult'; players: BattlePlayer[] };
+  | { name: 'battleResult'; players: BattlePlayer[] }
+  | { name: 'online'; initialCode?: string }
+  | { name: 'lobby'; roomId: string };
 
 /** loading = กำลังโหลดผู้ใช้, offline = ไม่มี Supabase (เล่นได้แต่ไม่เก็บ XP) */
 type MeState =
@@ -36,6 +41,26 @@ type MeState =
 const ALL_SUBJECTS = Object.keys(SUBJECTS) as Subject[];
 /** โจทย์สำรองสำหรับ Sudden Death (ถ้าใช้หมดจะวนกลับมาใช้ข้อเดิม) */
 const SUDDEN_DEATH_SPARE = 5;
+
+/** ลิงก์ชวนเพื่อน ?room=CODE (อ่านครั้งเดียวตอนเปิดแอพ แล้วลบออกจาก URL) */
+function takeInviteCode(): string | undefined {
+  const url = new URL(window.location.href);
+  const code = url.searchParams.get('room')?.toUpperCase().replace(/[^A-Z0-9]/g, '');
+  if (!code) return undefined;
+  url.searchParams.delete('room');
+  window.history.replaceState(null, '', url.toString());
+  return code.slice(0, 5);
+}
+
+/** อ่านครั้งเดียวตอนโหลดแอพ (ถ้าอ่านใน useState initializer, StrictMode จะเรียกซ้ำแล้วรหัสหาย) */
+const INVITE_CODE = takeInviteCode();
+
+const toRoomSettings = (s: GameSettings): RoomSettings => ({
+  subject: s.subject,
+  difficulty: s.difficulty,
+  track: s.track,
+  count: ([5, 10, 20] as const).includes(s.count as 5 | 10 | 20) ? (s.count as RoomSettings['count']) : 10,
+});
 
 const subjectsOf = (s: GameSettings): Subject[] => (s.subject === 'all' ? ALL_SUBJECTS : [s.subject]);
 
@@ -49,7 +74,9 @@ function countCorrect(questions: Question[], results: AnswerResult[]): Record<Di
 }
 
 export default function App() {
-  const [screen, setScreen] = useState<Screen>({ name: 'start', error: null });
+  const [screen, setScreen] = useState<Screen>(() =>
+    INVITE_CODE ? { name: 'online', initialCode: INVITE_CODE } : { name: 'start', error: null },
+  );
   const [me, setMe] = useState<MeState>(supabase ? { status: 'loading' } : { status: 'offline' });
   const [xp, setXp] = useState<XpState>({ status: 'off' });
   const [settings, setSettings] = useState<GameSettings>({
@@ -156,6 +183,8 @@ export default function App() {
   };
 
   const openAccount = () => setScreen({ name: 'account' });
+  const myId = me.status === 'ready' ? me.user.id : '';
+  const roomGone = useCallback((reason: string) => setScreen({ name: 'start', error: reason }), []);
 
   // ---------- หน้าจอที่ขึ้นกับสถานะผู้ใช้ ----------
   if (me.status === 'loading') return <LoadingScreen message="กำลังโหลดโปรไฟล์..." onCancel={() => setMe({ status: 'offline' })} />;
@@ -193,11 +222,43 @@ export default function App() {
           error={screen.name === 'start' ? (screen.error ?? (me.status === 'offline' ? me.error ?? null : null)) : null}
           onStart={start}
           onPlaySample={playSample}
+          onOnline={() =>
+            me.status === 'ready'
+              ? setScreen({ name: 'online' })
+              : setScreen({ name: 'start', error: 'โหมดออนไลน์ต้องเชื่อมต่อ Supabase' })
+          }
           profileSlot={profile && <ProfileCard profile={profile} guest={guest} needsPassword={needsPassword} onOpen={openAccount} />}
         />
       );
     case 'loading':
       return <LoadingScreen message={screen.message} onCancel={goHome} />;
+    case 'online':
+      return (
+        <OnlineMenuScreen
+          initialCode={screen.initialCode}
+          onBack={goHome}
+          onCreate={async () => {
+            const room = await createRoom(toRoomSettings(settings));
+            setScreen({ name: 'lobby', roomId: room.id });
+          }}
+          onJoin={async (code) => {
+            const room = await joinRoom(code);
+            setScreen({ name: 'lobby', roomId: room.id });
+          }}
+        />
+      );
+    case 'lobby':
+      return (
+        <LobbyScreen
+          roomId={screen.roomId}
+          myId={myId}
+          onGone={roomGone}
+          onLeave={() => {
+            leaveRoom(screen.roomId).catch(() => {});
+            setScreen({ name: 'online' });
+          }}
+        />
+      );
     case 'quiz':
       return (
         <QuizScreen

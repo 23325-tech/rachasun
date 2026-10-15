@@ -43,6 +43,7 @@ interface Props {
   onPlaySample: (settings: GameSettings) => void;
   /** การ์ดโปรไฟล์ (ถ้ามี) แสดงใต้ชื่อแอพ */
   profileSlot?: ReactNode;
+  onOnline: () => void;
 }
 
 function Segmented<T extends string | number>({
@@ -77,7 +78,7 @@ function Segmented<T extends string | number>({
   );
 }
 
-export function StartScreen({ initial, error, onStart, onPlaySample, profileSlot }: Props) {
+export function StartScreen({ initial, error, onStart, onPlaySample, profileSlot, onOnline }: Props) {
   const [s, setS] = useState<GameSettings>(initial);
   const set = <K extends keyof GameSettings>(key: K, value: GameSettings[K]) => setS((prev) => ({ ...prev, [key]: value }));
 
@@ -122,10 +123,10 @@ export function StartScreen({ initial, error, onStart, onPlaySample, profileSlot
           <span className="mode-tab__name">ดวลกับบอท</span>
           <span className="mode-tab__desc">ยิงหัวใจ เหลือรอดคนสุดท้าย</span>
         </button>
-        <button type="button" role="tab" aria-selected={false} className="mode-tab is-soon" disabled>
+        <button type="button" role="tab" aria-selected={false} className="mode-tab" onClick={onOnline}>
           <span className="mode-tab__icon">🌐</span>
           <span className="mode-tab__name">ออนไลน์</span>
-          <span className="mode-tab__desc">เร็วๆ นี้</span>
+          <span className="mode-tab__desc">สร้างห้องเล่นกับเพื่อน</span>
         </button>
       </div>
 
