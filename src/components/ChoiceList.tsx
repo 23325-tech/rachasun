@@ -4,20 +4,25 @@ import { MathText } from './MathText';
 
 interface Props {
   question: McqQuestion;
+  /** ล็อกปุ่ม (ตอบแล้วหรือเฉลยแล้ว) */
   revealed: boolean;
+  /** แสดงเฉลยถูก/ผิด ค่าเริ่มต้น = revealed (โหมดแข่งจะล็อกก่อน แล้วค่อยเฉลยตอนทุกคนตอบครบ) */
+  showAnswer?: boolean;
   selected: number | null;
   onSelect: (index: number) => void;
 }
 
-export function ChoiceList({ question, revealed, selected, onSelect }: Props) {
+export function ChoiceList({ question, revealed, showAnswer = revealed, selected, onSelect }: Props) {
   return (
     <div className="choices">
       {question.choices.map((choice, i) => {
         let state = '';
-        if (revealed) {
+        if (showAnswer) {
           if (i === question.answerIndex) state = 'is-correct';
           else if (i === selected) state = 'is-wrong';
           else state = 'is-dim';
+        } else if (revealed) {
+          state = i === selected ? 'is-selected' : 'is-dim';
         }
         return (
           <button

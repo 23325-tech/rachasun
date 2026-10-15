@@ -1,10 +1,18 @@
 import { useState, type CSSProperties } from 'react';
 import type { Difficulty, Subject, Track } from '../types';
 import { SUBJECTS } from '../data/subjects';
+import { BOT_LEVELS, type BotLevel } from '../game/bots';
+import { heartsFor } from '../game/battle';
 
 export type SubjectFilter = Subject | 'all';
 
+export type GameMode = 'solo' | 'bots';
+
 export interface GameSettings {
+  mode: GameMode;
+  /** จำนวนบอท (โหมดดวลกับบอท) รวมเราเป็น 2-8 คน */
+  botCount: number;
+  botLevel: BotLevel;
   subject: SubjectFilter;
   difficulty: Difficulty;
   track: Track;
@@ -23,6 +31,7 @@ const TRACKS: { value: Track; label: string; icon: string }[] = [
   { value: 'entrance', label: 'สอบเข้า', icon: '🎓' },
 ];
 const COUNTS = [5, 10, 20];
+const BOT_COUNTS = [1, 3, 5, 7];
 
 /** เวลาเฉลี่ยโดยประมาณต่อข้อ (วินาที) ใช้แสดงว่ารอบนี้ใช้เวลาราวกี่นาที */
 const AVG_SEC: Record<Difficulty, number> = { easy: 25, medium: 40, hard: 60 };
@@ -86,6 +95,36 @@ export function StartScreen({ initial, error, onStart, onPlaySample }: Props) {
         </div>
       </header>
 
+      <div className="mode-switch" role="tablist" aria-label="เลือกโหมด">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={s.mode === 'solo'}
+          className={`mode-tab ${s.mode === 'solo' ? 'is-active' : ''}`}
+          onClick={() => set('mode', 'solo')}
+        >
+          <span className="mode-tab__icon">🎯</span>
+          <span className="mode-tab__name">ฝึกเดี่ยว</span>
+          <span className="mode-tab__desc">ทำโจทย์สบายๆ</span>
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={s.mode === 'bots'}
+          className={`mode-tab ${s.mode === 'bots' ? 'is-active' : ''}`}
+          onClick={() => set('mode', 'bots')}
+        >
+          <span className="mode-tab__icon">⚔️</span>
+          <span className="mode-tab__name">ดวลกับบอท</span>
+          <span className="mode-tab__desc">ยิงหัวใจ เหลือรอดคนสุดท้าย</span>
+        </button>
+        <button type="button" role="tab" aria-selected={false} className="mode-tab is-soon" disabled>
+          <span className="mode-tab__icon">🌐</span>
+          <span className="mode-tab__name">ออนไลน์</span>
+          <span className="mode-tab__desc">เร็วๆ นี้</span>
+        </button>
+      </div>
+
       <div className="ai-badge">
         <span className="ai-badge__spark" aria-hidden>
           ✨
@@ -145,6 +184,17 @@ export function StartScreen({ initial, error, onStart, onPlaySample }: Props) {
       <section className="settings-card" aria-label="ตั้งค่ารอบนี้">
         <Segmented label="ความยาก" options={DIFFICULTIES} value={s.difficulty} onChange={(v) => set('difficulty', v)} />
         <Segmented label="แนวข้อสอบ" options={TRACKS} value={s.track} onChange={(v) => set('track', v)} />
+        {s.mode === 'bots' && (
+          <>
+            <Segmented
+              label="จำนวนบอท"
+              options={BOT_COUNTS.map((n) => ({ value: n, label: `${n} ตัว` }))}
+              value={s.botCount}
+              onChange={(v) => set('botCount', v)}
+            />
+            <Segmented label="ความเก่งบอท" options={BOT_LEVELS} value={s.botLevel} onChange={(v) => set('botLevel', v)} />
+          </>
+        )}
         <Segmented
           label="จำนวนข้อ"
           options={COUNTS.map((n) => ({ value: n, label: `${n} ข้อ` }))}
@@ -164,10 +214,12 @@ export function StartScreen({ initial, error, onStart, onPlaySample }: Props) {
 
       <div className="cta-bar">
         <p className="cta-bar__summary">
-          {subjectName} · {difficultyLabel} · {s.count} ข้อ · ราว {minutes} นาที
+          {s.mode === 'bots'
+            ? `⚔️ ${s.botCount + 1} คน · ${s.count} ข้อ · หัวใจคนละ ${heartsFor(s.count)} ดวง`
+            : `${subjectName} · ${difficultyLabel} · ${s.count} ข้อ · ราว ${minutes} นาที`}
         </p>
         <button type="button" className="btn btn--primary btn--block btn--big cta-bar__btn" onClick={() => onStart(s)}>
-          เริ่มฝึกเลย! 🚀
+          {s.mode === 'bots' ? 'เริ่มดวลเลย! ⚔️' : 'เริ่มฝึกเลย! 🚀'}
         </button>
       </div>
     </div>

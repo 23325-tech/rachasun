@@ -782,6 +782,344 @@ button {
   font-size: 0.88rem;
 }
 
+/* ---------- เลือกโหมด (หน้าแรก) ---------- */
+.mode-switch {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.mode-tab {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  padding: 10px 6px;
+  border: var(--border);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow: 0 4px 0 var(--ink);
+  cursor: pointer;
+  text-align: center;
+  touch-action: manipulation;
+}
+.mode-tab__icon {
+  font-size: 1.6rem;
+  line-height: 1.1;
+}
+.mode-tab__name {
+  font-weight: 600;
+  font-size: 0.98rem;
+}
+.mode-tab__desc {
+  font-size: 0.7rem;
+  line-height: 1.25;
+  color: var(--ink-soft);
+}
+.mode-tab.is-active {
+  background: var(--primary);
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 var(--ink);
+}
+.mode-tab.is-active .mode-tab__desc {
+  color: var(--ink);
+}
+.mode-tab.is-soon {
+  opacity: 0.55;
+  cursor: default;
+}
+
+/* ---------- หน้าดวล ---------- */
+.battle {
+  gap: 12px;
+}
+.battle--sudden {
+  background: radial-gradient(circle at 50% 0%, rgba(255, 60, 60, 0.35), transparent 60%);
+}
+.battle--me-hit::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(circle, transparent 40%, rgba(255, 30, 60, 0.55));
+  animation: flash-out 0.7s ease-out forwards;
+}
+.sudden-tag {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 10px;
+  background: var(--bad);
+  border: 2.5px solid var(--ink);
+  font-size: 0.95rem;
+  animation: pulse 0.9s ease-in-out infinite;
+}
+.sudden-banner {
+  text-align: center;
+  font-weight: 600;
+  color: #fff;
+  background: var(--bad);
+  border: var(--border);
+  border-radius: 14px;
+  padding: 6px 10px;
+}
+
+/* การ์ดผู้เล่น */
+.player-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+}
+.player-grid--2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.player-grid--3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.pcard {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 1px;
+  padding: 6px 4px 5px;
+  background: var(--card);
+  border: 2.5px solid var(--ink);
+  border-radius: 14px;
+  box-shadow: 0 3px 0 var(--ink);
+  min-width: 0;
+  transition: opacity 0.3s, filter 0.3s;
+}
+.pcard--me {
+  background: #fff6c7;
+  border-color: var(--primary-dark);
+}
+.pcard__avatar {
+  position: relative;
+  font-size: 1.6rem;
+  line-height: 1.15;
+}
+.pcard__name {
+  max-width: 100%;
+  font-size: 0.72rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pcard__hearts {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1px;
+  font-size: 0.62rem;
+  line-height: 1.2;
+}
+.pcard__status {
+  position: absolute;
+  top: -8px;
+  right: -6px;
+  font-size: 0.9rem;
+  filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.3));
+}
+.pcard__status--thinking {
+  animation: bob 1s ease-in-out infinite;
+}
+.pcard__status--locked {
+  animation: pop 0.3s ease-out;
+}
+.pcard.is-out {
+  opacity: 0.45;
+  filter: grayscale(1);
+}
+.pcard.is-aimed {
+  border-color: var(--bad-dark);
+}
+.pcard.is-hit {
+  animation: hit-shake 0.5s;
+  border-color: var(--bad-dark);
+  background: #ffe1e6;
+}
+.pcard__crosshair {
+  position: absolute;
+  inset: -6px;
+  display: grid;
+  place-items: center;
+  font-size: 2.2rem;
+  animation: aim 0.6s ease-out forwards;
+}
+.pcard__boom {
+  position: absolute;
+  inset: -10px;
+  display: grid;
+  place-items: center;
+  font-size: 2.4rem;
+  animation: boom 0.7s ease-out forwards;
+  pointer-events: none;
+}
+.heart--empty {
+  opacity: 0.35;
+}
+.heart--breaking {
+  display: inline-block;
+  animation: heart-break 0.9s ease-in forwards;
+}
+
+.waiting {
+  margin: 0;
+  text-align: center;
+  color: #fff;
+  font-weight: 500;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.25);
+}
+
+/* เฉลยหลังแต่ละข้อ */
+.shot-list {
+  display: grid;
+  gap: 4px;
+}
+.shot-list p {
+  margin: 0;
+}
+.shot-list__item {
+  font-size: 1rem;
+}
+.shot-list__item.is-me {
+  color: var(--bad-dark);
+  font-weight: 600;
+}
+.shot-list__out {
+  color: var(--bad-dark);
+  font-weight: 700;
+}
+.shot-list__none {
+  color: var(--good-dark);
+  font-weight: 600;
+}
+.explain summary {
+  cursor: pointer;
+  font-weight: 600;
+  padding: 2px 0;
+}
+.explain[open] {
+  line-height: 1.6;
+}
+.auto-next {
+  position: relative;
+  overflow: hidden;
+}
+.auto-next__fill {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.45);
+  transform-origin: left center;
+  transition: transform 0.1s linear;
+}
+.auto-next__label {
+  position: relative;
+}
+.game-over {
+  margin: 0;
+  text-align: center;
+  font-size: 1.4rem;
+  font-weight: 600;
+}
+
+/* ตกรอบ: ถามว่าจะดูต่อไหม */
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(43, 26, 74, 0.6);
+}
+.overlay__card {
+  width: min(100%, 360px);
+  display: grid;
+  gap: 10px;
+  text-align: center;
+  background: var(--card);
+  border: var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 20px;
+}
+.overlay__card h2,
+.overlay__card p {
+  margin: 0;
+}
+.overlay__emoji {
+  font-size: 3.5rem;
+}
+.skip-fab {
+  position: fixed;
+  right: 16px;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
+  z-index: 10;
+}
+
+/* ตัวเลือกที่ล็อกแล้วแต่ยังไม่เฉลย */
+.choice.is-selected {
+  background: #fff6c7;
+  border-color: var(--primary-dark);
+  box-shadow: 0 5px 0 var(--primary-dark);
+}
+
+/* อันดับ */
+.ranking {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+}
+.ranking__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--card);
+  border: 2.5px solid var(--ink);
+  border-radius: 16px;
+  box-shadow: 0 3px 0 var(--ink);
+  padding: 8px 12px;
+}
+.ranking__item.is-winner {
+  background: #fff6c7;
+}
+.ranking__item.is-me {
+  outline: 3px solid var(--primary);
+  outline-offset: 2px;
+}
+.ranking__rank {
+  flex: none;
+  width: 2em;
+  text-align: center;
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+.ranking__avatar {
+  font-size: 1.6rem;
+}
+.ranking__name {
+  flex: 1;
+  min-width: 0;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ranking__bot {
+  margin-left: 6px;
+  padding: 0 6px;
+  border-radius: 6px;
+  background: #efe9ff;
+  font-size: 0.7rem;
+  vertical-align: middle;
+}
+.ranking__score {
+  flex: none;
+  font-weight: 600;
+}
+
 /* ---------- หน้าสรุปผล ---------- */
 .result__hero {
   text-align: center;
@@ -969,6 +1307,81 @@ button {
   }
 }
 
+@keyframes aim {
+  0% {
+    transform: scale(2.4) rotate(-90deg);
+    opacity: 0;
+  }
+  70% {
+    transform: scale(0.9) rotate(10deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) rotate(0);
+    opacity: 1;
+  }
+}
+@keyframes boom {
+  0% {
+    transform: scale(0.3);
+    opacity: 1;
+  }
+  60% {
+    transform: scale(1.4);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.7);
+    opacity: 0;
+  }
+}
+@keyframes heart-break {
+  0% {
+    transform: scale(1);
+  }
+  25% {
+    transform: scale(1.8) rotate(-15deg);
+  }
+  100% {
+    transform: translateY(18px) rotate(40deg) scale(0.4);
+    opacity: 0;
+  }
+}
+@keyframes hit-shake {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  20% {
+    transform: translate(-5px, 2px) rotate(-3deg);
+  }
+  40% {
+    transform: translate(5px, -2px) rotate(3deg);
+  }
+  60% {
+    transform: translate(-3px, 1px);
+  }
+  80% {
+    transform: translate(3px, 0);
+  }
+}
+@keyframes bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+@keyframes flash-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
 @keyframes twinkle {
   0%,
   100% {
