@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 250" font-family="Mitr, sans-serif">
+  <rect width="320" height="250" rx="18" fill="#eef5ff"/>
+  <!-- grid: 1 s = 55px (x), 2 m/s = 40px (y); origin (55,205) -->
+  <g stroke="#c5d6f2" stroke-width="1.5">
+    <line x1="110" y1="45" x2="110" y2="205"/>
+    <line x1="165" y1="45" x2="165" y2="205"/>
+    <line x1="220" y1="45" x2="220" y2="205"/>
+    <line x1="275" y1="45" x2="275" y2="205"/>
+    <line x1="55" y1="165" x2="290" y2="165"/>
+    <line x1="55" y1="125" x2="290" y2="125"/>
+    <line x1="55" y1="85" x2="290" y2="85"/>
+    <line x1="55" y1="45" x2="290" y2="45"/>
+  </g>
+  <g stroke="#2b1a4a" stroke-width="3" fill="none">
+    <line x1="55" y1="205" x2="300" y2="205"/>
+    <line x1="55" y1="205" x2="55" y2="28"/>
+  </g>
+  <line x1="55" y1="205" x2="275" y2="45" stroke="#3d8bff" stroke-width="5" stroke-linecap="round"/>
+  <circle cx="275" cy="45" r="6" fill="#3d8bff"/>
+  <g font-size="14" fill="#2b1a4a" text-anchor="middle">
+    <text x="55" y="224">0</text>
+    <text x="110" y="224">1</text>
+    <text x="165" y="224">2</text>
+    <text x="220" y="224">3</text>
+    <text x="275" y="224">4</text>
+    <text x="290" y="242">t (s)</text>
+  </g>
+  <g font-size="14" fill="#2b1a4a" text-anchor="end">
+    <text x="47" y="170">2</text>
+    <text x="47" y="130">4</text>
+    <text x="47" y="90">6</text>
+    <text x="47" y="50">8</text>
+    <text x="70" y="20" text-anchor="start">v (m/s)</text>
+  </g>
+</svg>
