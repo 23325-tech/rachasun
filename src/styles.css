@@ -905,6 +905,60 @@ button {
   color: var(--ink-soft);
 }
 
+/* ---------- ยศ ---------- */
+.tier-badge {
+  flex: none;
+  padding: 0 8px;
+  border-radius: 999px;
+  border: 2px solid var(--ink);
+  font-size: 0.72rem;
+  font-weight: 600;
+  white-space: nowrap;
+  background: #f3e1d0;
+}
+.tier-badge--silver { background: #e6e9ef; }
+.tier-badge--gold { background: #ffe066; }
+.tier-badge--platinum { background: #c9f2ef; }
+.tier-badge--diamond { background: #d6ecff; }
+.tier-badge--legend {
+  background: linear-gradient(90deg, #ffcc00, #ff5d73, #b05cff);
+  color: #fff;
+}
+.tier-badge--big {
+  padding: 4px 14px;
+  font-size: 1rem;
+}
+.account__next-tier {
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+}
+.rank-change {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  padding-top: 6px;
+  border-top: 2px dashed #e4dcff;
+  width: 100%;
+}
+.rank-change__delta {
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+.rank-change__delta.is-up { color: var(--good-dark); }
+.rank-change__delta.is-down { color: var(--bad-dark); }
+.rank-change__tier {
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+}
+.rank-change__promo {
+  font-weight: 700;
+  color: var(--bg-1);
+}
+.rank-change__demo {
+  font-size: 0.85rem;
+  color: var(--bad-dark);
+}
+
 /* ---------- ฟอร์ม / หน้าบัญชี ---------- */
 .setup__hero {
   display: grid;

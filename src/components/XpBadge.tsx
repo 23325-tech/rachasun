@@ -1,10 +1,30 @@
 import { levelFromXp } from '../lib/level';
+import { tierOf } from '../lib/rank';
 
 export type XpState =
   | { status: 'saving' }
-  | { status: 'saved'; gained: number; total: number }
+  | { status: 'saved'; gained: number; total: number; rpDelta?: number; rp?: number }
   | { status: 'error'; message: string }
   | { status: 'off' };
+
+/** RP ที่ได้/เสียจากห้องสุ่ม + แจ้งเลื่อนยศ/ตกยศ */
+function RankChange({ delta, rp }: { delta: number; rp: number }) {
+  const before = tierOf(rp - delta);
+  const after = tierOf(rp);
+  return (
+    <div className="rank-change">
+      <span className={`rank-change__delta ${delta >= 0 ? 'is-up' : 'is-down'}`}>
+        {delta >= 0 ? '+' : ''}
+        {delta} RP
+      </span>
+      <span className="rank-change__tier">
+        {after.icon} {after.name} · {rp} RP
+      </span>
+      {after.min > before.min && <div className="rank-change__promo bounce">🎊 เลื่อนยศเป็น {after.icon} {after.name}!</div>}
+      {after.min < before.min && <div className="rank-change__demo">ตกยศเป็น {after.icon} {after.name} สู้ใหม่นะ!</div>}
+    </div>
+  );
+}
 
 /** แสดง XP ที่ได้จากเกมนี้ + แจ้งเลเวลอัป */
 export function XpBadge({ xp, guest, onRegister }: { xp: XpState; guest: boolean; onRegister: () => void }) {
@@ -18,6 +38,7 @@ export function XpBadge({ xp, guest, onRegister }: { xp: XpState; guest: boolean
     <div className="xp-badge pop-in">
       <div className="xp-badge__gain">+{xp.gained} XP</div>
       {after.level > before && <div className="xp-badge__levelup bounce">🎉 เลเวลอัป! Lv {after.level}</div>}
+      {xp.rpDelta !== undefined && xp.rp !== undefined && <RankChange delta={xp.rpDelta} rp={xp.rp} />}
       <span className="xp-bar">
         <span className="xp-bar__fill" style={{ transform: `scaleX(${after.current / after.needed})` }} />
       </span>

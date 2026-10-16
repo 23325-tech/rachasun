@@ -14,6 +14,7 @@ import {
   type Profile,
 } from '../lib/profile';
 import { levelFromXp } from '../lib/level';
+import { nextTier, tierOf } from '../lib/rank';
 import { NicknameForm } from '../components/NicknameForm';
 
 interface Props {
@@ -81,6 +82,15 @@ export function AccountScreen({ user, profile, needsPassword, onBack, onChanged 
         <section className="settings-card account__profile">
           <div className="account__avatar">{profile.avatar}</div>
           <div className="account__name">{displayName(profile)}</div>
+          <div className={`tier-badge tier-badge--big tier-badge--${tierOf(profile.rp ?? 0).key}`}>
+            {tierOf(profile.rp ?? 0).icon} {tierOf(profile.rp ?? 0).name} · {profile.rp ?? 0} RP
+          </div>
+          <div className="account__next-tier">
+            {(() => {
+              const n = nextTier(profile.rp ?? 0);
+              return n ? `อีก ${n.needed} RP ถึง ${n.tier.icon} ${n.tier.name} (ได้ RP จากโหมดสุ่มหาคู่แข่ง)` : 'ยศสูงสุดแล้ว! 👑';
+            })()}
+          </div>
           <div className="account__badge">{guest ? '👤 แขก' : `✅ ${user?.email ?? 'สมาชิก'}`}</div>
           <div className="stats">
             <div className="stat">

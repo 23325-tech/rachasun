@@ -33,7 +33,7 @@ export interface OnlineGameState {
     disconnected: string[];
   };
   nextAt?: number;
-  xp?: Record<string, { gained: number; total: number }>;
+  xp?: Record<string, { gained: number; total: number; rpDelta?: number; rp?: number }>;
   /** โหมดการ์ดพลัง */
   items?: boolean;
   dealt?: { round: number; cards: Record<string, CardKind> };

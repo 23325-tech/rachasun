@@ -57,7 +57,7 @@ export function OnlineMenuScreen({ initialMatch, onFind, onCreate, onJoin, onBac
       <section className="settings-card online-card online-card--match">
         <div className="online-card__icon">🎲</div>
         <h2 className="online-card__title">สุ่มหาคู่แข่ง</h2>
-        <p className="online-card__desc">จับคู่กับผู้เล่นจริงที่เลือกเหมือนกัน · 10 ข้อ · 2-8 คน</p>
+        <p className="online-card__desc">จับคู่กับผู้เล่นจริงที่เลือกเหมือนกัน · 10 ข้อ · 2-8 คน · 🏅 นับแต้มแรงค์</p>
         <div className="match-settings">
           <select
             className="field__input"

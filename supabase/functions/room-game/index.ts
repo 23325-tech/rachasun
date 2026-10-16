@@ -14,6 +14,7 @@ import {
   type RoundAnswer,
   type RoundOutcome,
 } from '../_shared/battle.ts';
+import { rpDelta } from '../_shared/rank.ts';
 import { calcPoints, checkFillAnswer, formatFillAnswer } from '../_shared/rules.ts';
 import { limitMsOf, pickQuestions as pickFromBank, toPublic, type PublicQuestion, type StoredQuestion } from '../_shared/questions.ts';
 
@@ -76,7 +77,7 @@ interface GameState {
   answered: string[];
   reveal?: Reveal;
   nextAt?: number;
-  xp?: Record<string, { gained: number; total: number }>;
+  xp?: Record<string, { gained: number; total: number; rpDelta?: number; rp?: number }>;
   preparingSince?: number;
   /** โหมดการ์ดพลัง */
   items?: boolean;
@@ -365,7 +366,7 @@ async function resolve(room: RoomRow) {
 
   const next: GameState = { ...s, seq: s.seq + 1, phase: 'reveal', players, reveal, nextAt: now + REVEAL_MS };
   if (outcome.gameOver) {
-    await saveState(room, { ...next, phase: 'finished', xp: await awardXp(room.id, players, s.round + 1) }, 'finished');
+    await saveState(room, { ...next, phase: 'finished', xp: await awardXp(room, players, s.round + 1) }, 'finished');
   } else {
     await saveState(room, next);
   }
@@ -478,14 +479,16 @@ async function useCard(room: RoomRow, uid: string, round: number, card: string, 
   return { card: kind, ...payload };
 }
 
-async function awardXp(roomId: string, players: BattlePlayer[], roundsPlayed: number) {
+/** XP ให้ทุกห้อง / แต้มแรงค์ (RP) เฉพาะห้องสุ่มจับคู่ */
+async function awardXp(room: RoomRow, players: BattlePlayer[], roundsPlayed: number) {
+  const roomId = room.id;
   const { data: rounds } = await admin.from('room_rounds').select('round,question').eq('room_id', roomId);
   const { data: answers } = await admin.from('room_answers').select('user_id,round,correct').eq('room_id', roomId);
   const total = rounds?.length ?? 1;
   const diffOf = (round: number) =>
     ((rounds ?? []).find((r) => r.round === round % total)?.question as StoredQuestion | undefined)?.difficulty ?? 'medium';
 
-  const xp: Record<string, { gained: number; total: number }> = {};
+  const xp: Record<string, { gained: number; total: number; rpDelta?: number; rp?: number }> = {};
   for (const p of players) {
     const c = { easy: 0, medium: 0, hard: 0 };
     for (const a of answers ?? []) if (a.user_id === p.id && a.correct) c[diffOf(a.round)]++;
@@ -500,6 +503,14 @@ async function awardXp(roomId: string, players: BattlePlayer[], roundsPlayed: nu
     });
     const row = (data as { xp_gained: number; xp_total: number }[] | null)?.[0];
     if (!error && row) xp[p.id] = { gained: row.xp_gained, total: row.xp_total };
+    if (room.kind === 'public' && xp[p.id]) {
+      const { data: rpRow } = await admin.rpc('apply_rank_points', {
+        p_user: p.id,
+        p_delta: rpDelta(p.rank ?? players.length, players.length),
+      });
+      const r = (rpRow as { rp_delta: number; rp_total: number }[] | null)?.[0];
+      if (r) xp[p.id] = { ...xp[p.id], rpDelta: r.rp_delta, rp: r.rp_total };
+    }
   }
   return xp;
 }

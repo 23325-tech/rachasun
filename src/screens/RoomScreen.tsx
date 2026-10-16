@@ -148,7 +148,11 @@ export function RoomScreen({ roomId, myId, guest, onLeave, onGone, onRegister, o
         }
         replayLabel={room.kind === 'public' ? 'หาเกมใหม่ 🎲' : 'เล่นอีกรอบ (กลับล็อบบี้) 🔁'}
         waitingLabel="⏳ รอเจ้าของห้องเริ่มรอบใหม่..."
-        xp={myXp ? { status: 'saved', gained: myXp.gained, total: myXp.total } : { status: 'off' }}
+        xp={
+          myXp
+            ? { status: 'saved', gained: myXp.gained, total: myXp.total, rpDelta: myXp.rpDelta, rp: myXp.rp }
+            : { status: 'off' }
+        }
         guest={guest}
         onRegister={onRegister}
       />

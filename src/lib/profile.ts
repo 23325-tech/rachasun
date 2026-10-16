@@ -10,6 +10,8 @@ export interface Profile {
   games_played: number;
   correct_answers: number;
   wins: number;
+  /** แต้มแรงค์จากห้องสุ่มจับคู่ */
+  rp: number;
 }
 
 export const AVATARS = ['😎', '🤓', '🦊', '🐼', '🐸', '🦄', '🐯', '🐙', '🦖', '🐧', '🤖', '👻', '🐱', '🐶', '🦉', '🐵'];
