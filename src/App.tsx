@@ -49,7 +49,9 @@ import { markPlanDone } from './lib/studyPlan';
 import { DEFAULT_LOOK_CODE } from './lib/look';
 import { createRoom, findMatch, joinRoom, leaveRoom, type MatchSettings, type RoomSettings } from './lib/rooms';
 import { t, useLang } from './lib/i18n';
-import { fetchSeason, type SeasonState } from './lib/season';
+import { fetchSeason, markSeasonRewardsSeen, setFrame, type SeasonState } from './lib/season';
+import { SeasonRewardModal } from './components/SeasonRewardModal';
+import { keepFrame } from './lib/look';
 import { SeasonScreen } from './screens/SeasonScreen';
 import { VersusIntro } from './components/VersusIntro';
 
@@ -155,6 +157,7 @@ export default function App() {
   const [shop, setShop] = useState<ShopState | null>(null);
   const loadShop = useCallback(() => fetchShopState().then((s) => (setShop(s), s)), []);
   const [season, setSeason] = useState<SeasonState | null>(null);
+  const [rewardBusy, setRewardBusy] = useState(false);
   // รอบที่เริ่มจากแผนการฝึก (ทำจบแล้วติ๊กในแผน)
   const planRunRef = useRef<{ level: Level; index: number } | null>(null);
   // กันผลโหลดที่ถูกยกเลิกไปแล้วมาเปลี่ยนหน้าจอทีหลัง
@@ -364,6 +367,29 @@ export default function App() {
           onShop={() => setScreen({ name: 'shop' })}
           season={season ? { no: season.no, endsAt: season.endsAt, rank: season.me.rank } : undefined}
           onSeason={() => setScreen({ name: 'season' })}
+          modalSlot={
+            season && profile && season.unseen.length > 0 && screen.name === 'start' ? (
+              <SeasonRewardModal
+                rewards={season.unseen}
+                avatar={profile.avatar}
+                busy={rewardBusy}
+                onClose={async (wear) => {
+                  setRewardBusy(true);
+                  try {
+                    if (wear) await setFrame(season.unseen[season.unseen.length - 1].season);
+                    await markSeasonRewardsSeen();
+                    setSeason({ ...season, unseen: [] });
+                    await refreshMe();
+                    loadShop().catch(() => {});
+                  } catch {
+                    /* ปิดไม่สำเร็จ ลองใหม่ได้ */
+                  } finally {
+                    setRewardBusy(false);
+                  }
+                }}
+              />
+            ) : null
+          }
           checkinSlot={
             shop && profile && !shop.checkin.claimedToday ? (
               <CheckinCard state={shop} onClaimed={() => loadShop().catch(() => {})} />
@@ -509,7 +535,7 @@ export default function App() {
           onBack={goHome}
           onBought={(coins, itemId) => setShop((s) => (s ? { ...s, coins, owned: [...s.owned, itemId] } : s))}
           onWear={async (avatar) => {
-            const updated = await updateProfile(profile.id, { avatar });
+            const updated = await updateProfile(profile.id, { avatar: keepFrame(avatar, profile.avatar) });
             setMe((m) => (m.status === 'ready' ? { ...m, profile: updated } : m));
             goHome();
           }}
@@ -525,7 +551,7 @@ export default function App() {
           onShop={() => setScreen({ name: 'shop' })}
           onBack={goHome}
           onSave={async (avatar) => {
-            const updated = await updateProfile(profile.id, { avatar });
+            const updated = await updateProfile(profile.id, { avatar: keepFrame(avatar, profile.avatar) });
             setMe((m) => (m.status === 'ready' ? { ...m, profile: updated } : m));
             goHome();
           }}

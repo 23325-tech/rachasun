@@ -4215,3 +4215,126 @@ html[lang="en"] .checkin__label {
   color: #fff;
   text-align: center;
 }
+
+/* 19.2: กรอบฤดูกาลรอบรูปผู้เล่น */
+.player-avatar.has-frame {
+  border-color: var(--fc);
+  border-width: 3px;
+  box-shadow: 0 0 0 2px var(--ink);
+}
+.player-avatar.has-frame.is-bare {
+  border: 0;
+  box-shadow: none;
+}
+.frame--bronze { --fc: #d08a4a; }
+.frame--silver { --fc: #b4bccb; }
+.frame--gold { --fc: #ffcc00; }
+.frame--platinum { --fc: #3ad0d9; }
+.frame--diamond {
+  --fc: #4f9bff;
+}
+.player-avatar.frame--diamond:not(.is-bare) {
+  box-shadow: 0 0 0 2px var(--ink), 0 0 10px rgba(79, 155, 255, 0.8);
+}
+.frame--legend {
+  --fc: #b46bff;
+}
+.player-avatar.frame--legend:not(.is-bare) {
+  box-shadow: 0 0 0 2px var(--ink), 0 0 12px rgba(180, 107, 255, 0.9);
+  animation: legend-glow 2.4s ease-in-out infinite;
+}
+@keyframes legend-glow {
+  50% {
+    box-shadow: 0 0 0 2px var(--ink), 0 0 18px rgba(255, 204, 0, 0.9);
+  }
+}
+
+/* 19.2: ป๊อปอัปผลฤดูกาล + กรอบในหน้าบัญชี */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(20, 10, 40, 0.55);
+}
+.season-modal {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  width: min(100%, 360px);
+  text-align: center;
+}
+.season-modal h2 {
+  margin: 4px 0;
+}
+.season-modal__burst {
+  color: var(--primary-dark, #e9a800);
+}
+.season-modal__tier,
+.season-modal__coins {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-weight: 700;
+}
+.season-modal__coins {
+  font-size: 1.3rem;
+}
+.season-frames__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+  gap: 8px;
+}
+.season-frame {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  padding: 8px 4px;
+  border: 2.5px solid #d9cff5;
+  border-radius: 14px;
+  background: #fff;
+  font: inherit;
+  cursor: pointer;
+}
+.season-frame.is-on {
+  border-color: var(--ink);
+  background: #fff6c7;
+  box-shadow: 0 3px 0 var(--ink);
+}
+.season-frame small {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-weight: 700;
+}
+.season-frame__none {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border: 2.5px dashed #b9add9;
+  border-radius: 50%;
+  color: #8a7fb0;
+}
+.season-history {
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.85rem;
+}
+.season-history li {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 6px 0;
+  border-top: 1.5px solid #eee8fb;
+}
+.season-history li span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}

@@ -41,6 +41,8 @@ interface Props {
   /** ฤดูกาลแรงค์ (ยังไม่โหลด = ไม่แสดงป้าย) */
   season?: { no: number; endsAt: string; rank: number | null };
   onSeason: () => void;
+  /** ป๊อปอัปทับหน้าแรก (เช่น ผลฤดูกาล) */
+  modalSlot?: ReactNode;
 }
 
 const modes = (): { key: HomeAction; title: string; desc: string; icon: Icon; grad: string }[] => [
@@ -225,6 +227,7 @@ export function HomeScreen(p: Props) {
           ))}
         </div>
       </section>
+      {p.modalSlot}
     </div>
   );
 }

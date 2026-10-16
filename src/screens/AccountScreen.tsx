@@ -18,6 +18,7 @@ import { nextTier, tierOf } from '../lib/rank';
 import { NicknameForm } from '../components/NicknameForm';
 import { PlayerAvatar } from '../components/PlayerAvatar';
 import { TierIcon } from '../components/icons';
+import { SeasonFrames } from '../components/SeasonFrames';
 import { Cube, DoorOpen, Key, WarningCircle } from '@phosphor-icons/react';
 import { isLowEnd, reduce3DSetting, setReduce3D } from '../lib/perf';
 import { t } from '../lib/i18n';
@@ -303,6 +304,8 @@ export function AccountScreen({ user, profile, needsPassword, onBack, onChanged 
           />
         </label>
       </section>
+
+      {profile && <SeasonFrames avatar={profile.avatar} onChanged={onChanged} />}
 
       {notice && <p className="form-notice">{notice}</p>}
       {error && <p className="form-error"><WarningCircle weight="fill" className="ico" /> {error}</p>}

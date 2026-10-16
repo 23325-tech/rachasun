@@ -57,3 +57,37 @@ export function seasonLeft(endsAt: string, now = Date.now()): string {
   if (h >= 1) return t(`${h} ชม.`, `${h}h`);
   return t(`${Math.max(1, Math.ceil(ms / 60_000))} นาที`, `${Math.max(1, Math.ceil(ms / 60_000))}m`);
 }
+
+export interface SeasonHistoryRow {
+  season: number;
+  tier: Tier['key'];
+  peakRp: number;
+  coins: number;
+}
+
+/** รางวัลทุกฤดูกาลที่เคยได้ (ใหม่สุดก่อน) */
+export async function fetchSeasonHistory(): Promise<SeasonHistoryRow[]> {
+  const sb = await ensureSession();
+  const { data, error } = await sb.rpc('my_season_history');
+  if (error) throw new Error(error.message);
+  return ((data ?? []) as { season_no: number; tier: Tier['key']; peak_rp: number; coins: number }[]).map((r) => ({
+    season: r.season_no,
+    tier: r.tier,
+    peakRp: r.peak_rp,
+    coins: r.coins,
+  }));
+}
+
+/** ปิดป๊อปอัปผลฤดูกาล */
+export async function markSeasonRewardsSeen(): Promise<void> {
+  const sb = await ensureSession();
+  await sb.rpc('mark_season_rewards_seen');
+}
+
+/** ใส่กรอบของฤดูกาลนั้น (null = ถอดกรอบ) คืนรหัสหน้าตาใหม่ */
+export async function setFrame(season: number | null): Promise<string> {
+  const sb = await ensureSession();
+  const { data, error } = await sb.rpc('set_frame', { p_season: season });
+  if (error) throw new Error(error.message.includes('frame_not_owned') ? t('ยังไม่มีกรอบนี้', "You don't own this frame") : error.message);
+  return data as string;
+}

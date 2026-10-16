@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { frameOf, lookCode } from '../lib/look';
 
 interface Props {
   /** รหัสหน้าตา (คอลัมน์ avatar) หรือว่าง = ช่องว่างรอผู้เล่น */
@@ -12,22 +13,25 @@ interface Props {
 /** ภาพหน้าตัวละครแบบวงกลม (วาดจากโมเดล 3D ครั้งเดียวแล้วแคช) */
 export function PlayerAvatar({ code, size = 40, className = '', framing = 'bust' }: Props) {
   const [url, setUrl] = useState<string | null>(null);
+  // กรอบวาดด้วย CSS รูปใช้แคชเดียวกับหน้าตาที่ไม่มีกรอบ
+  const base = code ? lookCode(code) : null;
+  const frame = frameOf(code);
 
   useEffect(() => {
-    if (!code) return;
+    if (!base) return;
     let alive = true;
     // โหลด three.js เฉพาะตอนต้องวาดจริง
     import('../three/portrait')
-      .then((m) => m.portraitOf(code, framing))
+      .then((m) => m.portraitOf(base, framing))
       .then((u) => alive && setUrl(u))
       .catch(() => {});
     return () => {
       alive = false;
     };
-  }, [code, framing]);
+  }, [base, framing]);
 
   return (
-    <span className={`player-avatar ${code ? '' : 'is-empty'} ${className}`} style={{ width: size, height: size }} aria-hidden>
+    <span className={`player-avatar ${code ? '' : 'is-empty'} ${frame ? `has-frame frame--${frame.tier}` : ''} ${className}`} style={{ width: size, height: size }} aria-hidden>
       {url && <img src={url} alt="" draggable={false} />}
     </span>
   );

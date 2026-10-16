@@ -72,7 +72,8 @@ export const DEFAULT_LOOK_CODE = 'v1.ffd9c2.3b2a4d.s.3b2a4d.u-2b3a8c.n.n';
 /** รหัส -> ค่าทีละช่อง (รูปแบบผิด = null) */
 export function parseLook(code: string | null | undefined): Look | null {
   if (!code || !code.startsWith('v1.')) return null;
-  const parts = code.split('.').slice(1);
+  // ส่วนท้าย "+1g" = กรอบฤดูกาล ไม่ใช่ส่วนของหน้าตา
+  const parts = code.split('+')[0].split('.').slice(1);
   if (parts.length !== SLOT_ORDER.length) return null;
   return Object.fromEntries(SLOT_ORDER.map((s, i) => [s, parts[i]])) as Look;
 }

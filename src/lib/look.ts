@@ -62,3 +62,22 @@ export const randomFreeCode = () => encodeLook(randomLook());
 
 /** หน้าตาบอท: ใส่ของแต่งได้ทุกชิ้น (โชว์ของในร้าน) สุ่มคงที่ตามชื่อบอท */
 export const botCode = (seed: string) => encodeLook(randomLook(WARDROBE, seededRand(`bot:${seed}`)));
+
+// ---------- กรอบฤดูกาล: ส่วนท้ายรหัสหน้าตา "+<ฤดูกาล><ยศ>" เช่น "+1g" ----------
+export type FrameTier = 'bronze' | 'silver' | 'gold' | 'platinum' | 'diamond' | 'legend';
+const TIER_BY_LETTER: Record<string, FrameTier> = { b: 'bronze', s: 'silver', g: 'gold', p: 'platinum', d: 'diamond', l: 'legend' };
+
+/** กรอบที่ใส่อยู่ (ไม่มี = null) */
+export function frameOf(code: string | null | undefined): { season: number; tier: FrameTier } | null {
+  const m = code?.match(/\+(\d{1,3})([bsgpdl])$/);
+  return m ? { season: Number(m[1]), tier: TIER_BY_LETTER[m[2]] } : null;
+}
+
+/** รหัสหน้าตาไม่รวมกรอบ */
+export const lookCode = (code: string) => code.split('+')[0];
+
+/** ใส่กรอบเดิมกลับเข้าไปในรหัสหน้าตาใหม่ (ตอนบันทึกชุดใหม่) */
+export const keepFrame = (newCode: string, oldCode: string | null | undefined) => {
+  const m = oldCode?.match(/\+\d{1,3}[bsgpdl]$/);
+  return lookCode(newCode) + (m ? m[0] : '');
+};
