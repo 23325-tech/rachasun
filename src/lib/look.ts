@@ -103,3 +103,10 @@ export const petOf = (code: string | null | undefined): PetKind => PET[lookOf(co
 export const petKind = (value: string): PetKind => PET[value] ?? 'none';
 /** ชนิดออร่าจากรหัสหน้าตา */
 export const auraOf = (code: string | null | undefined): AuraKind => AURA[lookOf(code).aura] ?? 'none';
+
+/** เอฟเฟกต์ตอนยิง */
+export type ShotSkin = 'default' | 'star' | 'heart' | 'sakura' | 'lightning' | 'galaxy';
+const SHOT: Record<string, ShotSkin> = { n: 'default', s: 'star', h: 'heart', k: 'sakura', l: 'lightning', g: 'galaxy' };
+export const shotKind = (value: string): ShotSkin => SHOT[value] ?? 'default';
+/** เอฟเฟกต์ยิงของผู้เล่นจากรหัสหน้าตา */
+export const shotOf = (code: string | null | undefined): ShotSkin => shotKind(lookOf(code).shot);

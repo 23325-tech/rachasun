@@ -46,6 +46,20 @@ const pick = <T,>(arr: T[]) => arr[Math.floor(Math.random() * arr.length)];
 const FIRE = [hex(0xfff3a0), hex(0xffcc00), hex(0xff9a3c), hex(0xff5d73)];
 const ICE = [hex(0xffffff), hex(0xbfefff), hex(0x6fd3ff), hex(0x3d8bff)];
 const GOLD = [hex(0xffffff), hex(0xfff3a0), hex(0xffcc00), hex(0xffa400)];
+/** หน้าตากระสุน/ระเบิดตามเอฟเฟกต์ยิงของคนยิง */
+export type ShotSkin = 'default' | 'star' | 'heart' | 'sakura' | 'lightning' | 'galaxy';
+interface ShotStyle {
+  trail: RGB[];
+  burst: RGB[];
+  star1: number;
+  star2: number;
+  ring1: number;
+  ring2: number;
+  spikes: number;
+}
+const PINK = [hex(0xffffff), hex(0xffd6e5), hex(0xff8fc0), hex(0xff5d9e)];
+const SAKURA = [hex(0xffffff), hex(0xffe3ee), hex(0xffb7d0), hex(0xff9ac0)];
+const GALAXY = [hex(0xffffff), hex(0xc9b6ff), hex(0x8a5cf6), hex(0x4fb6ff)];
 const VIOLET = [hex(0xffffff), hex(0xe2c8ff), hex(0xb46bff), hex(0xff6bd6)];
 
 /** หัวใจแบน 2 มิติ ขนาดราว 1 หน่วย */
@@ -60,6 +74,15 @@ function heartShape(): THREE.Shape {
   s.bezierCurveTo(0.5, -0.05, 0.05, -0.3, 0, -0.35);
   return s;
 }
+
+const STYLES: Record<ShotSkin, () => ShotStyle> = {
+  default: () => ({ trail: FIRE, burst: FIRE, star1: 0xffcc00, star2: 0xff5d73, ring1: 0xffd25c, ring2: 0xff5d73, spikes: 12 }),
+  star: () => ({ trail: GOLD, burst: GOLD, star1: 0xffe066, star2: 0xffa400, ring1: 0xffe066, ring2: 0xffffff, spikes: 5 }),
+  heart: () => ({ trail: PINK, burst: PINK, star1: 0xff8fc0, star2: 0xff3b7a, ring1: 0xffb7d0, ring2: 0xff5d9e, spikes: 10 }),
+  sakura: () => ({ trail: SAKURA, burst: SAKURA, star1: 0xffd6e5, star2: 0xff9ac0, ring1: 0xffe3ee, ring2: 0xff9ac0, spikes: 8 }),
+  lightning: () => ({ trail: ICE, burst: ICE, star1: 0xbfefff, star2: 0x3d8bff, ring1: 0x6fd3ff, ring2: 0xffffff, spikes: 9 }),
+  galaxy: () => ({ trail: GALAXY, burst: GALAXY, star1: 0xc9b6ff, star2: 0x4fb6ff, ring1: 0x8a5cf6, ring2: 0x4fb6ff, spikes: 14 }),
+};
 
 export class FxEngine {
   private renderer: THREE.WebGLRenderer;
@@ -392,10 +415,11 @@ export class FxEngine {
   }
 
   // ---------- ระเบิดตอนกระสุนถึงเป้า ----------
-  impact(at: Pt, lethal: boolean, palette = FIRE) {
-    const fire = palette === FIRE;
-    this.starBurst(at, lethal ? 95 : 70, fire ? 0xffcc00 : 0xc58bff, 0.55);
-    this.after(0.05, () => this.starBurst(at, lethal ? 62 : 46, fire ? 0xff5d73 : 0xff6bd6, 0.45, 9));
+  impact(at: Pt, lethal: boolean, palette = FIRE, skin: ShotSkin = 'default') {
+    const st = palette === FIRE ? STYLES[skin]() : { ...STYLES.default(), burst: palette, star1: 0xc58bff, star2: 0xff6bd6 };
+    palette = st.burst;
+    this.starBurst(at, lethal ? 95 : 70, st.star1, 0.55, st.spikes);
+    this.after(0.05, () => this.starBurst(at, lethal ? 62 : 46, st.star2, 0.45, Math.max(5, st.spikes - 3)));
     this.after(0.09, () => this.starBurst(at, lethal ? 32 : 24, 0xffffff, 0.35, 7));
     this.flash(at, lethal ? 260 : 180, '#ffffff', 0.18);
     if (lethal) {
@@ -407,8 +431,9 @@ export class FxEngine {
         this.onShake?.(22);
       });
     }
-    this.ring(at, lethal ? 210 : 140, 0xffd25c, 0.5, 2);
-    this.after(0.08, () => this.ring(at, lethal ? 160 : 105, 0xff5d73, 0.45, 2.4));
+    this.ring(at, lethal ? 210 : 140, st.ring1, 0.5, 2);
+    this.after(0.08, () => this.ring(at, lethal ? 160 : 105, st.ring2, 0.45, 2.4));
+    this.skinExtra(at, skin, lethal);
     this.burst(at, lethal ? 170 : 95, palette, [260, lethal ? 1100 : 820], { size: rand(8, 18) });
     // ประกายเส้นยาวพุ่งออก
     this.burst(at, lethal ? 26 : 14, [hex(0xffffff), palette[0]], [900, 1500], { size: 16, endSize: 2, max: 0.28, gravity: 0, drag: 4 });
@@ -418,6 +443,64 @@ export class FxEngine {
     }
     this.heartShards(at, lethal ? 16 : 9);
     this.onShake?.(lethal ? 16 : 9);
+  }
+
+  /** ลูกเล่นเพิ่มตามสกินกระสุน */
+  private skinExtra(at: Pt, skin: ShotSkin, lethal: boolean) {
+    const n = lethal ? 1.6 : 1;
+    if (skin === 'star') {
+      for (let i = 0; i < 8 * n; i++) {
+        const a = Math.random() * Math.PI * 2;
+        const r = rand(40, 120);
+        this.after(rand(0.02, 0.25), () => this.starBurst({ x: at.x + Math.cos(a) * r, y: at.y + Math.sin(a) * r }, rand(10, 18), pick([0xffe066, 0xffffff, 0xffa400]), 0.5, 5));
+      }
+    } else if (skin === 'heart') {
+      this.heartShards(at, Math.round(10 * n));
+      this.flash(at, 140, '#ff8fc0', 0.35);
+    } else if (skin === 'sakura') {
+      for (let i = 0; i < 70 * n; i++) {
+        const a = Math.random() * Math.PI * 2;
+        const v = rand(120, 420);
+        this.emit({ x: at.x, y: at.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 80, size: rand(9, 15), endSize: 6, color: pick(SAKURA), max: rand(1.2, 2.2), gravity: 120, drag: 2.2 });
+      }
+    } else if (skin === 'lightning') {
+      for (let i = 0; i < 5; i++) {
+        const a = (i / 5) * Math.PI * 2 + Math.random();
+        const end = { x: at.x + Math.cos(a) * rand(80, 140), y: at.y + Math.sin(a) * rand(80, 140) };
+        this.streak(at, end, 0.12, ICE, 8);
+      }
+      this.flash(at, 220, '#bfefff', 0.25);
+    } else if (skin === 'galaxy') {
+      for (let i = 0; i < 60 * n; i++) {
+        const a = Math.random() * Math.PI * 2;
+        const r = rand(10, 150);
+        this.emit({ x: at.x + Math.cos(a) * r, y: at.y + Math.sin(a) * r, vx: -Math.sin(a) * 160, vy: Math.cos(a) * 160, size: rand(4, 9), endSize: 1, color: pick(GALAXY), max: rand(0.6, 1.3), drag: 1 });
+      }
+      this.after(0.12, () => this.ring(at, 190, 0xc9b6ff, 0.7, 1.5));
+    }
+  }
+
+  /** สายฟ้าตรงจากคนยิงถึงเป้า (สกินสายฟ้า) */
+  private zap(from: Pt, to: Pt, delay: number, onHit: () => void) {
+    this.flash(from, 80, '#bfefff', 0.3);
+    this.after(Math.max(0, delay - 0.1), () => {
+      const segs = 8;
+      let p = from;
+      for (let i = 1; i <= segs; i++) {
+        const k = i / segs;
+        const q = { x: from.x + (to.x - from.x) * k + (i < segs ? rand(-26, 26) : 0), y: from.y + (to.y - from.y) * k + (i < segs ? rand(-26, 26) : 0) };
+        const n = Math.ceil(Math.hypot(q.x - p.x, q.y - p.y) / 5);
+        for (let j = 0; j < n; j++) {
+          const r = j / n;
+          const x = p.x + (q.x - p.x) * r;
+          const y = p.y + (q.y - p.y) * r;
+          this.emit({ x, y, size: 24, endSize: 8, color: hex(0x6fd3ff), max: 0.3 });
+          this.emit({ x, y, size: 9, endSize: 4, color: [1, 1, 1], max: 0.24 });
+        }
+        p = q;
+      }
+      this.after(0.1, onHit);
+    });
   }
 
   // ---------- โล่ ----------
@@ -531,16 +614,17 @@ export class FxEngine {
   }
 
   // ---------- ลำดับการยิงทั้งหมด ----------
-  shoot(from: Pt | null, to: Pt, kind: 'hit' | 'blocked' | 'counter', lethal: boolean, flight: number, counterTo?: Pt) {
+  shoot(from: Pt | null, to: Pt, kind: 'hit' | 'blocked' | 'counter', lethal: boolean, flight: number, counterTo?: Pt, skin: ShotSkin = 'default') {
     const land = () => {
       if (kind === 'blocked') this.shield(to);
       else if (kind === 'counter' && counterTo) {
         this.shield(to);
         this.projectile(to, counterTo, flight * 0.6, VIOLET, () => this.impact(counterTo, lethal, VIOLET));
-      } else this.impact(to, lethal);
+      } else this.impact(to, lethal, FIRE, skin);
     };
-    if (from) this.projectile(from, to, flight, FIRE, land);
-    else this.lightning(to, land, flight);
+    if (!from) this.lightning(to, land, flight);
+    else if (skin === 'lightning') this.zap(from, to, flight, land);
+    else this.projectile(from, to, flight, STYLES[skin]().trail, land);
   }
 
   // =================== การ์ด ===================

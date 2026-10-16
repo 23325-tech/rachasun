@@ -77,7 +77,7 @@ export default function BattleFx() {
         if (!to) continue;
         const from = s.from ? centerOf(s.from) : null;
         const counterTo = s.counterTo ? centerOf(s.counterTo) ?? undefined : undefined;
-        engine.shoot(from, to, s.kind, s.lethal, flightMs / 1000, counterTo);
+        engine.shoot(from, to, s.kind, s.lethal, flightMs / 1000, counterTo, s.skin);
       }
     }, (fx) => {
       if (engine) playCard(engine, fx);

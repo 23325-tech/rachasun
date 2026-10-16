@@ -10,6 +10,8 @@ export interface Shot {
   counterTo?: string;
   /** โดนแล้วตกรอบ (ระเบิดใหญ่กว่า) */
   lethal: boolean;
+  /** เอฟเฟกต์ยิงของคนยิง */
+  skin?: import('./engine').ShotSkin;
 }
 
 /** เอฟเฟกต์การ์ด */
@@ -57,6 +59,7 @@ export function buildShots(
   damages: DamageLike[],
   eliminated: string[],
   answers: { playerId: string; correct: boolean; timeMs: number }[],
+  skinOf: (playerId: string) => import('./engine').ShotSkin = () => 'default',
 ): Shot[] {
   const shooters = answers.filter((a) => a.correct).sort((a, b) => a.timeMs - b.timeMs);
   const shooterFor = (target: string) => shooters.find((a) => a.playerId !== target)?.playerId ?? null;
@@ -66,7 +69,8 @@ export function buildShots(
     if (d.redirectedTo) {
       shots.push({ from: shooterFor(d.playerId), to: d.playerId, kind: 'counter', counterTo: d.redirectedTo, lethal: eliminated.includes(d.redirectedTo) });
     } else {
-      shots.push({ from: shooterFor(d.playerId), to: d.playerId, kind: d.blocked ? 'blocked' : 'hit', lethal: eliminated.includes(d.playerId) });
+      const from = shooterFor(d.playerId);
+      shots.push({ from, to: d.playerId, kind: d.blocked ? 'blocked' : 'hit', lethal: eliminated.includes(d.playerId), skin: from ? skinOf(from) : 'default' });
     }
   }
   return shots;

@@ -16,10 +16,12 @@ import {
   PawPrint,
   Sparkle,
   MaskHappy,
+  ShootingStar,
   type Icon,
 } from '@phosphor-icons/react';
 import { PetImage, PlayerAvatar } from '../components/PlayerAvatar';
-import { encodeLook, lookOf, toChibi, WARDROBE, type Look, petKind } from '../lib/look';
+import { ShotIcon, ShotPreview } from '../fx/ShotPreview';
+import { encodeLook, lookOf, toChibi, WARDROBE, type Look, petKind, shotKind } from '../lib/look';
 import { isFree, type Rarity, type Slot, type WardrobeItem } from '../../supabase/functions/_shared/wardrobe';
 import { t } from '../lib/i18n';
 
@@ -34,12 +36,13 @@ interface Props {
   onSave: (code: string) => Promise<void>;
 }
 
-const TABS: { slot: Slot; label: string; icon: Icon; thumb: 'swatch' | 'bust' | 'full' | 'pet' }[] = [
+const TABS: { slot: Slot; label: string; icon: Icon; thumb: 'swatch' | 'bust' | 'full' | 'pet' | 'shot' }[] = [
   { slot: 'outfit', get label() { return t('ชุด', 'Outfit'); }, icon: TShirt, thumb: 'full' },
   { slot: 'hat', get label() { return t('หมวก', 'Hat'); }, icon: BaseballCap, thumb: 'bust' },
   { slot: 'pet', get label() { return t('สัตว์เลี้ยง', 'Pet'); }, icon: PawPrint, thumb: 'pet' },
   { slot: 'aura', get label() { return t('ออร่า', 'Aura'); }, icon: Sparkle, thumb: 'full' },
   { slot: 'set', get label() { return t('ชุดพิเศษ', 'Costume'); }, icon: MaskHappy, thumb: 'full' },
+  { slot: 'shot', get label() { return t('เอฟเฟกต์ยิง', 'Shot FX'); }, icon: ShootingStar, thumb: 'shot' },
   { slot: 'item', get label() { return t('ของในมือ', 'Held item'); }, icon: HandGrabbing, thumb: 'full' },
   { slot: 'face', get label() { return t('ใบหน้า', 'Face'); }, icon: Sunglasses, thumb: 'bust' },
   { slot: 'style', get label() { return t('ทรงผม', 'Hairstyle'); }, icon: Scissors, thumb: 'bust' },
@@ -80,7 +83,9 @@ export function DressingRoomScreen({ code, owned, onShop, onBack, onSave }: Prop
   const chibi = useMemo(() => toChibi(draft), [draft]);
   const current = TABS.find((t) => t.slot === tab)!;
 
+  const [fireShot, setFireShot] = useState(0);
   const tryOn = (it: WardrobeItem) => {
+    if (it.slot === 'shot') setFireShot((n) => n + 1);
     setDraft((d) => ({ ...d, [it.slot]: it.value }));
     setCheer(1);
     setTimeout(() => setCheer(0), 800);
@@ -123,6 +128,7 @@ export function DressingRoomScreen({ code, owned, onShop, onBack, onSave }: Prop
             <ArrowCounterClockwise weight="bold" size={16} /> {t('ชุดเดิม', 'Reset')}
           </button>
         )}
+        {tab === 'shot' && <ShotPreview skin={shotKind(draft.shot)} fire={fireShot} target=".dressing__stage" />}
         <p className="dressing__hint">{t('ลากเพื่อหมุนดูตัวละคร', 'Drag to rotate')}</p>
       </section>
 
@@ -159,6 +165,8 @@ export function DressingRoomScreen({ code, owned, onShop, onBack, onSave }: Prop
               <span className="ward-item__art">
                 {current.thumb === 'swatch' ? (
                   <span className="ward-item__swatch" style={{ '--sw': `#${it.value}` } as CSSProperties} />
+                ) : current.thumb === 'shot' ? (
+                  <ShotIcon skin={shotKind(it.value)} />
                 ) : current.thumb === 'pet' ? (
                   it.value === 'n' ? <span className="ward-item__none">—</span> : <PetImage kind={petKind(it.value)} size={64} />
                 ) : (

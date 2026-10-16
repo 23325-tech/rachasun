@@ -14,6 +14,7 @@ import { Crosshair, Eye, FlagCheckered, Gift, Hourglass, Lightbulb, Lightning, S
 import { VersusIntro } from '../components/VersusIntro';
 import { t } from '../lib/i18n';
 import { buildShots, fxBus } from '../fx/bus';
+import { shotOf } from '../lib/look';
 import { use3D } from '../lib/perf';
 
 const BattleFx = lazy(() => import('../fx/BattleFx'));
@@ -97,7 +98,10 @@ export function OnlineBattleView({ roomId, state: s, myId, onLeave }: Props) {
       window.setTimeout(() => {
         setHitStage('aim');
         const answers = Object.entries(reveal.results).map(([playerId, r]) => ({ playerId, correct: r.correct, timeMs: r.timeMs }));
-        fxBus.shots(buildShots(reveal.outcome.damages, reveal.outcome.eliminated, answers), BANG_AT - AIM_AT);
+        fxBus.shots(
+          buildShots(reveal.outcome.damages, reveal.outcome.eliminated, answers, (id) => shotOf(s.players.find((p) => p.id === id)?.avatar)),
+          BANG_AT - AIM_AT,
+        );
       }, AIM_AT),
     );
     timersRef.current.push(

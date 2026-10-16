@@ -24,6 +24,7 @@ import { DIFFICULTY_LABEL, SUBJECTS } from '../data/subjects';
 import { Eye, FlagCheckered, Lightbulb, Lightning, LockSimple, SkipForward, SmileyMeh, Users, WarningCircle } from '@phosphor-icons/react';
 import { t } from '../lib/i18n';
 import { buildShots, fxBus } from '../fx/bus';
+import { shotOf } from '../lib/look';
 import { use3D } from '../lib/perf';
 
 const BattleFx = lazy(() => import('../fx/BattleFx'));
@@ -154,7 +155,10 @@ export function BattleScreen({ questions, questionCount, initialPlayers, bots, o
     if (result.outcome.damages.length) {
       later(() => {
         setHitStage('aim');
-        fxBus.shots(buildShots(result.outcome.damages, result.outcome.eliminated, answers), (BANG_AT - AIM_AT) * speed);
+        fxBus.shots(
+          buildShots(result.outcome.damages, result.outcome.eliminated, answers, (id) => shotOf(s.players.find((p) => p.id === id)?.avatar)),
+          (BANG_AT - AIM_AT) * speed,
+        );
       }, AIM_AT * speed);
       later(() => {
         setHitStage('bang');

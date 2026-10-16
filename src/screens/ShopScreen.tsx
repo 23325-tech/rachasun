@@ -1,7 +1,8 @@
 import { lazy, Suspense, useMemo, useState, type CSSProperties } from 'react';
 import { CheckCircle, Clock, Coin, Diamond, PawPrint, Plus, Sparkle, Storefront, TShirt } from '@phosphor-icons/react';
 import { PetImage, PlayerAvatar } from '../components/PlayerAvatar';
-import { encodeLook, lookOf, petKind, toChibi, WARDROBE, type Look } from '../lib/look';
+import { encodeLook, lookOf, petKind, shotKind, toChibi, WARDROBE, type Look } from '../lib/look';
+import { ShotIcon, ShotPreview } from '../fx/ShotPreview';
 import { buyItem, timeLeft, type ShopState } from '../lib/shop';
 import { isFree, SPECIAL_SLOTS, type Rarity, type Slot, type WardrobeItem } from '../../supabase/functions/_shared/wardrobe';
 import { t } from '../lib/i18n';
@@ -47,8 +48,10 @@ export function ShopScreen({ code, state, onBack, onBought, onWear, onTopup, onG
   const regular = WARDROBE.filter((w) => w.rarity === 'common' && !isFree(w) && !SPECIAL_SLOTS.includes(w.slot));
   const specials = WARDROBE.filter((w) => SPECIAL_SLOTS.includes(w.slot) && !isFree(w) && !w.gacha);
 
+  const [fireShot, setFireShot] = useState(0);
   const pick = (it: WardrobeItem) => {
     setPicked(it);
+    if (it.slot === 'shot') setFireShot((n) => n + 1);
     setError('');
     setJustBought(null);
     setCheer(1);
@@ -94,7 +97,9 @@ export function ShopScreen({ code, state, onBack, onBought, onWear, onTopup, onG
       >
         <span className="ward-item__rarity">{RARITY_TEXT[it.rarity]}</span>
         <span className="ward-item__art">
-          {it.slot === 'pet' ? (
+          {it.slot === 'shot' ? (
+            <ShotIcon skin={shotKind(it.value)} />
+          ) : it.slot === 'pet' ? (
             <PetImage kind={petKind(it.value)} size={64} />
           ) : SWATCH_SLOTS.includes(it.slot) ? (
             <span className="ward-item__swatch" style={{ '--sw': `#${it.value}` } as CSSProperties} />
@@ -147,6 +152,7 @@ export function ShopScreen({ code, state, onBack, onBought, onWear, onTopup, onG
           <Avatar3D look={chibi} interactive cheer={cheer} className="dressing__canvas" />
         </Suspense>
         <div className="dressing__podium" />
+        {picked?.slot === 'shot' && <ShotPreview skin={shotKind(picked.value)} fire={fireShot} target=".shop__stage" />}
         {picked && !has && <span className="shop__trying">{t('กำลังลองสวม:', 'Trying on:')} {picked.name}</span>}
       </section>
 

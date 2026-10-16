@@ -141,6 +141,11 @@ export const WARDROBE: WardrobeItem[] = [
   { id: 'set_ninja', slot: 'set', value: 'j', name: 'ชุดนินจา', rarity: 'legend', gem: 89, en: 'Ninja' },
   { id: 'set_astronaut', slot: 'set', value: 'a', name: 'ชุดนักบินอวกาศ', rarity: 'legend', gem: 99, en: 'Astronaut' },
   free('shot_none', 'shot', 'n', 'กระสุนปกติ', 'Default shot'),
+  { id: 'shot_star', slot: 'shot', value: 's', name: 'กระสุนดาวตก', rarity: 'rare', coin: 3000, en: 'Shooting star' },
+  { id: 'shot_heart', slot: 'shot', value: 'h', name: 'กระสุนหัวใจหวาน', rarity: 'rare', coin: 3000, en: 'Sweetheart shot' },
+  { id: 'shot_sakura', slot: 'shot', value: 'k', name: 'พายุซากุระ', rarity: 'epic', coin: 5000, en: 'Sakura storm' },
+  { id: 'shot_lightning', slot: 'shot', value: 'l', name: 'สายฟ้าฟาด', rarity: 'epic', gem: 49, en: 'Thunderbolt' },
+  { id: 'shot_galaxy', slot: 'shot', value: 'g', name: 'ลำแสงกาแล็กซี่', rarity: 'legend', gem: 79, en: 'Galaxy beam' },
 ];
 
 export const SLOT_ORDER: Slot[] = ['skin', 'hair', 'style', 'eyes', 'outfit', 'hat', 'item', 'face', 'pet', 'aura', 'set', 'shot'];

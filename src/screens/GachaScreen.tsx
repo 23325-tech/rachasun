@@ -2,7 +2,8 @@ import { useEffect, useState, type CSSProperties } from 'react';
 import { Cake, Coin, Cookie, Fish, Info, PuzzlePiece, Sparkle, Star } from '@phosphor-icons/react';
 import { PetImage, PlayerAvatar } from '../components/PlayerAvatar';
 import { t } from '../lib/i18n';
-import { encodeLook, lookOf, petKind, WARDROBE } from '../lib/look';
+import { encodeLook, lookOf, petKind, shotKind, WARDROBE } from '../lib/look';
+import { ShotIcon } from '../fx/ShotPreview';
 import { FOOD_NAME } from '../lib/petCare';
 import { drawGacha, exchangeShards, fetchGacha, GACHA_COST, GACHA_ODDS, PITY_AT, SHARD_PRICE, type GachaResult, type GachaState } from '../lib/gacha';
 import type { Rarity, WardrobeItem } from '../../supabase/functions/_shared/wardrobe';
@@ -22,6 +23,7 @@ const SWATCH = ['skin', 'hair', 'eyes'];
 /** รูปของรางวัล */
 function Art({ it, code }: { it: WardrobeItem; code: string }) {
   if (it.slot === 'pet') return <PetImage kind={petKind(it.value)} size={64} />;
+  if (it.slot === 'shot') return <ShotIcon skin={shotKind(it.value)} size={48} />;
   if (SWATCH.includes(it.slot)) return <span className="ward-item__swatch" style={{ '--sw': `#${it.value}` } as CSSProperties} />;
   const full = ['outfit', 'item', 'aura', 'set'].includes(it.slot);
   return <PlayerAvatar code={encodeLook({ ...lookOf(code), [it.slot]: it.value })} size={64} framing={full ? 'full' : 'bust'} className="is-bare" />;
