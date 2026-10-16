@@ -1,5 +1,5 @@
 import { lazy, Suspense, useMemo, useState, type CSSProperties } from 'react';
-import { CheckCircle, Clock, Coin, Diamond, Sparkle, Storefront, TShirt } from '@phosphor-icons/react';
+import { CheckCircle, Clock, Coin, Diamond, Plus, Sparkle, Storefront, TShirt } from '@phosphor-icons/react';
 import { PlayerAvatar } from '../components/PlayerAvatar';
 import { encodeLook, lookOf, toChibi, WARDROBE, type Look } from '../lib/look';
 import { buyItem, timeLeft, type ShopState } from '../lib/shop';
@@ -16,6 +16,8 @@ interface Props {
   onBought: (coins: number, itemId: string) => void;
   /** ใส่ชิ้นที่ซื้อแล้วทันที */
   onWear: (code: string) => Promise<void>;
+  /** ไปหน้าเติมเพชร */
+  onTopup: () => void;
 }
 
 const RARITY_TEXT: Record<Rarity, string> = {
@@ -28,7 +30,7 @@ const SWATCH_SLOTS: Slot[] = ['skin', 'hair', 'eyes'];
 const FULL_SLOTS: Slot[] = ['outfit', 'item'];
 
 /** ร้านค้า: ของประจำ (ธรรมดา) + ของหมุนเวียน 8 ชิ้น (หายากขึ้นไป) ลองสวมก่อนซื้อได้ */
-export function ShopScreen({ code, state, onBack, onBought, onWear }: Props) {
+export function ShopScreen({ code, state, onBack, onBought, onWear, onTopup }: Props) {
   const saved = lookOf(code);
   const [picked, setPicked] = useState<WardrobeItem | null>(null);
   const [busy, setBusy] = useState(false);
@@ -125,8 +127,13 @@ export function ShopScreen({ code, state, onBack, onBought, onWear }: Props) {
         <div className="quiz__progress">
           <Storefront weight="fill" className="ico" /> {t('ร้านค้า', 'Shop')}
         </div>
-        <span className="coin-pill">
-          <Coin weight="fill" size={18} /> {state.coins.toLocaleString()}
+        <span className="shop__wallet">
+          <span className="coin-pill">
+            <Coin weight="fill" size={18} /> {state.coins.toLocaleString()}
+          </span>
+          <button type="button" className="coin-pill gem-pill" onClick={onTopup} aria-label={t('เพชร เติมเพชร', 'Gems, top up')}>
+            <Diamond weight="fill" size={16} /> {state.gems.toLocaleString()} <Plus weight="bold" size={12} />
+          </button>
         </span>
       </header>
 
@@ -175,9 +182,15 @@ export function ShopScreen({ code, state, onBack, onBought, onWear }: Props) {
               <TShirt weight="fill" className="ico" /> {t(`ใส่ ${picked.name}`, `Wear ${picked.name}`)}
             </button>
           ) : picked.gem ? (
-            <button type="button" className="btn btn--ghost btn--block" disabled>
-              <Diamond weight="fill" className="ico" /> {t(`${picked.gem} เพชร · เติมเพชรเร็วๆ นี้`, `${picked.gem} gems · gem top-up coming soon`)}
-            </button>
+            state.gems >= picked.gem ? (
+              <button type="button" className="btn btn--primary btn--block btn--big" disabled={busy} onClick={buy}>
+                {busy ? t('กำลังซื้อ...', 'Buying...') : <>{t('ซื้อ', 'Buy')} <Diamond weight="fill" className="ico" /> {picked.gem}</>}
+              </button>
+            ) : (
+              <button type="button" className="btn btn--primary btn--block btn--big" onClick={onTopup}>
+                <Diamond weight="fill" className="ico" /> {t(`เพชรไม่พอ (ขาดอีก ${picked.gem - state.gems}) · เติมเพชร`, `Need ${picked.gem - state.gems} more gems · Top up`)}
+              </button>
+            )
           ) : (
             <button type="button" className="btn btn--primary btn--block btn--big" disabled={busy || short > 0} onClick={buy}>
               {short > 0 ? (

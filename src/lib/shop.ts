@@ -1,8 +1,16 @@
 import { ensureSession } from './supabase';
 import { t } from './i18n';
 
+export interface GemPack {
+  id: string;
+  price: number;
+  gems: number;
+}
+
 export interface ShopState {
   coins: number;
+  gems: number;
+  packs: GemPack[];
   owned: string[];
   /** รหัสสินค้าหายากขึ้นไปที่วางขายรอบนี้ (8 ชิ้น เปลี่ยนทุก 3 วัน) */
   rotation: string[];
@@ -14,6 +22,7 @@ export interface ShopState {
 
 const ERRORS: Record<string, string> = {
   get not_enough_coins() { return t('เหรียญไม่พอ เล่นเพิ่มอีกนิดนะ', 'Not enough coins — play a bit more'); },
+  get not_enough_gems() { return t('เพชรไม่พอ เติมเพชรก่อนนะ', 'Not enough gems — top up first'); },
   get already_owned() { return t('มีชิ้นนี้แล้ว', 'You already own this'); },
   get not_in_shop() { return t('ชิ้นนี้หมดรอบขายแล้ว รอวนกลับมานะ', 'No longer on sale this round — it will come back'); },
   get gem_item() { return t('ชิ้นนี้ใช้เพชร (เติมเพชรเร็วๆ นี้)', 'This costs gems (top-up coming soon)'); },
@@ -30,6 +39,8 @@ export async function fetchShopState(): Promise<ShopState> {
   const d = data as Record<string, unknown> & { checkin: Record<string, unknown> };
   return {
     coins: d.coins as number,
+    gems: (d.gems as number) ?? 0,
+    packs: (d.packs as GemPack[]) ?? [],
     owned: (d.owned as string[]) ?? [],
     rotation: (d.rotation as string[]) ?? [],
     rotationEndsAt: d.rotation_ends_at as string,
@@ -44,7 +55,7 @@ export async function fetchShopState(): Promise<ShopState> {
   };
 }
 
-/** ซื้อด้วยเหรียญ คืนยอดเหรียญที่เหลือ */
+/** ซื้อด้วยเหรียญหรือเพชร คืนยอดเหรียญที่เหลือ */
 export async function buyItem(itemId: string): Promise<number> {
   const sb = await ensureSession();
   const { data, error } = await sb.rpc('buy_item', { p_item: itemId });

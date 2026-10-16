@@ -53,6 +53,7 @@ import { fetchSeason, markSeasonRewardsSeen, setFrame, type SeasonState } from '
 import { SeasonRewardModal } from './components/SeasonRewardModal';
 import { keepFrame } from './lib/look';
 import { SeasonScreen } from './screens/SeasonScreen';
+import { GemTopupScreen } from './screens/GemTopupScreen';
 import { VersusIntro } from './components/VersusIntro';
 
 type Screen =
@@ -73,6 +74,7 @@ type Screen =
   | { name: 'dressing' }
   | { name: 'shop' }
   | { name: 'season' }
+  | { name: 'gems' }
   | { name: 'mock' }
   | { name: 'mockExam'; session: MockSession }
   | { name: 'mockResult'; review: MockReview };
@@ -158,6 +160,9 @@ export default function App() {
   const loadShop = useCallback(() => fetchShopState().then((s) => (setShop(s), s)), []);
   const [season, setSeason] = useState<SeasonState | null>(null);
   const [rewardBusy, setRewardBusy] = useState(false);
+  const onGemsPaid = useCallback(() => {
+    loadShop().catch(() => {});
+  }, [loadShop]);
   // รอบที่เริ่มจากแผนการฝึก (ทำจบแล้วติ๊กในแผน)
   const planRunRef = useRef<{ level: Level; index: number } | null>(null);
   // กันผลโหลดที่ถูกยกเลิกไปแล้วมาเปลี่ยนหน้าจอทีหลัง
@@ -205,7 +210,7 @@ export default function App() {
 
   const profileId = profile?.id;
   useEffect(() => {
-    if (profileId && (screen.name === 'start' || screen.name === 'shop' || screen.name === 'dressing')) loadShop().catch(() => {});
+    if (profileId && (screen.name === 'start' || screen.name === 'shop' || screen.name === 'dressing' || screen.name === 'gems')) loadShop().catch(() => {});
     if (profileId && (screen.name === 'start' || screen.name === 'season')) fetchSeason().then(setSeason).catch(() => {});
   }, [profileId, screen.name, loadShop]);
 
@@ -527,13 +532,30 @@ export default function App() {
       ) : (
         <LoadingScreen message={t('กำลังโหลดฤดูกาล...', 'Loading season...')} onCancel={goHome} />
       );
+    case 'gems':
+      return shop ? (
+        <GemTopupScreen
+          packs={shop.packs}
+          gems={shop.gems}
+          guest={guest}
+          onBack={() => setScreen({ name: 'shop' })}
+          onAccount={openAccount}
+          onPaid={onGemsPaid}
+        />
+      ) : (
+        <LoadingScreen message={t('กำลังเปิดร้านค้า...', 'Opening the shop...')} onCancel={goHome} />
+      );
     case 'shop':
       return profile && shop ? (
         <ShopScreen
           code={profile.avatar}
           state={shop}
           onBack={goHome}
-          onBought={(coins, itemId) => setShop((s) => (s ? { ...s, coins, owned: [...s.owned, itemId] } : s))}
+          onBought={(coins, itemId) => {
+            setShop((s) => (s ? { ...s, coins, owned: [...s.owned, itemId] } : s));
+            loadShop().catch(() => {});
+          }}
+          onTopup={() => setScreen({ name: 'gems' })}
           onWear={async (avatar) => {
             const updated = await updateProfile(profile.id, { avatar: keepFrame(avatar, profile.avatar) });
             setMe((m) => (m.status === 'ready' ? { ...m, profile: updated } : m));
