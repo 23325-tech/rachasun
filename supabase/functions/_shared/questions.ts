@@ -20,6 +20,7 @@ export interface StoredQuestion {
   /** รหัสบท เช่น upper.math.7 (โจทย์เก่าบางข้อยังไม่มี) */
   chapter?: string | null;
   track: string;
+  level?: string;
   type: 'mcq' | 'fill';
   prompt: string;
   choices: string[] | null;
@@ -98,4 +99,30 @@ export async function pickQuestions(admin: SupabaseClient, settings: QuestionSet
     [picked[i], picked[j]] = [picked[j], picked[i]];
   }
   return picked;
+}
+
+/** บันทึกคำตอบลงประวัติ (ใช้วิเคราะห์จุดอ่อนรายบท) บันทึกซ้ำด้วย key เดิมจะถูกข้าม และไม่ทำให้เกมล้มถ้าบันทึกไม่สำเร็จ */
+export async function logAnswers(
+  admin: SupabaseClient,
+  q: StoredQuestion,
+  mode: 'room' | 'async',
+  rows: { userId: string; correct: boolean; timeMs: number; key: string }[],
+) {
+  if (!q.id || !rows.length) return;
+  const { error } = await admin.from('answer_log').upsert(
+    rows.map((r) => ({
+      user_id: r.userId,
+      question_id: q.id,
+      level: q.level ?? 'upper',
+      subject: q.subject,
+      chapter: q.chapter ?? null,
+      difficulty: q.difficulty,
+      correct: r.correct,
+      time_ms: Math.max(0, Math.round(r.timeMs)),
+      mode,
+      source_key: r.key,
+    })),
+    { onConflict: 'user_id,source_key', ignoreDuplicates: true },
+  );
+  if (error) console.warn('answer_log', error.message);
 }

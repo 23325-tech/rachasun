@@ -42,6 +42,8 @@ interface Props {
   onPlaySample: (settings: GameSettings) => void;
   /** เปลี่ยนระดับชั้น (บันทึกเป็นค่าเริ่มต้นในโปรไฟล์) */
   onLevelChange?: (level: Level) => void;
+  /** เปิดหน้าวิเคราะห์จุดอ่อน */
+  onAnalysis?: () => void;
   /** การ์ดโปรไฟล์ (ถ้ามี) แสดงใต้ชื่อแอพ */
   profileSlot?: ReactNode;
   onOnline: () => void;
@@ -90,6 +92,7 @@ export function StartScreen({
   onStart,
   onPlaySample,
   onLevelChange,
+  onAnalysis,
   profileSlot,
   onOnline,
   onGroups,
@@ -182,6 +185,19 @@ export function StartScreen({
           <span className="mode-tab__desc">โจทย์ประจำวัน + ตารางอันดับ</span>
         </button>
       </div>
+
+      {onAnalysis && (
+        <button type="button" className="analysis-cta" onClick={onAnalysis}>
+          <span className="analysis-cta__icon" aria-hidden>
+            📊
+          </span>
+          <span className="analysis-cta__body">
+            <strong>วิเคราะห์จุดอ่อนของฉัน</strong>
+            <span>ดูว่าถนัดบทไหน บทไหนควรฝึก</span>
+          </span>
+          <span aria-hidden>›</span>
+        </button>
+      )}
 
       <div className="ai-badge">
         <span className="ai-badge__spark" aria-hidden>

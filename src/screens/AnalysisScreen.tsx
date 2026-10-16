@@ -1,0 +1,188 @@
+import { useEffect, useState, type CSSProperties } from 'react';
+import type { Difficulty, Level, Subject } from '../types';
+import { LEVELS, subjectInfo } from '../data/subjects';
+import { chapterName, chaptersOf } from '../data/chapters';
+import { LevelPicker } from '../components/LevelPicker';
+import {
+  accuracyOf,
+  fetchChapterStats,
+  MIN_ANSWERS,
+  STATUS_TEXT,
+  statusOf,
+  type ChapterStat,
+} from '../lib/analysis';
+
+export interface PracticeRequest {
+  level: Level;
+  subject: Subject;
+  chapter: string;
+  difficulty: Difficulty;
+}
+
+interface Props {
+  initialLevel: Level;
+  onBack: () => void;
+  onPractice: (p: PracticeRequest) => void;
+}
+
+/** ความยากที่แนะนำให้ฝึกต่อ ตามความแม่นล่าสุดของบท */
+function suggestDifficulty(stat: ChapterStat | undefined): Difficulty {
+  if (!stat || stat.recent < MIN_ANSWERS) return 'medium';
+  const acc = accuracyOf(stat);
+  return acc < 0.4 ? 'easy' : acc < 0.6 ? 'medium' : acc < 0.8 ? 'hard' : 'challenge';
+}
+
+const pct = (x: number) => `${Math.round(x * 100)}%`;
+
+/** วิเคราะห์จุดอ่อนรายบท จาก 20 ข้อล่าสุดของแต่ละบท */
+export function AnalysisScreen({ initialLevel, onBack, onPractice }: Props) {
+  const [level, setLevel] = useState<Level>(initialLevel);
+  const [stats, setStats] = useState<ChapterStat[] | null>(null);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    let alive = true;
+    setStats(null);
+    setError('');
+    fetchChapterStats(level)
+      .then((s) => alive && setStats(s))
+      .catch((e) => alive && setError(e instanceof Error ? e.message : String(e)));
+    return () => {
+      alive = false;
+    };
+  }, [level]);
+
+  const byChapter = new Map((stats ?? []).map((s) => [s.chapter, s]));
+  const recent = (stats ?? []).reduce((n, s) => n + s.recent, 0);
+  const recentCorrect = (stats ?? []).reduce((n, s) => n + s.recentCorrect, 0);
+  const total = (stats ?? []).reduce((n, s) => n + s.total, 0);
+  const weakest = (stats ?? [])
+    .filter((s) => statusOf(s) === 'weak' && chapterName(s.chapter))
+    .sort((a, b) => accuracyOf(a) - accuracyOf(b))
+    .slice(0, 3);
+  const strongCount = (stats ?? []).filter((s) => statusOf(s) === 'strong').length;
+
+  const practice = (chapter: string) => {
+    const [, subject] = chapter.split('.');
+    onPractice({ level, subject: subject as Subject, chapter, difficulty: suggestDifficulty(byChapter.get(chapter)) });
+  };
+
+  return (
+    <div className="screen analysis">
+      <header className="quiz__top">
+        <button type="button" className="icon-btn" onClick={onBack} aria-label="กลับ">
+          ←
+        </button>
+        <div className="quiz__progress">📊 วิเคราะห์ของฉัน</div>
+      </header>
+
+      <section className="settings-card">
+        <LevelPicker value={level} onChange={setLevel} />
+      </section>
+
+      {error && <p className="form-error">😵 {error}</p>}
+      {!stats && !error && <p className="muted analysis__loading">กำลังโหลดสถิติ...</p>}
+
+      {stats && total === 0 && (
+        <section className="settings-card analysis__empty">
+          <p className="analysis__big">🌱</p>
+          <p>
+            ยังไม่มีข้อมูลระดับ {LEVELS[level].name} เลย
+            <br />
+            ลองฝึกเดี่ยวสัก 2-3 รอบ แล้วกลับมาดูว่าถนัดบทไหน
+          </p>
+        </section>
+      )}
+
+      {stats && total > 0 && (
+        <>
+          <section className="settings-card analysis__summary">
+            <div>
+              <span className="analysis__big">{pct(recent ? recentCorrect / recent : 0)}</span>
+              <span className="muted">ความแม่นล่าสุด</span>
+            </div>
+            <div>
+              <span className="analysis__big">{total}</span>
+              <span className="muted">ข้อที่เคยทำ</span>
+            </div>
+            <div>
+              <span className="analysis__big">{strongCount}</span>
+              <span className="muted">บทที่ถนัด</span>
+            </div>
+          </section>
+
+          <section className="settings-card">
+            <h2 className="section-title section-title--dark">🎯 ควรฝึกก่อน</h2>
+            {weakest.length === 0 ? (
+              <p className="muted">
+                ยังไม่มีบทที่ต่ำกว่า 60% {recent < 20 ? `(ทำให้ครบบทละ ${MIN_ANSWERS} ข้อขึ้นไปจะวิเคราะห์ได้แม่นขึ้น)` : '👏'}
+              </p>
+            ) : (
+              <ul className="analysis__weak">
+                {weakest.map((s) => {
+                  const sub = subjectInfo(s.subject as Subject, level);
+                  return (
+                    <li key={s.chapter} className="analysis__weak-item">
+                      <div>
+                        <strong>{chapterName(s.chapter)}</strong>
+                        <span className="muted">
+                          {sub.emoji} {sub.name} · ถูก {s.recentCorrect}/{s.recent} ({pct(accuracyOf(s))})
+                        </span>
+                      </div>
+                      <button type="button" className="btn btn--primary" onClick={() => practice(s.chapter)}>
+                        ฝึกบทนี้
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </section>
+        </>
+      )}
+
+      {stats &&
+        LEVELS[level].subjects.map((subject) => {
+          const chapters = chaptersOf(level, subject);
+          const done = chapters.filter((c) => byChapter.has(c.id)).length;
+          const sub = subjectInfo(subject, level);
+          return (
+            <details key={subject} className="settings-card analysis__subject" open={done > 0}>
+              <summary className="analysis__subject-head" style={{ '--c': sub.color } as CSSProperties}>
+                <span>
+                  {sub.emoji} {sub.name}
+                </span>
+                <span className="muted">
+                  ทำแล้ว {done}/{chapters.length} บท
+                </span>
+              </summary>
+              <ul className="analysis__chapters">
+                {chapters.map((c, i) => {
+                  const st = byChapter.get(c.id);
+                  const status = statusOf(st);
+                  return (
+                    <li key={c.id} className={`analysis__row analysis__row--${status}`}>
+                      <button type="button" className="analysis__row-btn" onClick={() => practice(c.id)} title="ฝึกบทนี้">
+                        <span className="analysis__row-name">
+                          {i + 1}. {c.name}
+                        </span>
+                        <span className="analysis__row-status">
+                          {STATUS_TEXT[status]}
+                          {st && status !== 'none' && ` · ${st.recentCorrect}/${st.recent}`}
+                        </span>
+                        <span className="analysis__bar" aria-hidden>
+                          <span style={{ width: st ? pct(accuracyOf(st)) : '0%' }} />
+                        </span>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </details>
+          );
+        })}
+
+      {stats && <p className="muted analysis__note">ดูจาก 20 ข้อล่าสุดของแต่ละบท · กดชื่อบทเพื่อฝึกบทนั้นได้เลย</p>}
+    </div>
+  );
+}

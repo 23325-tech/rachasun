@@ -3,7 +3,7 @@
 // action: create_challenge | start | start_daily | next | answer
 import { createClient, type SupabaseClient } from 'npm:@supabase/supabase-js@2';
 import { calcPoints, checkFillAnswer, formatFillAnswer } from '../_shared/rules.ts';
-import { limitMsOf, pickQuestions, toPublic, type StoredQuestion } from '../_shared/questions.ts';
+import { limitMsOf, logAnswers, pickQuestions, toPublic, type StoredQuestion } from '../_shared/questions.ts';
 
 const CHALLENGE_TTL_MS = 24 * 60 * 60 * 1000;
 const ANSWER_GRACE_MS = 800;
@@ -234,6 +234,8 @@ async function answer(uid: string, playId: string, index: number, given: unknown
   if (!(await record(play, questions.length, timedOut ? null : given, correct, timeMs, points))) {
     throw new PlayError('question_closed');
   }
+
+  await logAnswers(admin, q, 'async', [{ userId: uid, correct, timeMs, key: `play:${play.id}:${play.idx}` }]);
 
   const done = play.idx + 1 >= questions.length;
   let xp: { gained: number; total: number } | undefined;

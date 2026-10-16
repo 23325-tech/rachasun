@@ -16,7 +16,14 @@ import {
 } from '../_shared/battle.ts';
 import { rpDelta } from '../_shared/rank.ts';
 import { calcPoints, checkFillAnswer, formatFillAnswer } from '../_shared/rules.ts';
-import { limitMsOf, pickQuestions as pickFromBank, toPublic, type PublicQuestion, type StoredQuestion } from '../_shared/questions.ts';
+import {
+  limitMsOf,
+  logAnswers,
+  pickQuestions as pickFromBank,
+  toPublic,
+  type PublicQuestion,
+  type StoredQuestion,
+} from '../_shared/questions.ts';
 
 const COUNTDOWN_MS = 3000;
 const REVEAL_MS = 7000;
@@ -340,6 +347,16 @@ async function resolve(room: RoomRow) {
       points: calcPoints(r.correct, limit - r.time_ms, limit),
     };
   });
+
+  // ประวัติสำหรับวิเคราะห์จุดอ่อน (ไม่นับข้อที่ข้ามด้วยการ์ด)
+  await logAnswers(
+    admin,
+    q,
+    'room',
+    answers
+      .filter((a) => !a.skipped)
+      .map((a) => ({ userId: a.playerId, correct: a.correct, timeMs: a.timeMs, key: `room:${room.id}:${s.startsAt}` })),
+  );
 
   // ยิงสวน: อ่านเป้าจากตารางลับ
   const { data: counters } = await admin

@@ -28,6 +28,8 @@ export const ME_ID = 'me';
 export interface MyBattleStats {
   rounds: number;
   correct: Record<Question['difficulty'], number>;
+  /** คำตอบของเราแต่ละข้อ (เก็บประวัติวิเคราะห์จุดอ่อน) */
+  answers: { questionId: string; correct: boolean; timeMs: number }[];
 }
 
 interface Props {
@@ -86,7 +88,7 @@ export function BattleScreen({ questions, questionCount, initialPlayers, bots, o
   // ref ล่าสุดสำหรับใช้ใน timer callback
   const stateRef = useRef({ players, myAnswer, botPlan, limitMs, round, q });
   stateRef.current = { players, myAnswer, botPlan, limitMs, round, q };
-  const myStatsRef = useRef<MyBattleStats>({ rounds: 0, correct: { easy: 0, medium: 0, hard: 0, challenge: 0 } });
+  const myStatsRef = useRef<MyBattleStats>({ rounds: 0, correct: { easy: 0, medium: 0, hard: 0, challenge: 0 }, answers: [] });
   const timersRef = useRef<number[]>([]);
   const later = (fn: () => void, ms: number) => timersRef.current.push(window.setTimeout(fn, ms));
   useEffect(() => () => timersRef.current.forEach(clearTimeout), []);
@@ -108,6 +110,7 @@ export function BattleScreen({ questions, questionCount, initialPlayers, bots, o
         const a = s.myAnswer ?? { correct: false, timeMs: s.limitMs, timedOut: true, given: null };
         myStatsRef.current.rounds++;
         if (a.correct) myStatsRef.current.correct[s.q.difficulty]++;
+        myStatsRef.current.answers.push({ questionId: s.q.id, correct: a.correct, timeMs: a.timeMs });
         answers.push({
           playerId: p.id,
           correct: a.correct,

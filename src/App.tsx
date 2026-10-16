@@ -17,6 +17,7 @@ import {
 import { createPlayers, type BattlePlayer } from './game/battle';
 import { createBots, type Bot } from './game/bots';
 import { StartScreen, withLevel, type GameSettings } from './screens/StartScreen';
+import { AnalysisScreen } from './screens/AnalysisScreen';
 import { LoadingScreen } from './screens/LoadingScreen';
 import { QuizScreen } from './screens/QuizScreen';
 import { ResultScreen } from './screens/ResultScreen';
@@ -34,6 +35,7 @@ import { ChallengeScreen } from './screens/ChallengeScreen';
 import { GroupsScreen } from './screens/GroupsScreen';
 import { GroupScreen } from './screens/GroupScreen';
 import { createChallenge } from './lib/asyncPlay';
+import { logAnswers } from './lib/analysis';
 import { createRoom, findMatch, joinRoom, leaveRoom, type MatchSettings, type RoomSettings } from './lib/rooms';
 
 type Screen =
@@ -48,7 +50,8 @@ type Screen =
   | { name: 'lobby'; roomId: string }
   | { name: 'challenge'; code: string; autoPlay?: boolean }
   | { name: 'groups'; initialCode?: string }
-  | { name: 'group'; groupId: string };
+  | { name: 'group'; groupId: string }
+  | { name: 'analysis' };
 
 /** loading = กำลังโหลดผู้ใช้, offline = ไม่มี Supabase (เล่นได้แต่ไม่เก็บ XP) */
 type MeState =
@@ -321,6 +324,11 @@ export default function App() {
           onStart={start}
           onPlaySample={playSample}
           onLevelChange={changeLevel}
+          onAnalysis={() =>
+            me.status === 'ready'
+              ? setScreen({ name: 'analysis' })
+              : setScreen({ name: 'start', error: 'การวิเคราะห์ต้องเชื่อมต่ออินเทอร์เน็ต' })
+          }
           offline={!online}
           installSlot={<InstallBanner />}
           onGroups={() =>
@@ -334,6 +342,16 @@ export default function App() {
               : setScreen({ name: 'start', error: 'โหมดออนไลน์ต้องเชื่อมต่อ Supabase' })
           }
           profileSlot={profile && <ProfileCard profile={profile} guest={guest} needsPassword={needsPassword} onOpen={openAccount} />}
+        />
+      );
+    case 'analysis':
+      return (
+        <AnalysisScreen
+          initialLevel={settings.level}
+          onBack={goHome}
+          onPractice={(p) =>
+            start({ ...settings, mode: 'solo', level: p.level, subject: p.subject, chapters: [p.chapter], difficulty: p.difficulty, track: 'school', count: 10 })
+          }
         />
       );
     case 'loading':
@@ -413,6 +431,12 @@ export default function App() {
           onQuit={goHome}
           onFinish={(results) => {
             setScreen({ name: 'result', questions: screen.questions, results });
+            logAnswers(
+              'solo',
+              screen.runId,
+              screen.questions,
+              results.map((r) => ({ questionId: r.questionId, correct: r.correct, timeMs: r.timeUsedMs })),
+            );
             const c = countCorrect(screen.questions, results);
             saveGame({
               mode: 'solo',
@@ -449,6 +473,7 @@ export default function App() {
           onFinish={(players, stats: MyBattleStats) => {
             setScreen({ name: 'battleResult', players });
             const mine = players.find((p) => p.id === ME_ID)!;
+            logAnswers('bots', screen.runId, screen.questions, stats.answers);
             saveGame({
               mode: 'bots',
               questions: Math.max(1, stats.rounds),
