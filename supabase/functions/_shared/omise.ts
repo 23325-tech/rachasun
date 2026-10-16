@@ -10,9 +10,20 @@ export interface OmiseCharge {
   source?: { scannable_code?: { image?: { download_uri?: string } } };
 }
 
+/** ชนิดคีย์แบบไม่เปิดเผยค่า (ใช้บอกว่าใส่คีย์ผิดชนิด) */
+function keyKind(key: string): string {
+  if (/^pkey_/.test(key)) return 'public_key_not_secret';
+  if (/^skey_test_/.test(key)) return 'secret_test';
+  if (/^skey_/.test(key)) return 'secret_live';
+  if (/^["']/.test(key)) return 'has_quotes';
+  return 'unknown_format';
+}
+
 function auth(): string {
-  const key = Deno.env.get('OMISE_SECRET_KEY');
+  // ตัดช่องว่าง/เครื่องหมายคำพูดที่เผลอติดมาตอนวางคีย์
+  const key = (Deno.env.get('OMISE_SECRET_KEY') ?? '').trim().replace(/^["']|["']$/g, '');
   if (!key) throw new Error('payments_not_configured');
+  if (!/^skey_/.test(key)) throw new Error(`omise: bad_key ${keyKind(key)}`);
   return 'Basic ' + btoa(key + ':');
 }
 

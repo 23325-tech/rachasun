@@ -81,6 +81,8 @@ Deno.serve(async (req) => {
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     console.error(msg);
-    return json({ error: msg.includes('payments_not_configured') ? 'payments_not_configured' : 'payment_error' }, 500);
+    // ส่งรหัสข้อผิดพลาดของ Omise กลับไปด้วย (ไม่มีข้อมูลคีย์) ช่วยหาสาเหตุ
+    const detail = msg.startsWith('omise:') ? msg.slice(0, 160) : undefined;
+    return json({ error: msg.includes('payments_not_configured') ? 'payments_not_configured' : 'payment_error', detail }, 500);
   }
 });
