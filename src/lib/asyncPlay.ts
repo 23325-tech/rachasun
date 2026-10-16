@@ -1,5 +1,5 @@
 import type { Difficulty, Subject, Track } from '../types';
-import { ensureSession } from './supabase';
+import { ensureSession, PUBLIC_URL } from './supabase';
 import { noteServerTime } from './roomGame';
 
 /** โจทย์ที่เซิร์ฟเวอร์ส่งมา (ไม่มีเฉลย) */
@@ -105,4 +105,4 @@ export async function fetchChallengeBoard(code: string): Promise<ChallengeBoard 
 }
 
 /** ลิงก์ท้าเพื่อน เช่น https://.../?challenge=ABC123 */
-export const challengeLink = (code: string) => `${window.location.origin}/?challenge=${code}`;
+export const challengeLink = (code: string) => `${PUBLIC_URL}/?challenge=${code}`;

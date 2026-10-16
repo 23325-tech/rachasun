@@ -1,5 +1,5 @@
 import type { Difficulty, Subject, Track } from '../types';
-import { ensureSession } from './supabase';
+import { ensureSession, PUBLIC_URL } from './supabase';
 
 export interface GroupSettings {
   subject: Subject | 'all';
@@ -60,4 +60,4 @@ export const groupBoard = (groupId: string, period: 'day' | 'week') =>
   rpc<GroupBoard>('group_board', { p_group: groupId, p_period: period });
 
 /** ลิงก์ชวนเข้ากลุ่ม เช่น https://.../?group=ABC123 */
-export const groupLink = (code: string) => `${window.location.origin}/?group=${code}`;
+export const groupLink = (code: string) => `${PUBLIC_URL}/?group=${code}`;

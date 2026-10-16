@@ -1,6 +1,6 @@
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import type { Difficulty, Subject, Track } from '../types';
-import { ensureSession } from './supabase';
+import { ensureSession, PUBLIC_URL } from './supabase';
 
 export interface RoomSettings {
   subject: Subject | 'all';
@@ -120,4 +120,4 @@ export async function subscribeRoom(
 }
 
 /** ลิงก์ชวนเพื่อนเข้าห้อง เช่น https://.../?room=K7P2Q */
-export const inviteLink = (code: string) => `${window.location.origin}/?room=${code}`;
+export const inviteLink = (code: string) => `${PUBLIC_URL}/?room=${code}`;
