@@ -6398,3 +6398,28 @@ html[lang="en"] .checkin__label {
   margin: 6px 0 0;
   font-size: 0.9rem;
 }
+
+/* 27.1: แจ้งเตือน */
+.notif {
+  display: grid;
+  gap: 8px;
+}
+.notif__note {
+  margin: 0;
+  font-size: 0.8rem;
+}
+.notif__row {
+  display: flex;
+  gap: 8px;
+}
+.notif__row .btn {
+  flex: 1;
+}
+.notif__kinds {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.notif__kinds li {
+  border-top: 1.5px solid #eee8fb;
+}

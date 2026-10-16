@@ -44,6 +44,8 @@ export default defineConfig({
         // หน้าต้นแบบดีไซน์ (three.js) ไม่ต้องโหลดเก็บไว้ในเครื่องผู้เล่นทุกคน
         globIgnores: ['**/LabScreen-*'],
         navigateFallback: '/index.html',
+        // ตัวรับแจ้งเตือน Web Push (public/push-sw.js)
+        importScripts: ['push-sw.js'],
         runtimeCaching: [
           {
             // ฟอนต์ Mitr จาก Google Fonts

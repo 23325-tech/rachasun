@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { User } from '@supabase/supabase-js';
+import { NotificationSettings } from '../components/NotificationSettings';
 import {
   displayName,
   isGuest,
@@ -283,6 +284,8 @@ export function AccountScreen({ user, profile, needsPassword, onBack, onChanged 
           </button>
         </section>
       )}
+
+      {profile && <NotificationSettings />}
 
       <section className="settings-card">
         <label className="toggle-row">

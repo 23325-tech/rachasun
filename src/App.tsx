@@ -123,6 +123,17 @@ const INVITE_CODE = takeLinkCode('room', 5);
 const CHALLENGE_CODE = takeLinkCode('challenge', 6);
 const GROUP_CODE = takeLinkCode('group', 6);
 
+/** เปิดจากการแตะแจ้งเตือน: ?go=mistakes|classroom|clan|dream */
+function takeGo(): 'mistakes' | 'classroom' | 'clan' | 'dream' | undefined {
+  const url = new URL(window.location.href);
+  const go = url.searchParams.get('go');
+  if (!go) return undefined;
+  url.searchParams.delete('go');
+  window.history.replaceState(null, '', url.toString());
+  return go === 'mistakes' || go === 'classroom' || go === 'clan' || go === 'dream' ? go : undefined;
+}
+const GO = takeGo();
+
 const toRoomSettings = (s: GameSettings): RoomSettings => ({
   subject: s.subject,
   difficulty: s.difficulty,
@@ -152,7 +163,9 @@ export default function App() {
         ? { name: 'groups', initialCode: GROUP_CODE }
         : INVITE_CODE
           ? { name: 'online', initialCode: INVITE_CODE }
-          : { name: 'start', error: null },
+          : GO
+            ? { name: GO }
+            : { name: 'start', error: null },
   );
   const [me, setMe] = useState<MeState>(supabase ? { status: 'loading' } : { status: 'offline' });
   const [xp, setXp] = useState<XpState>({ status: 'off' });
