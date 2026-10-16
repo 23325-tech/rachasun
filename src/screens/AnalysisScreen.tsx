@@ -3,6 +3,8 @@ import type { Difficulty, Level, Subject } from '../types';
 import { LEVELS, subjectInfo } from '../data/subjects';
 import { chapterName, chaptersOf } from '../data/chapters';
 import { LevelPicker } from '../components/LevelPicker';
+import { PlanPanel } from '../components/PlanPanel';
+import type { PlanItem } from '../lib/planBuilder';
 import {
   accuracyOf,
   fetchChapterStats,
@@ -23,6 +25,8 @@ interface Props {
   initialLevel: Level;
   onBack: () => void;
   onPractice: (p: PracticeRequest) => void;
+  /** เริ่มรอบจากแผนการฝึก (ทำเสร็จแล้วจะติ๊กในแผน) */
+  onPracticePlan: (level: Level, item: PlanItem, index: number) => void;
 }
 
 /** ความยากที่แนะนำให้ฝึกต่อ ตามความแม่นล่าสุดของบท */
@@ -35,8 +39,9 @@ function suggestDifficulty(stat: ChapterStat | undefined): Difficulty {
 const pct = (x: number) => `${Math.round(x * 100)}%`;
 
 /** วิเคราะห์จุดอ่อนรายบท จาก 20 ข้อล่าสุดของแต่ละบท */
-export function AnalysisScreen({ initialLevel, onBack, onPractice }: Props) {
+export function AnalysisScreen({ initialLevel, onBack, onPractice, onPracticePlan }: Props) {
   const [level, setLevel] = useState<Level>(initialLevel);
+  const [tab, setTab] = useState<'plan' | 'chapters'>('plan');
   const [stats, setStats] = useState<ChapterStat[] | null>(null);
   const [error, setError] = useState('');
 
@@ -78,12 +83,36 @@ export function AnalysisScreen({ initialLevel, onBack, onPractice }: Props) {
 
       <section className="settings-card">
         <LevelPicker value={level} onChange={setLevel} />
+        <div className="segmented" role="tablist">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={tab === 'plan'}
+            className={`segmented__opt ${tab === 'plan' ? 'is-active' : ''}`}
+            onClick={() => setTab('plan')}
+          >
+            📅 แผนฝึก
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={tab === 'chapters'}
+            className={`segmented__opt ${tab === 'chapters' ? 'is-active' : ''}`}
+            onClick={() => setTab('chapters')}
+          >
+            📊 รายบท
+          </button>
+        </div>
       </section>
+
+      {tab === 'plan' && stats && (
+        <PlanPanel key={level} level={level} stats={stats} onPractice={(item, index) => onPracticePlan(level, item, index)} />
+      )}
 
       {error && <p className="form-error">😵 {error}</p>}
       {!stats && !error && <p className="muted analysis__loading">กำลังโหลดสถิติ...</p>}
 
-      {stats && total === 0 && (
+      {tab === 'chapters' && stats && total === 0 && (
         <section className="settings-card analysis__empty">
           <p className="analysis__big">🌱</p>
           <p>
@@ -94,7 +123,7 @@ export function AnalysisScreen({ initialLevel, onBack, onPractice }: Props) {
         </section>
       )}
 
-      {stats && total > 0 && (
+      {tab === 'chapters' && stats && total > 0 && (
         <>
           <section className="settings-card analysis__summary">
             <div>
@@ -141,7 +170,8 @@ export function AnalysisScreen({ initialLevel, onBack, onPractice }: Props) {
         </>
       )}
 
-      {stats &&
+      {tab === 'chapters' &&
+        stats &&
         LEVELS[level].subjects.map((subject) => {
           const chapters = chaptersOf(level, subject);
           const done = chapters.filter((c) => byChapter.has(c.id)).length;
@@ -182,7 +212,7 @@ export function AnalysisScreen({ initialLevel, onBack, onPractice }: Props) {
           );
         })}
 
-      {stats && <p className="muted analysis__note">ดูจาก 20 ข้อล่าสุดของแต่ละบท · กดชื่อบทเพื่อฝึกบทนั้นได้เลย</p>}
+      {tab === 'chapters' && stats && <p className="muted analysis__note">ดูจาก 20 ข้อล่าสุดของแต่ละบท · กดชื่อบทเพื่อฝึกบทนั้นได้เลย</p>}
     </div>
   );
 }

@@ -191,6 +191,84 @@ button {
   opacity: 0.95;
 }
 
+/* แผนการฝึก */
+.plan__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+.plan__progress {
+  display: block;
+  margin: 4px 0 10px;
+}
+.plan__progress > span {
+  background: #22c58b;
+}
+.plan__list {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.plan__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: #f6f2ff;
+}
+.plan__item--big {
+  border: 2px solid var(--ink);
+  background: #fff;
+}
+.plan__item.is-done {
+  opacity: 0.6;
+}
+.plan__item-body {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  font-size: 0.9rem;
+}
+.plan__item .btn {
+  flex: none;
+  padding: 6px 14px;
+}
+.plan__check {
+  font-size: 1.3rem;
+}
+.plan__day {
+  display: grid;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+.plan__day-name {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+.plan__day.is-today .plan__day-name::after {
+  content: ' · วันนี้';
+  color: var(--bg-1);
+}
+.plan__actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+.plan__advice {
+  background: linear-gradient(135deg, #fff 0%, #f3ecff 100%);
+}
+.plan__advice-text {
+  white-space: pre-line;
+  line-height: 1.6;
+  margin: 0 0 10px;
+}
+
 /* ปุ่มเปิดหน้าวิเคราะห์ */
 .analysis-cta {
   display: flex;

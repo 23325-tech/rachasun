@@ -18,4 +18,4 @@ export async function ensureSession(): Promise<SupabaseClient> {
 }
 
 /** ที่อยู่เว็บหลักสำหรับลิงก์ชวนเพื่อน (ลิงก์ deploy ย่อยของ Vercel คนอื่นเปิดไม่ได้) */
-export const PUBLIC_URL = ((import.meta.env.VITE_PUBLIC_URL as string | undefined) || window.location.origin).replace(/\/$/, '');
+export const PUBLIC_URL = ((import.meta.env.VITE_PUBLIC_URL as string | undefined) || (typeof window === 'undefined' ? '' : window.location.origin)).replace(/\/$/, '');

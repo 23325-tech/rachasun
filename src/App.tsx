@@ -36,6 +36,7 @@ import { GroupsScreen } from './screens/GroupsScreen';
 import { GroupScreen } from './screens/GroupScreen';
 import { createChallenge } from './lib/asyncPlay';
 import { logAnswers } from './lib/analysis';
+import { markPlanDone } from './lib/studyPlan';
 import { createRoom, findMatch, joinRoom, leaveRoom, type MatchSettings, type RoomSettings } from './lib/rooms';
 
 type Screen =
@@ -127,6 +128,8 @@ export default function App() {
     mode: 'classic',
   });
   const online = useOnline();
+  // รอบที่เริ่มจากแผนการฝึก (ทำจบแล้วติ๊กในแผน)
+  const planRunRef = useRef<{ level: Level; index: number } | null>(null);
   // กันผลโหลดที่ถูกยกเลิกไปแล้วมาเปลี่ยนหน้าจอทีหลัง
   const loadIdRef = useRef(0);
 
@@ -321,7 +324,10 @@ export default function App() {
         <StartScreen
           initial={settings}
           error={screen.name === 'start' ? (screen.error ?? (me.status === 'offline' ? me.error ?? null : null)) : null}
-          onStart={start}
+          onStart={(s) => {
+            planRunRef.current = null;
+            start(s);
+          }}
           onPlaySample={playSample}
           onLevelChange={changeLevel}
           onAnalysis={() =>
@@ -349,9 +355,33 @@ export default function App() {
         <AnalysisScreen
           initialLevel={settings.level}
           onBack={goHome}
-          onPractice={(p) =>
-            start({ ...settings, mode: 'solo', level: p.level, subject: p.subject, chapters: [p.chapter], difficulty: p.difficulty, track: 'school', count: 10 })
-          }
+          onPracticePlan={(level, item, index) => {
+            planRunRef.current = { level, index };
+            const [, subject] = item.chapter.split('.');
+            start({
+              ...settings,
+              mode: 'solo',
+              level,
+              subject: subject as Subject,
+              chapters: [item.chapter],
+              difficulty: item.difficulty,
+              track: 'school',
+              count: 10,
+            });
+          }}
+          onPractice={(p) => {
+            planRunRef.current = null;
+            start({
+              ...settings,
+              mode: 'solo',
+              level: p.level,
+              subject: p.subject,
+              chapters: [p.chapter],
+              difficulty: p.difficulty,
+              track: 'school',
+              count: 10,
+            });
+          }}
         />
       );
     case 'loading':
@@ -431,6 +461,11 @@ export default function App() {
           onQuit={goHome}
           onFinish={(results) => {
             setScreen({ name: 'result', questions: screen.questions, results });
+            if (planRunRef.current) {
+              const { level, index } = planRunRef.current;
+              planRunRef.current = null;
+              markPlanDone(level, index).catch(() => {});
+            }
             logAnswers(
               'solo',
               screen.runId,
