@@ -50,6 +50,7 @@ export function PlayerGrid({ players, maxHearts, meId, status, hits, hitStage }:
         return (
           <div
             key={p.id}
+            data-pid={p.id}
             className={[
               'pcard',
               p.id === meId && 'pcard--me',

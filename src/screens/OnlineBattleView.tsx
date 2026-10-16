@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import type { FillQuestion, McqQuestion } from '../types';
 import { heartsFor, isAlive, type BattlePlayer } from '../game/battle';
 import { callGame, serverNow, type OnlineGameState } from '../lib/roomGame';
@@ -13,6 +13,10 @@ import type { CardKind } from '../game/battle';
 import { Crosshair, Eye, FlagCheckered, Gift, Hourglass, Lightbulb, Lightning, ShieldCheck, SkipForward, SmileyMeh, Users, WifiSlash } from '@phosphor-icons/react';
 import { VersusIntro } from '../components/VersusIntro';
 import { t } from '../lib/i18n';
+import { buildShots, fxBus } from '../fx/bus';
+import { use3D } from '../lib/perf';
+
+const BattleFx = lazy(() => import('../fx/BattleFx'));
 
 interface Props {
   roomId: string;
@@ -60,6 +64,7 @@ export function OnlineBattleView({ roomId, state: s, myId, onLeave }: Props) {
   } | null>(null);
   const [usingCard, setUsingCard] = useState(false);
   const [hitStage, setHitStage] = useState<HitStage>('none');
+  const [fx3d] = useState(use3D);
   // หัวใจที่แสดง: ตอนเฉลยจะค้างค่าเดิมไว้จนถึงจังหวะยิง
   const [shownPlayers, setShownPlayers] = useState<BattlePlayer[]>(s.players);
   const lastPlayersRef = useRef<BattlePlayer[]>(s.players);
@@ -88,7 +93,13 @@ export function OnlineBattleView({ roomId, state: s, myId, onLeave }: Props) {
       return;
     }
     setShownPlayers(lastPlayersRef.current);
-    timersRef.current.push(window.setTimeout(() => setHitStage('aim'), AIM_AT));
+    timersRef.current.push(
+      window.setTimeout(() => {
+        setHitStage('aim');
+        const answers = Object.entries(reveal.results).map(([playerId, r]) => ({ playerId, correct: r.correct, timeMs: r.timeMs }));
+        fxBus.shots(buildShots(reveal.outcome.damages, reveal.outcome.eliminated, answers), BANG_AT - AIM_AT);
+      }, AIM_AT),
+    );
     timersRef.current.push(
       window.setTimeout(() => {
         setHitStage('bang');
@@ -247,6 +258,12 @@ export function OnlineBattleView({ roomId, state: s, myId, onLeave }: Props) {
           <Users weight="fill" className="ico" /> {s.players.filter(isAlive).length}/{s.players.length}
         </div>
       </header>
+
+      {fx3d && (
+        <Suspense fallback={null}>
+          <BattleFx />
+        </Suspense>
+      )}
 
       <PlayerGrid
         players={shownPlayers}

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Question } from '../types';
 import {
   alivePlayers,
@@ -23,6 +23,10 @@ import { PlayerGrid, type HitStage, type PlayerStatus } from '../components/Play
 import { DIFFICULTY_LABEL, SUBJECTS } from '../data/subjects';
 import { Eye, FlagCheckered, Lightbulb, Lightning, LockSimple, SkipForward, SmileyMeh, Users, WarningCircle } from '@phosphor-icons/react';
 import { t } from '../lib/i18n';
+import { buildShots, fxBus } from '../fx/bus';
+import { use3D } from '../lib/perf';
+
+const BattleFx = lazy(() => import('../fx/BattleFx'));
 
 export const ME_ID = 'me';
 
@@ -73,6 +77,7 @@ export function BattleScreen({ questions, questionCount, initialPlayers, bots, o
   const [outcome, setOutcome] = useState<RoundOutcome | null>(null);
   const [roundAnswers, setRoundAnswers] = useState<Record<string, RoundAnswer>>({});
   const [hitStage, setHitStage] = useState<HitStage>('none');
+  const [fx3d] = useState(use3D);
   const [spectate, setSpectate] = useState<'no' | 'asking' | 'watching'>('no');
   const [explainOpen, setExplainOpen] = useState(false);
   const [autoLeft, setAutoLeft] = useState(AUTO_NEXT_MS);
@@ -147,7 +152,10 @@ export function BattleScreen({ questions, questionCount, initialPlayers, bots, o
 
     const speed = fastRef.current ? 0.5 : 1;
     if (result.outcome.damages.length) {
-      later(() => setHitStage('aim'), AIM_AT * speed);
+      later(() => {
+        setHitStage('aim');
+        fxBus.shots(buildShots(result.outcome.damages, result.outcome.eliminated, answers), (BANG_AT - AIM_AT) * speed);
+      }, AIM_AT * speed);
       later(() => {
         setHitStage('bang');
         setPlayers(result.players);
@@ -284,6 +292,12 @@ export function BattleScreen({ questions, questionCount, initialPlayers, bots, o
           <Users weight="fill" className="ico" /> {alivePlayers(players).length}/{players.length}
         </div>
       </header>
+
+      {fx3d && (
+        <Suspense fallback={null}>
+          <BattleFx />
+        </Suspense>
+      )}
 
       <PlayerGrid
         players={players}

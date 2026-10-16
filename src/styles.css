@@ -4436,3 +4436,27 @@ html[lang="en"] .checkin__label {
 .gems__done svg {
   color: var(--good-dark);
 }
+
+/* 21.1: สั่นจอจากเอฟเฟกต์ 3D + โดนยิงแรงขึ้น */
+.screen.battle.fx-shake {
+  animation: fx-shake 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+}
+@keyframes fx-shake {
+  10%, 90% { transform: translate(calc(var(--shake, 8px) * -0.3), 0); }
+  20%, 80% { transform: translate(calc(var(--shake, 8px) * 0.6), calc(var(--shake, 8px) * 0.3)); }
+  30%, 50%, 70% { transform: translate(calc(var(--shake, 8px) * -1), calc(var(--shake, 8px) * -0.4)) rotate(-0.6deg); }
+  40%, 60% { transform: translate(var(--shake, 8px), calc(var(--shake, 8px) * 0.4)) rotate(0.6deg); }
+}
+.battle--me-hit::after {
+  background:
+    radial-gradient(circle, transparent 30%, rgba(255, 30, 60, 0.7)),
+    repeating-linear-gradient(115deg, transparent 0 46px, rgba(255, 255, 255, 0.12) 46px 48px);
+  animation: me-hit-flash 0.9s ease-out forwards;
+}
+@keyframes me-hit-flash {
+  0% { opacity: 0; }
+  12% { opacity: 1; }
+  30% { opacity: 0.55; }
+  45% { opacity: 0.9; }
+  100% { opacity: 0; }
+}
