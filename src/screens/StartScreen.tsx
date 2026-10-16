@@ -1,7 +1,6 @@
-import { useEffect, useState, type CSSProperties, type ReactNode } from 'react';
+import { useEffect, useState, type CSSProperties } from 'react';
 import type { Difficulty, Level, Subject, Track } from '../types';
 import { adjustForLevel, DIFFICULTY_OPTIONS, LEVELS, subjectInfo } from '../data/subjects';
-import { LevelPicker } from '../components/LevelPicker';
 import { ChapterPicker } from '../components/ChapterPicker';
 import { BOT_LEVELS, type BotLevel } from '../game/bots';
 import { heartsFor } from '../game/battle';
@@ -40,21 +39,12 @@ interface Props {
   error: string | null;
   onStart: (settings: GameSettings) => void;
   onPlaySample: (settings: GameSettings) => void;
-  /** เปลี่ยนระดับชั้น (บันทึกเป็นค่าเริ่มต้นในโปรไฟล์) */
-  onLevelChange?: (level: Level) => void;
-  /** เปิดหน้าวิเคราะห์จุดอ่อน */
-  onAnalysis?: () => void;
-  /** เปิดจำลองสอบ A-Level (ม.ปลาย) */
-  onMock?: () => void;
-  /** การ์ดโปรไฟล์ (ถ้ามี) แสดงใต้ชื่อแอพ */
-  profileSlot?: ReactNode;
-  onOnline: () => void;
-  onGroups: () => void;
+  onBack: () => void;
   /** ออฟไลน์อยู่: เล่นได้เฉพาะโจทย์ตัวอย่าง */
   offline?: boolean;
-  /** แถบชวนติดตั้งแอพ */
-  installSlot?: ReactNode;
 }
+
+const MODE_TITLE: Record<GameMode, string> = { solo: 'ฝึกเดี่ยว', bots: 'ดวลกับบอท', challenge: 'สร้างคำท้า' };
 
 function Segmented<T extends string | number>({
   label,
@@ -93,14 +83,8 @@ export function StartScreen({
   error,
   onStart,
   onPlaySample,
-  onLevelChange,
-  onAnalysis,
-  onMock,
-  profileSlot,
-  onOnline,
-  onGroups,
+  onBack,
   offline,
-  installSlot,
 }: Props) {
   const [s, setS] = useState<GameSettings>(initial);
   const set = <K extends keyof GameSettings>(key: K, value: GameSettings[K]) => setS((prev) => ({ ...prev, [key]: value }));
@@ -108,10 +92,6 @@ export function StartScreen({
   useEffect(() => {
     setS((prev) => (prev.level === initial.level ? prev : withLevel(prev, initial.level)));
   }, [initial.level]);
-  const changeLevel = (level: Level) => {
-    setS((prev) => withLevel(prev, level));
-    onLevelChange?.(level);
-  };
 
   const levelInfo = LEVELS[s.level];
   const subjectName =
@@ -122,109 +102,22 @@ export function StartScreen({
   const minutes = Math.max(1, Math.round((s.count * AVG_SEC[s.difficulty]) / 60));
 
   return (
-    <div className="screen home">
-      <header className="home__hero">
-        <div className="home__logo" aria-hidden>
-          <span>🧠</span>
-        </div>
-        <div>
-          <h1 className="home__title">Brain Gym</h1>
-          <p className="home__tagline">ฝึกสมองวันละนิด แล้วไปแข่งกับเพื่อน!</p>
+    <div className="screen home round-setup">
+      <header className="quiz__top">
+        <button type="button" className="icon-btn" onClick={onBack} aria-label="กลับ">
+          ←
+        </button>
+        <div className="quiz__progress">
+          {MODE_TITLE[s.mode]} · {levelInfo.name}
         </div>
       </header>
 
       {offline && (
         <div className="offline-banner" role="status">
-          📴 ออฟไลน์อยู่ — เล่นฝึกเดี่ยว/ดวลบอทด้วยโจทย์ตัวอย่างได้ (ไม่ได้ XP)
+          ออฟไลน์อยู่ — เล่นด้วยโจทย์ตัวอย่างในเครื่อง (ไม่ได้ XP)
         </div>
       )}
 
-      {installSlot}
-
-      {profileSlot}
-
-      <div className="mode-switch" role="tablist" aria-label="เลือกโหมด">
-        <button
-          type="button"
-          role="tab"
-          aria-selected={s.mode === 'solo'}
-          className={`mode-tab ${s.mode === 'solo' ? 'is-active' : ''}`}
-          onClick={() => set('mode', 'solo')}
-        >
-          <span className="mode-tab__icon">🎯</span>
-          <span className="mode-tab__name">ฝึกเดี่ยว</span>
-          <span className="mode-tab__desc">ทำโจทย์สบายๆ</span>
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={s.mode === 'bots'}
-          className={`mode-tab ${s.mode === 'bots' ? 'is-active' : ''}`}
-          onClick={() => set('mode', 'bots')}
-        >
-          <span className="mode-tab__icon">⚔️</span>
-          <span className="mode-tab__name">ดวลกับบอท</span>
-          <span className="mode-tab__desc">ยิงหัวใจ เหลือรอดคนสุดท้าย</span>
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={s.mode === 'challenge'}
-          className={`mode-tab ${s.mode === 'challenge' ? 'is-active' : ''}`}
-          onClick={() => set('mode', 'challenge')}
-        >
-          <span className="mode-tab__icon">🔗</span>
-          <span className="mode-tab__name">ท้าเพื่อน</span>
-          <span className="mode-tab__desc">ทำชุดเดียวกัน ภายใน 24 ชม.</span>
-        </button>
-        <button type="button" role="tab" aria-selected={false} className="mode-tab" onClick={onOnline}>
-          <span className="mode-tab__icon">🌐</span>
-          <span className="mode-tab__name">ออนไลน์</span>
-          <span className="mode-tab__desc">สร้างห้องเล่นกับเพื่อน</span>
-        </button>
-        <button type="button" role="tab" aria-selected={false} className="mode-tab mode-tab--wide" onClick={onGroups}>
-          <span className="mode-tab__icon">🏆</span>
-          <span className="mode-tab__name">กลุ่มเพื่อน</span>
-          <span className="mode-tab__desc">โจทย์ประจำวัน + ตารางอันดับ</span>
-        </button>
-      </div>
-
-      {onAnalysis && (
-        <button type="button" className="analysis-cta" onClick={onAnalysis}>
-          <span className="analysis-cta__icon" aria-hidden>
-            📊
-          </span>
-          <span className="analysis-cta__body">
-            <strong>วิเคราะห์จุดอ่อนของฉัน</strong>
-            <span>ดูว่าถนัดบทไหน บทไหนควรฝึก</span>
-          </span>
-          <span aria-hidden>›</span>
-        </button>
-      )}
-
-      {onMock && s.level === 'upper' && (
-        <button type="button" className="analysis-cta analysis-cta--mock" onClick={onMock}>
-          <span className="analysis-cta__icon" aria-hidden>
-            📝
-          </span>
-          <span className="analysis-cta__body">
-            <strong>จำลองสอบ A-Level</strong>
-            <span>เต็มชุด 90 นาที / ครึ่งชุด · เทียบคะแนนกับคนอื่น</span>
-          </span>
-          <span aria-hidden>›</span>
-        </button>
-      )}
-
-      <div className="ai-badge">
-        <span className="ai-badge__spark" aria-hidden>
-          ✨
-        </span>
-        <span>AI สร้างโจทย์ใหม่ให้ทุกรอบ พร้อมเฉลยละเอียด</span>
-      </div>
-
-      <section className="home-level" aria-label="ระดับชั้น">
-        <LevelPicker value={s.level} onChange={changeLevel} />
-      </section>
 
       <section aria-labelledby="pick-subject">
         <h2 id="pick-subject" className="section-title">

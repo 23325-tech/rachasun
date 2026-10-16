@@ -11,7 +11,7 @@ export function markDressingSeen() {
   }
 }
 
-function seen() {
+export function isDressingSeen() {
   try {
     return localStorage.getItem(SEEN_KEY) === '1';
   } catch {
@@ -21,7 +21,7 @@ function seen() {
 
 /** ทางเข้าห้องแต่งตัว: ครั้งแรกเป็นป้ายชวนแต่งตัว หลังจากนั้นเป็นปุ่มเล็ก */
 export function DressEntry({ code, onOpen }: { code: string; onOpen: () => void }) {
-  const isNew = !seen();
+  const isNew = !isDressingSeen();
   return (
     <button type="button" className={`dress-entry ${isNew ? 'is-new' : ''}`} onClick={onOpen}>
       <PlayerAvatar code={code} size={isNew ? 58 : 40} framing="full" className="is-bare" />

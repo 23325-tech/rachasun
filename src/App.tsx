@@ -19,7 +19,8 @@ import { createBots, type Bot } from './game/bots';
 import { StartScreen, withLevel, type GameSettings } from './screens/StartScreen';
 import { AnalysisScreen } from './screens/AnalysisScreen';
 import { DressingRoomScreen } from './screens/DressingRoomScreen';
-import { DressEntry, markDressingSeen } from './components/DressEntry';
+import { isDressingSeen, markDressingSeen } from './components/DressEntry';
+import { HomeScreen } from './screens/HomeScreen';
 import { MockMenuScreen } from './screens/MockMenuScreen';
 import { MockExamScreen } from './screens/MockExamScreen';
 import { MockResultScreen } from './screens/MockResultScreen';
@@ -31,7 +32,6 @@ import { BattleScreen, ME_ID, type MyBattleStats } from './screens/BattleScreen'
 import { BattleResultScreen } from './screens/BattleResultScreen';
 import { ProfileSetupScreen } from './screens/ProfileSetupScreen';
 import { AccountScreen } from './screens/AccountScreen';
-import { ProfileCard } from './components/ProfileCard';
 import type { XpState } from './components/XpBadge';
 import { InstallBanner } from './components/InstallBanner';
 import { useOnline } from './hooks/usePwa';
@@ -48,6 +48,7 @@ import { createRoom, findMatch, joinRoom, leaveRoom, type MatchSettings, type Ro
 
 type Screen =
   | { name: 'start'; error: string | null }
+  | { name: 'setup'; error: string | null }
   | { name: 'loading'; message: string }
   | { name: 'account' }
   | { name: 'quiz'; questions: Question[]; runId: number }
@@ -139,6 +140,7 @@ export default function App() {
     mode: 'classic',
   });
   const online = useOnline();
+  const [dressNew, setDressNew] = useState(() => !isDressingSeen());
   // รอบที่เริ่มจากแผนการฝึก (ทำจบแล้วติ๊กในแผน)
   const planRunRef = useRef<{ level: Level; index: number } | null>(null);
   // กันผลโหลดที่ถูกยกเลิกไปแล้วมาเปลี่ยนหน้าจอทีหลัง
@@ -237,14 +239,14 @@ export default function App() {
     // ออฟไลน์: ฝึกเดี่ยว/ดวลบอทใช้โจทย์ตัวอย่างในเครื่อง
     if (!navigator.onLine) {
       if (s.mode === 'challenge') {
-        setScreen({ name: 'start', error: 'โหมดท้าเพื่อนต้องต่อเน็ต' });
+        setScreen({ name: 'setup', error: 'โหมดท้าเพื่อนต้องต่อเน็ต' });
         return;
       }
       play(s, sampleQuiz(subjectsOf(s), totalNeeded(s)));
       return;
     }
     if (!supabase) {
-      setScreen({ name: 'start', error: 'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ ลองเล่นโจทย์ตัวอย่างไปก่อนนะ' });
+      setScreen({ name: 'setup', error: 'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ ลองเล่นโจทย์ตัวอย่างไปก่อนนะ' });
       return;
     }
     const loadId = ++loadIdRef.current;
@@ -260,7 +262,7 @@ export default function App() {
         });
         if (loadId === loadIdRef.current) setScreen({ name: 'challenge', code, autoPlay: true });
       } catch (e) {
-        if (loadId === loadIdRef.current) setScreen({ name: 'start', error: e instanceof Error ? e.message : String(e) });
+        if (loadId === loadIdRef.current) setScreen({ name: 'setup', error: e instanceof Error ? e.message : String(e) });
       }
       return;
     }
@@ -282,7 +284,7 @@ export default function App() {
       const count = Math.min(s.count, questions.length);
       play({ ...s, count }, questions);
     } catch (e) {
-      if (loadId === loadIdRef.current) setScreen({ name: 'start', error: e instanceof Error ? e.message : String(e) });
+      if (loadId === loadIdRef.current) setScreen({ name: 'setup', error: e instanceof Error ? e.message : String(e) });
     }
   };
 
@@ -332,51 +334,57 @@ export default function App() {
     case 'start':
     case 'account':
       return (
-        <StartScreen
-          initial={settings}
+        <HomeScreen
+          profile={profile}
+          guest={guest}
+          needsPassword={needsPassword}
+          level={settings.level}
+          onLevelChange={changeLevel}
+          offline={!online}
+          installSlot={<InstallBanner />}
           error={screen.name === 'start' ? (screen.error ?? (me.status === 'offline' ? me.error ?? null : null)) : null}
+          onDismissError={goHome}
+          onAccount={openAccount}
+          dressNew={dressNew}
+          onDress={() => {
+            markDressingSeen();
+            setDressNew(false);
+            setScreen({ name: 'dressing' });
+          }}
+          onSubject={(subject) => {
+            setSettings((prev) => ({ ...prev, mode: 'solo', subject, chapters: [] }));
+            setScreen({ name: 'setup', error: null });
+          }}
+          onAction={(a) => {
+            if (a === 'solo' || a === 'bots' || a === 'challenge') {
+              setSettings((prev) => ({ ...prev, mode: a }));
+              setScreen({ name: 'setup', error: null });
+              return;
+            }
+            if (me.status !== 'ready') {
+              setScreen({ name: 'start', error: 'โหมดนี้ต้องเชื่อมต่ออินเทอร์เน็ต' });
+              return;
+            }
+            if (a === 'online') setScreen({ name: 'online' });
+            else if (a === 'groups') setScreen({ name: 'groups' });
+            else if (a === 'analysis') setScreen({ name: 'analysis' });
+            else setScreen({ name: 'mock' });
+          }}
+        />
+      );
+    case 'setup':
+      return (
+        <StartScreen
+          key={settings.mode}
+          initial={settings}
+          error={screen.error}
+          offline={!online}
+          onBack={goHome}
           onStart={(s) => {
             planRunRef.current = null;
             start(s);
           }}
           onPlaySample={playSample}
-          onLevelChange={changeLevel}
-          onMock={() =>
-            me.status === 'ready'
-              ? setScreen({ name: 'mock' })
-              : setScreen({ name: 'start', error: 'การจำลองสอบต้องเชื่อมต่ออินเทอร์เน็ต' })
-          }
-          onAnalysis={() =>
-            me.status === 'ready'
-              ? setScreen({ name: 'analysis' })
-              : setScreen({ name: 'start', error: 'การวิเคราะห์ต้องเชื่อมต่ออินเทอร์เน็ต' })
-          }
-          offline={!online}
-          installSlot={<InstallBanner />}
-          onGroups={() =>
-            me.status === 'ready'
-              ? setScreen({ name: 'groups' })
-              : setScreen({ name: 'start', error: 'โหมดกลุ่มต้องเชื่อมต่อ Supabase' })
-          }
-          onOnline={() =>
-            me.status === 'ready'
-              ? setScreen({ name: 'online' })
-              : setScreen({ name: 'start', error: 'โหมดออนไลน์ต้องเชื่อมต่อ Supabase' })
-          }
-          profileSlot={
-            profile && (
-              <>
-                <ProfileCard profile={profile} guest={guest} needsPassword={needsPassword} onOpen={openAccount} />
-                <DressEntry
-                  code={profile.avatar}
-                  onOpen={() => {
-                    markDressingSeen();
-                    setScreen({ name: 'dressing' });
-                  }}
-                />
-              </>
-            )
-          }
         />
       );
     case 'analysis':
