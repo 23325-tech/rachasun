@@ -1,5 +1,5 @@
 import { lazy, Suspense, useMemo, type CSSProperties, type ReactNode } from 'react';
-import { ChartLineUp, Coin, Crown, Exam, FloppyDisk, GlobeHemisphereEast, Heart, type Icon, Key, LinkSimple, Robot, Sparkle, Storefront, Target, Trophy, TShirt, PawPrint, UsersThree, WifiSlash, CaretRight } from '@phosphor-icons/react';
+import { ChartLineUp, Coin, Crown, Exam, FloppyDisk, GlobeHemisphereEast, Heart, type Icon, Key, LinkSimple, Robot, Sparkle, Storefront, Target, Trophy, TShirt, PawPrint, UsersThree, WifiSlash, CaretRight, BookBookmark } from '@phosphor-icons/react';
 import type { Level, Subject } from '../types';
 import { LEVEL_KEYS, LEVELS, subjectInfo } from '../data/subjects';
 import { displayName, type Profile } from '../lib/profile';
@@ -14,7 +14,7 @@ import { getLang, setLang, t } from '../lib/i18n';
 
 const Avatar3D = lazy(() => import('../components/Avatar3D').then((m) => ({ default: m.Avatar3D })));
 
-export type HomeAction = GameMode | 'online' | 'groups' | 'analysis' | 'mock';
+export type HomeAction = GameMode | 'online' | 'groups' | 'analysis' | 'mock' | 'mistakes';
 
 interface Props {
   profile: Profile | null;
@@ -38,6 +38,8 @@ interface Props {
   onShop: () => void;
   onPets: () => void;
   onGacha: () => void;
+  /** ข้อผิดที่ครบกำหนดทบทวน */
+  mistakesDue?: number;
   /** สัตว์เลี้ยงที่พาอยู่: เลเวล + หิวไหม (ยังไม่โหลด = ไม่มี) */
   pet?: { level: number; hungry: boolean };
   /** การ์ดเช็กอินรายวัน */
@@ -55,6 +57,7 @@ const modes = (): { key: HomeAction; title: string; desc: string; icon: Icon; gr
   { key: 'online', title: t('ออนไลน์', 'Online'), desc: t('สุ่มหาคู่ · ห้องเพื่อน', 'Matchmaking · Friend rooms'), icon: GlobeHemisphereEast, grad: 'linear-gradient(135deg,#2fa8ff,#4fe0d0)' },
   { key: 'challenge', title: t('ท้าเพื่อน', 'Challenge a friend'), desc: t('ส่งลิงก์ ทำชุดเดียวกัน', 'Share a link, same question set'), icon: LinkSimple, grad: 'linear-gradient(135deg,#ffb020,#ffd65c)' },
   { key: 'groups', title: t('กลุ่มเพื่อน', 'Friend groups'), desc: t('โจทย์ประจำวัน + อันดับ', 'Daily questions + leaderboard'), icon: UsersThree, grad: 'linear-gradient(135deg,#22c58b,#7be08f)' },
+  { key: 'mistakes', title: t('สมุดข้อผิด', 'Mistake notebook'), desc: t('ทบทวนข้อที่เคยผิดตามรอบ', 'Review past mistakes on schedule'), icon: BookBookmark, grad: 'linear-gradient(135deg,#ff7a59,#ffb36b)' },
   { key: 'analysis', title: t('วิเคราะห์ของฉัน', 'My analysis'), desc: t('แผนฝึก + AI โค้ช', 'Study plan + AI coach'), icon: ChartLineUp, grad: 'linear-gradient(135deg,#5a6bff,#8f9dff)' },
 ];
 
@@ -211,6 +214,7 @@ export function HomeScreen(p: Props) {
         <div className="hm-modes">
           {modes().map((m) => (
             <button key={m.key} type="button" className="hm-mode" onClick={() => p.onAction(m.key)}>
+              {m.key === 'mistakes' && !!p.mistakesDue && <span className="hm-mode__count">{p.mistakesDue}</span>}
               <IconTile icon={m.icon} grad={m.grad} />
               <span className="hm-mode__text">
                 <strong>{m.title}</strong>

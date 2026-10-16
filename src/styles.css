@@ -5118,3 +5118,124 @@ html[lang="en"] .checkin__label {
   text-align: center;
   font-size: 0.8rem;
 }
+
+/* 24.1: สมุดข้อผิด */
+.hm-mode {
+  position: relative;
+}
+.hm-mode__count {
+  position: absolute;
+  top: -8px;
+  right: -6px;
+  min-width: 26px;
+  padding: 2px 7px;
+  border: 2.5px solid var(--ink);
+  border-radius: 999px;
+  background: #ff5d73;
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-align: center;
+  animation: bob 1.4s ease-in-out infinite;
+}
+.mistakes__empty {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  text-align: center;
+}
+.mistakes__empty svg {
+  color: var(--good-dark);
+}
+.mistakes__today {
+  display: grid;
+  gap: 10px;
+}
+.mistakes__today.has-due {
+  background: #fff6ec;
+}
+.mistakes__due {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.mistakes__due strong {
+  font-size: 2.4rem;
+  line-height: 1;
+  color: #ff5d3c;
+}
+.mistakes__clear {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  margin: 0;
+  color: var(--good-dark);
+  font-weight: 700;
+}
+.mistakes__clear small {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--ink-soft, #6b6290);
+  font-weight: 600;
+}
+.mistakes__boxes {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  align-items: end;
+  gap: 6px;
+  text-align: center;
+}
+.mistakes__box {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+}
+.mistakes__bar {
+  width: 70%;
+  border: 2.5px solid var(--ink);
+  border-radius: 8px 8px 4px 4px;
+  background: var(--c, #ffb36b);
+}
+.mistakes__box--1 { --c: #ff7a59; }
+.mistakes__box--2 { --c: #ffb020; }
+.mistakes__box--3 { --c: #ffd65c; }
+.mistakes__box--4 { --c: #7be08f; }
+.mistakes__box--done { --c: #22c58b; }
+.mistakes__box small {
+  font-size: 0.72rem;
+}
+.mistakes__hint {
+  margin: 8px 0 0;
+  font-size: 0.8rem;
+}
+.mistakes__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.mistakes__list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  border-top: 1.5px solid #eee8fb;
+  font-size: 0.88rem;
+}
+.mistakes__list li span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.mistakes__pill {
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: #ffe8ec;
+  color: #c2304a;
+  font-size: 0.72rem;
+}
+.mistakes__sub {
+  margin: 12px 0 4px;
+  font-size: 0.9rem;
+}

@@ -23,7 +23,7 @@ export interface QuizLoadResult {
   generated: number;
 }
 
-interface QuestionRow {
+export interface QuestionRow {
   id: string;
   subject: Subject;
   difficulty: Difficulty;
@@ -38,7 +38,7 @@ interface QuestionRow {
   time_limit_sec: number | null;
 }
 
-function fromRow(r: QuestionRow): Question {
+export function fromRow(r: QuestionRow): Question {
   const base = {
     id: r.id,
     subject: r.subject,

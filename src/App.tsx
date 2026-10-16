@@ -56,6 +56,8 @@ import { keepFrame, lookOf, WARDROBE } from './lib/look';
 import { fetchPetCare, isHungry, type PetCareState } from './lib/petCare';
 import { PetScreen } from './screens/PetScreen';
 import { GachaScreen } from './screens/GachaScreen';
+import { MistakeScreen } from './screens/MistakeScreen';
+import { fetchMistakes, fetchReviewQuestions } from './lib/mistakes';
 import { SeasonScreen } from './screens/SeasonScreen';
 import { GemTopupScreen } from './screens/GemTopupScreen';
 import { VersusIntro } from './components/VersusIntro';
@@ -65,8 +67,9 @@ type Screen =
   | { name: 'setup'; error: string | null }
   | { name: 'loading'; message: string }
   | { name: 'account' }
-  | { name: 'quiz'; questions: Question[]; runId: number }
-  | { name: 'result'; questions: Question[]; results: AnswerResult[] }
+  | { name: 'quiz'; questions: Question[]; runId: number; review?: boolean }
+  | { name: 'mistakes' }
+  | { name: 'result'; questions: Question[]; results: AnswerResult[]; review?: boolean }
   | { name: 'battle'; questions: Question[]; questionCount: number; players: BattlePlayer[]; bots: Bot[]; runId: number; intro?: boolean }
   | { name: 'battleResult'; players: BattlePlayer[] }
   | { name: 'online'; initialCode?: string }
@@ -168,6 +171,7 @@ export default function App() {
   const [season, setSeason] = useState<SeasonState | null>(null);
   const [rewardBusy, setRewardBusy] = useState(false);
   const [petCare, setPetCare] = useState<PetCareState | null>(null);
+  const [mistakesDue, setMistakesDue] = useState<number | undefined>(undefined);
   const onGemsPaid = useCallback(() => {
     loadShop().catch(() => {});
   }, [loadShop]);
@@ -221,6 +225,7 @@ export default function App() {
     if (profileId && (screen.name === 'start' || screen.name === 'shop' || screen.name === 'dressing' || screen.name === 'gems')) loadShop().catch(() => {});
     if (profileId && (screen.name === 'start' || screen.name === 'season')) fetchSeason().then(setSeason).catch(() => {});
     if (profileId && screen.name === 'start') fetchPetCare().then(setPetCare).catch(() => {});
+    if (profileId && screen.name === 'start') fetchMistakes().then((m) => setMistakesDue(m.due)).catch(() => {});
   }, [profileId, screen.name, loadShop]);
 
   const changeLevel = (level: Level) => {
@@ -383,6 +388,7 @@ export default function App() {
           onSeason={() => setScreen({ name: 'season' })}
           onPets={() => setScreen({ name: 'pets' })}
           onGacha={() => setScreen({ name: 'gacha' })}
+          mistakesDue={mistakesDue}
           pet={(() => {
             const it = profile ? WARDROBE.find((w) => w.slot === 'pet' && w.value === lookOf(profile.avatar).pet && w.value !== 'n') : undefined;
             const st = it && petCare?.pets.find((x) => x.id === it.id);
@@ -449,6 +455,7 @@ export default function App() {
             if (a === 'online') setScreen({ name: 'online' });
             else if (a === 'groups') setScreen({ name: 'groups' });
             else if (a === 'analysis') setScreen({ name: 'analysis' });
+            else if (a === 'mistakes') setScreen({ name: 'mistakes' });
             else setScreen({ name: 'mock' });
           }}
         />
@@ -551,6 +558,17 @@ export default function App() {
         <SeasonScreen season={season} meId={profile?.id ?? null} onBack={goHome} />
       ) : (
         <LoadingScreen message={t('กำลังโหลดฤดูกาล...', 'Loading season...')} onCancel={goHome} />
+      );
+    case 'mistakes':
+      return (
+        <MistakeScreen
+          onBack={goHome}
+          onReview={async (all) => {
+            const questions = await fetchReviewQuestions(all);
+            if (!questions.length) throw new Error(t('ไม่มีข้อให้ทบทวนตอนนี้', 'Nothing to review right now'));
+            setScreen({ name: 'quiz', questions, runId: Date.now(), review: true });
+          }}
+        />
       );
     case 'gacha':
       return profile ? <GachaScreen code={profile.avatar} onBack={goHome} onChanged={() => loadShop().catch(() => {})} /> : null;
@@ -691,7 +709,7 @@ export default function App() {
           avatar={profile?.avatar ?? DEFAULT_LOOK_CODE}
           onQuit={goHome}
           onFinish={(results) => {
-            setScreen({ name: 'result', questions: screen.questions, results });
+            setScreen({ name: 'result', questions: screen.questions, results, review: screen.review });
             if (planRunRef.current) {
               const { level, index } = planRunRef.current;
               planRunRef.current = null;
@@ -721,7 +739,7 @@ export default function App() {
           questions={screen.questions}
           results={screen.results}
           avatar={profile?.avatar ?? DEFAULT_LOOK_CODE}
-          onReplay={() => start(settings)}
+          onReplay={() => (screen.review ? setScreen({ name: 'mistakes' }) : start(settings))}
           onHome={goHome}
           xp={xp}
           guest={guest}
