@@ -12,18 +12,35 @@ export interface Shot {
   lethal: boolean;
 }
 
+/** เอฟเฟกต์การ์ด */
+export type CardFx =
+  | { type: 'fifty'; choices: number[] }
+  | { type: 'skip' }
+  | { type: 'extra'; who: string }
+  | { type: 'slow'; from: string; to: string; frostMe: boolean }
+  | { type: 'counter'; who: string }
+  | { type: 'cast'; who: string }
+  | { type: 'dealt'; who: string };
+
 type Listener = (shots: Shot[], flightMs: number) => void;
+type CardListener = (fx: CardFx) => void;
 let listener: Listener | null = null;
+let cardListener: CardListener | null = null;
 
 export const fxBus = {
   /** ยิงพร้อมกันหลายนัด กระสุนถึงเป้าหลัง flightMs */
   shots(shots: Shot[], flightMs: number) {
     if (shots.length) listener?.(shots, flightMs);
   },
-  subscribe(l: Listener) {
+  card(fx: CardFx) {
+    cardListener?.(fx);
+  },
+  subscribe(l: Listener, c?: CardListener) {
     listener = l;
+    if (c) cardListener = c;
     return () => {
       if (listener === l) listener = null;
+      if (c && cardListener === c) cardListener = null;
     };
   },
 };

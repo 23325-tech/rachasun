@@ -7,6 +7,13 @@ export interface Pt {
   y: number;
 }
 
+export interface Rect {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+
 type RGB = [number, number, number];
 
 interface Particle {
@@ -38,6 +45,7 @@ const pick = <T,>(arr: T[]) => arr[Math.floor(Math.random() * arr.length)];
 
 const FIRE = [hex(0xfff3a0), hex(0xffcc00), hex(0xff9a3c), hex(0xff5d73)];
 const ICE = [hex(0xffffff), hex(0xbfefff), hex(0x6fd3ff), hex(0x3d8bff)];
+const GOLD = [hex(0xffffff), hex(0xfff3a0), hex(0xffcc00), hex(0xffa400)];
 const VIOLET = [hex(0xffffff), hex(0xe2c8ff), hex(0xb46bff), hex(0xff6bd6)];
 
 /** หัวใจแบน 2 มิติ ขนาดราว 1 หน่วย */
@@ -161,11 +169,15 @@ export class FxEngine {
     const tick = (now: number) => {
       const dt = Math.min(0.05, (now - this.last) / 1000);
       this.last = now;
-      this.effects = this.effects.filter((e) => {
+      // เอฟเฟกต์ที่เพิ่มระหว่างอัปเดต (เช่นจาก after) ต้องไม่หาย
+      const list = this.effects;
+      this.effects = [];
+      const kept = list.filter((e) => {
         const alive = e.update(dt);
         if (!alive) e.dispose?.();
         return alive;
       });
+      this.effects = kept.concat(this.effects);
       this.stepParticles(dt);
       this.renderer.render(this.scene, this.camera);
       if (this.effects.length || this.particles.length) this.raf = requestAnimationFrame(tick);
@@ -529,6 +541,172 @@ export class FxEngine {
     };
     if (from) this.projectile(from, to, flight, FIRE, land);
     else this.lightning(to, land, flight);
+  }
+
+  // =================== การ์ด ===================
+
+  /** เส้นอนุภาควิ่งจาก a ไป b ในเวลา dur (รอยฟัน/สายลม) */
+  private streak(a: Pt, b: Pt, dur: number, palette: RGB[], width: number) {
+    let t = 0;
+    let prev = 0;
+    this.add({
+      update: (dt) => {
+        t += dt;
+        const k = Math.min(1, t / dur);
+        const n = Math.max(1, Math.ceil(((k - prev) * Math.hypot(b.x - a.x, b.y - a.y)) / 4));
+        for (let i = 1; i <= n; i++) {
+          const r = prev + ((k - prev) * i) / n;
+          const x = a.x + (b.x - a.x) * r;
+          const y = a.y + (b.y - a.y) * r;
+          this.emit({ x, y, size: width * 1.8, endSize: 1, color: pick(palette), max: 0.32 });
+          this.emit({ x, y, size: width * 0.8, endSize: 1, color: [1, 1, 1], max: 0.2 });
+        }
+        prev = k;
+        return k < 1;
+      },
+    });
+  }
+
+  /** ร่ายการ์ดทั่วไป (คนอื่นใช้การ์ด ไม่บอกชนิด) */
+  cast(at: Pt, palette = GOLD, fill = 0xffe066) {
+    this.ring(at, 70, fill, 0.45, 2);
+    this.starBurst(at, 34, fill, 0.45, 8);
+    for (let i = 0; i < 26; i++) {
+      this.emit({ x: at.x + rand(-28, 28), y: at.y + rand(-10, 20), vx: rand(-40, 40), vy: rand(-260, -90), size: rand(6, 12), color: pick(palette), max: rand(0.6, 1.1), gravity: -80, drag: 1 });
+    }
+  }
+
+  /** ได้การ์ดใหม่ */
+  dealt(at: Pt) {
+    this.flash(at, 90, '#fff3a0', 0.3);
+    this.burst(at, 30, GOLD, [120, 380], { gravity: 200, size: rand(6, 11) });
+    this.ring(at, 60, 0xffcc00, 0.4);
+  }
+
+  /** 50/50: ใบมีดฟันตัวเลือกผิดขาด */
+  slash(rects: Rect[]) {
+    rects.forEach((r, i) => {
+      this.after(i * 0.12, () => {
+        const a = { x: r.x - 10, y: r.y + r.h * 0.15 };
+        const b = { x: r.x + r.w + 10, y: r.y + r.h * 0.85 };
+        this.streak(a, b, 0.14, [hex(0xffffff), hex(0xffd6e2), hex(0xff6bd6)], 12);
+        this.after(0.14, () => {
+          const c = { x: r.x + r.w / 2, y: r.y + r.h / 2 };
+          this.starBurst(c, 34, 0xff6bd6, 0.4, 8);
+          this.burst(c, 40, [hex(0xffffff), hex(0xff6bd6), hex(0xffd6e2)], [200, 700], { gravity: 700, size: rand(6, 12) });
+          this.onShake?.(5);
+        });
+      });
+    });
+  }
+
+  /** ข้ามข้อ: สายลมกวาดผ่านโจทย์ */
+  whoosh(r: Rect) {
+    for (let i = 0; i < 7; i++) {
+      const y = r.y + (r.h * (i + 0.5)) / 7 + rand(-8, 8);
+      this.after(i * 0.03, () => this.streak({ x: r.x - 30, y }, { x: r.x + r.w + 30, y: y - rand(10, 30) }, 0.22, ICE, 7));
+    }
+    this.after(0.2, () => this.burst({ x: r.x + r.w, y: r.y + r.h / 2 }, 30, ICE, [200, 600], { gravity: 0 }));
+  }
+
+  /** เพิ่มเวลา: ออร่าทองหมุนรอบตัว + แถบเวลาเรืองทอง */
+  goldAura(at: Pt, bar?: Rect) {
+    this.cast(at, GOLD, 0xffcc00);
+    let t = 0;
+    const dur = 1.3;
+    this.add({
+      update: (dt) => {
+        t += dt;
+        for (let j = 0; j < 3; j++) {
+          const a = t * 9 + (j * Math.PI * 2) / 3;
+          const r = 44 + Math.sin(t * 6) * 6;
+          this.emit({ x: at.x + Math.cos(a) * r, y: at.y + Math.sin(a) * r * 0.55 - t * 40, size: 13, endSize: 2, color: pick(GOLD), max: 0.45 });
+        }
+        return t < dur;
+      },
+    });
+    if (bar) {
+      this.after(0.15, () => {
+        for (let i = 0; i < 40; i++) {
+          this.emit({ x: bar.x + Math.random() * bar.w, y: bar.y + bar.h / 2, vx: rand(-40, 40), vy: rand(-160, -40), size: rand(6, 12), color: pick(GOLD), max: rand(0.5, 1), gravity: -60 });
+        }
+        this.flash({ x: bar.x + bar.w / 2, y: bar.y + bar.h / 2 }, bar.w * 0.4, '#ffe066', 0.4);
+      });
+    }
+  }
+
+  /** ลดเวลา: กระสุนน้ำแข็งไปหาเป้า */
+  iceShot(from: Pt, to: Pt, onHit?: () => void) {
+    this.cast(from, ICE, 0x8fe0ff);
+    this.projectile(from, to, 0.55, ICE, () => {
+      this.iceBurst(to);
+      onHit?.();
+    });
+  }
+
+  iceBurst(at: Pt) {
+    this.starBurst(at, 58, 0xbfefff, 0.6, 6);
+    this.after(0.04, () => this.starBurst(at, 32, 0xffffff, 0.45, 6));
+    this.ring(at, 120, 0x6fd3ff, 0.5, 2);
+    this.burst(at, 50, ICE, [200, 700], { gravity: 400, size: rand(6, 12) });
+    // เกล็ดหิมะลอยลงช้าๆ
+    for (let i = 0; i < 40; i++) {
+      this.emit({ x: at.x + rand(-90, 90), y: at.y + rand(-60, 20), vx: rand(-30, 30), vy: rand(10, 60), size: rand(5, 10), color: [1, 1, 1], max: rand(1.2, 2), gravity: 20, drag: 0.5 });
+    }
+    this.onShake?.(6);
+  }
+
+  /** โดนลดเวลา: น้ำแข็งเกาะแถบเวลาของเรา */
+  frost(bar: Rect) {
+    for (let i = 0; i < 6; i++) {
+      this.after(i * 0.05, () => this.starBurst({ x: bar.x + (bar.w * (i + 0.5)) / 6, y: bar.y + bar.h / 2 }, rand(14, 22), 0xdff6ff, 0.9, 6));
+    }
+    for (let i = 0; i < 60; i++) {
+      this.emit({ x: bar.x + Math.random() * bar.w, y: bar.y + bar.h / 2 + rand(-6, 6), vx: rand(-20, 20), vy: rand(-30, 30), size: rand(5, 10), color: pick(ICE), max: rand(0.8, 1.6), drag: 2 });
+    }
+  }
+
+  /** ยิงสวน: วงเล็งสีม่วงหมุนรอบตัว */
+  reticle(at: Pt) {
+    this.starBurst(at, 36, 0xb46bff, 0.45, 8);
+    const mk = (r: number) => {
+      const mat = new THREE.MeshBasicMaterial({ color: 0xb46bff, transparent: true, depthTest: false, side: THREE.DoubleSide });
+      const m = new THREE.Mesh(new THREE.RingGeometry(r - 4, r, 48, 1, 0, Math.PI * 1.6), mat);
+      m.position.set(at.x, -at.y, 3);
+      m.renderOrder = 9;
+      this.scene.add(m);
+      return m;
+    };
+    const outer = mk(58);
+    const inner = mk(40);
+    let t = 0;
+    const dur = 1.4;
+    this.add({
+      update: (dt) => {
+        t += dt;
+        const k = t / dur;
+        const sc = k < 0.2 ? 1.6 - (k / 0.2) * 0.6 : 1;
+        outer.scale.set(sc, sc, 1);
+        inner.scale.set(sc, sc, 1);
+        outer.rotation.z += dt * 4;
+        inner.rotation.z -= dt * 6;
+        const o = k < 0.75 ? 1 : 1 - (k - 0.75) / 0.25;
+        (outer.material as THREE.MeshBasicMaterial).opacity = o;
+        (inner.material as THREE.MeshBasicMaterial).opacity = o;
+        if (Math.random() < 0.5) {
+          const a = Math.random() * Math.PI * 2;
+          this.emit({ x: at.x + Math.cos(a) * 58, y: at.y + Math.sin(a) * 58, size: 9, endSize: 1, color: pick(VIOLET), max: 0.4 });
+        }
+        return k < 1;
+      },
+      dispose: () => {
+        for (const m of [outer, inner]) {
+          this.scene.remove(m);
+          m.geometry.dispose();
+          (m.material as THREE.Material).dispose();
+        }
+      },
+    });
   }
 
   dispose() {

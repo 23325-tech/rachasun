@@ -4460,3 +4460,23 @@ html[lang="en"] .checkin__label {
   45% { opacity: 0.9; }
   100% { opacity: 0; }
 }
+
+/* 21.2: โดนลดเวลา น้ำแข็งเกาะขอบจอ */
+.battle--frosted::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at center, transparent 55%, rgba(190, 235, 255, 0.55) 85%, rgba(230, 248, 255, 0.85)),
+    repeating-linear-gradient(60deg, transparent 0 18px, rgba(255, 255, 255, 0.18) 18px 19px),
+    repeating-linear-gradient(-60deg, transparent 0 22px, rgba(255, 255, 255, 0.14) 22px 23px);
+  animation: frost-in 0.6s ease-out both;
+}
+@keyframes frost-in {
+  from {
+    opacity: 0;
+    transform: scale(1.06);
+  }
+}

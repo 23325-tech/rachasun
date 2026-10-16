@@ -132,6 +132,30 @@ export function OnlineBattleView({ roomId, state: s, myId, onLeave }: Props) {
       .catch(() => {});
   }, [s.phase, s.round, s.cardUsed, myId, roomId, cardResult]);
 
+  // เอฟเฟกต์การ์ดของคนอื่น (แสดงครั้งเดียวต่อเหตุการณ์ ไม่บอกชนิดการ์ด ยกเว้นลดเวลาที่เห็นผลอยู่แล้ว)
+  const fxShownRef = useRef(new Set<string>());
+  useEffect(() => {
+    if (s.phase !== 'question') return;
+    const shown = fxShownRef.current;
+    for (const [target, by] of Object.entries(s.slowed ?? {})) {
+      const key = `slow:${s.round}:${target}`;
+      if (shown.has(key)) continue;
+      shown.add(key);
+      fxBus.card({ type: 'slow', from: by, to: target, frostMe: target === myId });
+    }
+    for (const [pid, card] of Object.entries(s.cardUsed ?? {})) {
+      const key = `card:${s.round}:${pid}`;
+      if (shown.has(key)) continue;
+      shown.add(key);
+      if (pid !== myId && card !== 'slow') fxBus.card({ type: 'cast', who: pid });
+    }
+    const dealtKey = `dealt:${s.round}`;
+    if (s.dealt?.round === s.round && s.dealt.cards[myId] && !shown.has(dealtKey) && s.startsAt && serverNow() >= s.startsAt) {
+      shown.add(dealtKey);
+      fxBus.card({ type: 'dealt', who: myId });
+    }
+  }, [s.phase, s.round, s.slowed, s.cardUsed, s.dealt, s.startsAt, myId, now]);
+
   // ล้างคำตอบเมื่อขึ้นข้อใหม่
   useEffect(() => {
     setAnswerError('');
@@ -156,6 +180,13 @@ export function OnlineBattleView({ roomId, state: s, myId, onLeave }: Props) {
     try {
       const r = await callGame('use_card', { roomId, round: s.round, card, target });
       setCardResult({ round: s.round, card, removed: r.removed, skipped: r.skipped });
+      if (card === 'fifty') fxBus.card(r.skipped ? { type: 'skip' } : { type: 'fifty', choices: r.removed ?? [] });
+      else if (card === 'extra') fxBus.card({ type: 'extra', who: myId });
+      else if (card === 'counter') fxBus.card({ type: 'counter', who: myId });
+      else if (card === 'slow' && target) {
+        fxShownRef.current.add(`slow:${s.round}:${target}`);
+        fxBus.card({ type: 'slow', from: myId, to: target, frostMe: false });
+      }
     } catch (e) {
       setAnswerError(e instanceof Error ? e.message : String(e));
     } finally {
@@ -246,7 +277,9 @@ export function OnlineBattleView({ roomId, state: s, myId, onLeave }: Props) {
   const nextIn = s.nextAt ? Math.max(0, Math.ceil((s.nextAt - now) / 1000)) : 0;
 
   return (
-    <div className={`screen battle ${sudden ? 'battle--sudden' : ''} ${myHit && hitStage === 'bang' ? 'battle--me-hit' : ''}`}>
+    <div
+      className={`screen battle ${sudden ? 'battle--sudden' : ''} ${myHit && hitStage === 'bang' ? 'battle--me-hit' : ''} ${slowedBy && meAlive && !answeredThisRound ? 'battle--frosted' : ''}`}
+    >
       <header className="quiz__top">
         <button type="button" className="icon-btn" onClick={onLeave} aria-label={t('ออกจากห้อง', 'Leave room')}>
           ✕
