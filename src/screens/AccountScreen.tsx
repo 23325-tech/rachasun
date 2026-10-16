@@ -20,6 +20,7 @@ import { PlayerAvatar } from '../components/PlayerAvatar';
 import { TierIcon } from '../components/icons';
 import { Cube, DoorOpen, Key, WarningCircle } from '@phosphor-icons/react';
 import { isLowEnd, reduce3DSetting, setReduce3D } from '../lib/perf';
+import { t } from '../lib/i18n';
 
 interface Props {
   user: User | null;
@@ -63,10 +64,10 @@ export function AccountScreen({ user, profile, needsPassword, onBack, onChanged 
       if (tab === 'register') {
         const r = await registerWithEmail(email, password);
         if (r === 'confirm_email') {
-          setNotice(`ส่งอีเมลยืนยันไปที่ ${email} แล้ว กดลิงก์ในอีเมล แล้วกลับมาตั้งรหัสผ่านที่หน้านี้`);
+          setNotice(t(`ส่งอีเมลยืนยันไปที่ ${email} แล้ว กดลิงก์ในอีเมล แล้วกลับมาตั้งรหัสผ่านที่หน้านี้`, `We sent a confirmation email to ${email}. Open the link, then come back here to set a password.`));
           return;
         }
-        setNotice('สมัครสำเร็จ! ความก้าวหน้าทั้งหมดถูกบันทึกในบัญชีแล้ว');
+        setNotice(t('สมัครสำเร็จ! ความก้าวหน้าทั้งหมดถูกบันทึกในบัญชีแล้ว', 'Signed up! All your progress is saved to your account.'));
       } else {
         await loginWithEmail(email, password);
       }
@@ -78,10 +79,10 @@ export function AccountScreen({ user, profile, needsPassword, onBack, onChanged 
   return (
     <div className="screen account">
       <header className="quiz__top">
-        <button type="button" className="icon-btn" onClick={onBack} aria-label="กลับ">
+        <button type="button" className="icon-btn" onClick={onBack} aria-label={t('กลับ', 'Back')}>
           ←
         </button>
-        <div className="quiz__progress">บัญชีของฉัน</div>
+        <div className="quiz__progress">{t('บัญชีของฉัน', 'My account')}</div>
       </header>
 
       {profile && lv && (
@@ -96,10 +97,10 @@ export function AccountScreen({ user, profile, needsPassword, onBack, onChanged 
           <div className="account__next-tier">
             {(() => {
               const n = nextTier(profile.rp ?? 0);
-              return n ? `อีก ${n.needed} RP ถึงยศ${n.tier.name} (ได้ RP จากโหมดสุ่มหาคู่แข่ง)` : 'ยศสูงสุดแล้ว!';
+              return n ? t(`อีก ${n.needed} RP ถึงยศ${n.tier.name} (ได้ RP จากโหมดสุ่มหาคู่แข่ง)`, `${n.needed} RP to ${n.tier.name} (earn RP from matchmaking)`) : t('ยศสูงสุดแล้ว!', 'Top rank reached!');
             })()}
           </div>
-          <div className="account__badge">{guest ? 'แขก' : `${user?.email ?? 'สมาชิก'}`}</div>
+          <div className="account__badge">{guest ? t('แขก', 'Guest') : `${user?.email ?? t('สมาชิก', 'Member')}`}</div>
           <div className="stats">
             <div className="stat">
               <div className="stat__num">Lv {lv.level}</div>
@@ -107,21 +108,21 @@ export function AccountScreen({ user, profile, needsPassword, onBack, onChanged 
             </div>
             <div className="stat">
               <div className="stat__num">{profile.games_played}</div>
-              <div className="stat__label">เกมที่เล่น</div>
+              <div className="stat__label">{t('เกมที่เล่น', 'Games played')}</div>
             </div>
             <div className="stat">
               <div className="stat__num">{profile.wins}</div>
-              <div className="stat__label">ดวลชนะ</div>
+              <div className="stat__label">{t('ดวลชนะ', 'Battle wins')}</div>
             </div>
           </div>
           {!editing ? (
             <button type="button" className="btn btn--ghost btn--block" onClick={() => setEditing(true)}>
-              แก้ชื่อเล่น
+              {t('แก้ชื่อเล่น', 'Edit nickname')}
             </button>
           ) : (
             <NicknameForm
               initialNickname={profile.nickname}
-              submitLabel="บันทึก"
+              submitLabel={t('บันทึก', 'Save')}
               onSubmit={async (nickname) => {
                 await updateProfile(profile.id, { nickname });
                 await onChanged();
@@ -142,7 +143,7 @@ export function AccountScreen({ user, profile, needsPassword, onBack, onChanged 
               className={`segmented__opt ${tab === 'register' ? 'is-active' : ''}`}
               onClick={() => setTab('register')}
             >
-              สมัครสมาชิก
+              {t('สมัครสมาชิก', 'Sign up')}
             </button>
             <button
               type="button"
@@ -151,14 +152,14 @@ export function AccountScreen({ user, profile, needsPassword, onBack, onChanged 
               className={`segmented__opt ${tab === 'login' ? 'is-active' : ''}`}
               onClick={() => setTab('login')}
             >
-              เข้าสู่ระบบ
+              {t('เข้าสู่ระบบ', 'Log in')}
             </button>
           </div>
 
           <p className="account__hint">
             {tab === 'register'
-              ? 'สมัครเพื่อเก็บ XP และสถิติไว้ถาวร เล่นต่อได้ทุกเครื่อง (XP ที่เล่นแบบแขกมาแล้วติดไปด้วย)'
-              : 'ถ้าเข้าสู่ระบบบัญชีอื่น XP ที่เล่นแบบแขกในเครื่องนี้จะไม่ถูกรวม'}
+              ? t('สมัครเพื่อเก็บ XP และสถิติไว้ถาวร เล่นต่อได้ทุกเครื่อง (XP ที่เล่นแบบแขกมาแล้วติดไปด้วย)', 'Sign up to keep your XP and stats forever and play on any device (your guest XP comes with you)')
+              : t('ถ้าเข้าสู่ระบบบัญชีอื่น XP ที่เล่นแบบแขกในเครื่องนี้จะไม่ถูกรวม', 'If you log in to another account, guest XP on this device won\'t be merged')}
           </p>
 
           <form
@@ -169,7 +170,7 @@ export function AccountScreen({ user, profile, needsPassword, onBack, onChanged 
             }}
           >
             <label className="field">
-              <span className="field__label">อีเมล</span>
+              <span className="field__label">{t('อีเมล', 'Email')}</span>
               <input
                 className="field__input"
                 type="email"
@@ -180,7 +181,7 @@ export function AccountScreen({ user, profile, needsPassword, onBack, onChanged 
               />
             </label>
             <label className="field">
-              <span className="field__label">รหัสผ่าน (อย่างน้อย 6 ตัว)</span>
+              <span className="field__label">{t('รหัสผ่าน (อย่างน้อย 6 ตัว)', 'Password (at least 6 characters)')}</span>
               <input
                 className="field__input"
                 type="password"
@@ -192,7 +193,7 @@ export function AccountScreen({ user, profile, needsPassword, onBack, onChanged 
               />
             </label>
             <button type="submit" className="btn btn--primary btn--block" disabled={busy}>
-              {busy ? 'กำลังดำเนินการ...' : tab === 'register' ? 'สมัครสมาชิก' : 'เข้าสู่ระบบ'}
+              {busy ? t('กำลังดำเนินการ...', 'Working...') : tab === 'register' ? t('สมัครสมาชิก', 'Sign up') : t('เข้าสู่ระบบ', 'Log in')}
             </button>
           </form>
 
@@ -203,27 +204,27 @@ export function AccountScreen({ user, profile, needsPassword, onBack, onChanged 
               disabled={busy}
               onClick={() => {
                 if (!email.trim()) {
-                  setError('ใส่อีเมลก่อน แล้วกด "ลืมรหัสผ่าน" อีกครั้ง');
+                  setError(t('ใส่อีเมลก่อน แล้วกด "ลืมรหัสผ่าน" อีกครั้ง', 'Enter your email first, then tap "Forgot password" again'));
                   return;
                 }
                 run(
                   () => sendPasswordReset(email),
-                  `ส่งลิงก์ตั้งรหัสผ่านใหม่ไปที่ ${email} แล้ว เปิดลิงก์ในอีเมลบนเครื่องนี้ แล้วตั้งรหัสผ่านใหม่`,
+                  t(`ส่งลิงก์ตั้งรหัสผ่านใหม่ไปที่ ${email} แล้ว เปิดลิงก์ในอีเมลบนเครื่องนี้ แล้วตั้งรหัสผ่านใหม่`, `We sent a reset link to ${email}. Open it on this device and set a new password.`),
                 );
               }}
             >
-              ลืมรหัสผ่าน / ยังไม่ได้ตั้งรหัสผ่าน?
+              {t('ลืมรหัสผ่าน / ยังไม่ได้ตั้งรหัสผ่าน?', 'Forgot password / haven\'t set one?')}
             </button>
           )}
 
-          <div className="divider">หรือ</div>
+          <div className="divider">{t('หรือ', 'or')}</div>
           <button
             type="button"
             className="btn btn--ghost btn--block google-btn"
             disabled={busy}
             onClick={() => run(tab === 'register' && profile ? linkGoogle : loginWithGoogle)}
           >
-            <span className="google-btn__g">G</span> {tab === 'register' ? 'สมัครด้วย Google' : 'เข้าสู่ระบบด้วย Google'}
+            <span className="google-btn__g">G</span> {tab === 'register' ? t('สมัครด้วย Google', 'Sign up with Google') : t('เข้าสู่ระบบด้วย Google', 'Log in with Google')}
           </button>
         </section>
       ) : (
@@ -237,16 +238,16 @@ export function AccountScreen({ user, profile, needsPassword, onBack, onChanged 
                   await setPassword(password);
                   setPw('');
                   await onChanged();
-                }, 'ตั้งรหัสผ่านเรียบร้อย ใช้เข้าสู่ระบบเครื่องอื่นได้แล้ว');
+                }, t('ตั้งรหัสผ่านเรียบร้อย ใช้เข้าสู่ระบบเครื่องอื่นได้แล้ว', 'Password set. You can now log in on other devices.'));
             }}
           >
             {needsPassword && (
               <p className="form-warning">
-                <Key weight="fill" className="ico" /> ยืนยันอีเมลแล้ว แต่ยังไม่ได้ตั้งรหัสผ่าน ตั้งตอนนี้เพื่อใช้เข้าสู่ระบบจากเครื่องอื่น
+                <Key weight="fill" className="ico" /> {t('ยืนยันอีเมลแล้ว แต่ยังไม่ได้ตั้งรหัสผ่าน ตั้งตอนนี้เพื่อใช้เข้าสู่ระบบจากเครื่องอื่น', 'Email confirmed but no password yet. Set one now to log in from other devices.')}
               </p>
             )}
             <label className="field">
-              <span className="field__label">{needsPassword ? 'ตั้งรหัสผ่าน (อย่างน้อย 6 ตัว)' : 'เปลี่ยนรหัสผ่าน'}</span>
+              <span className="field__label">{needsPassword ? t('ตั้งรหัสผ่าน (อย่างน้อย 6 ตัว)', 'Set password (at least 6 characters)') : t('เปลี่ยนรหัสผ่าน', 'Change password')}</span>
               <input
                 className="field__input"
                 type="password"
@@ -262,7 +263,7 @@ export function AccountScreen({ user, profile, needsPassword, onBack, onChanged 
               className={`btn btn--block ${needsPassword ? 'btn--primary' : 'btn--ghost'}`}
               disabled={busy}
             >
-              บันทึกรหัสผ่าน
+              {t('บันทึกรหัสผ่าน', 'Save password')}
             </button>
           </form>
           <button
@@ -276,7 +277,7 @@ export function AccountScreen({ user, profile, needsPassword, onBack, onChanged 
               })
             }
           >
-            <DoorOpen weight="fill" className="ico" /> ออกจากระบบ
+            <DoorOpen weight="fill" className="ico" /> {t('ออกจากระบบ', 'Log out')}
           </button>
         </section>
       )}
@@ -287,8 +288,8 @@ export function AccountScreen({ user, profile, needsPassword, onBack, onChanged 
             <Cube weight="fill" />
           </span>
           <span className="toggle-row__text">
-            <b>ลดเอฟเฟกต์ 3D</b>
-            <small>{lowEnd ? 'เครื่องนี้ใช้ภาพนิ่งอัตโนมัติอยู่แล้ว' : 'ใช้ภาพนิ่งแทนตัวละครเคลื่อนไหว ช่วยประหยัดแบต'}</small>
+            <b>{t('ลดเอฟเฟกต์ 3D', 'Reduce 3D effects')}</b>
+            <small>{lowEnd ? t('เครื่องนี้ใช้ภาพนิ่งอัตโนมัติอยู่แล้ว', 'This device already uses still images') : t('ใช้ภาพนิ่งแทนตัวละครเคลื่อนไหว ช่วยประหยัดแบต', 'Use still images instead of animated characters to save battery')}</small>
           </span>
           <input
             type="checkbox"

@@ -1,4 +1,5 @@
 import { Brain } from '@phosphor-icons/react';
+import { t } from '../lib/i18n';
 export function LoadingScreen({ message, onCancel }: { message: string; onCancel: () => void }) {
   return (
     <div className="screen loading">
@@ -14,7 +15,7 @@ export function LoadingScreen({ message, onCancel }: { message: string; onCancel
         <span />
       </div>
       <button type="button" className="btn btn--ghost" onClick={onCancel}>
-        ยกเลิก
+        {t('ยกเลิก', 'Cancel')}
       </button>
     </div>
   );

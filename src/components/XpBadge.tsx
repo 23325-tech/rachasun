@@ -2,6 +2,7 @@ import { levelFromXp } from '../lib/level';
 import { tierOf } from '../lib/rank';
 import { TierIcon } from './icons';
 import { Coin, Confetti, FloppyDisk, Hourglass } from '@phosphor-icons/react';
+import { t } from '../lib/i18n';
 
 export type XpState =
   | { status: 'saving' }
@@ -23,10 +24,10 @@ function RankChange({ delta, rp }: { delta: number; rp: number }) {
         <TierIcon tier={after.key} size={18} /> {after.name} · {rp} RP
       </span>
       {after.min > before.min && <div className="rank-change__promo bounce">
-          <Confetti weight="fill" size={18} /> เลื่อนยศเป็น <TierIcon tier={after.key} size={18} /> {after.name}!
+          <Confetti weight="fill" size={18} /> {t('เลื่อนยศเป็น', 'Promoted to')} <TierIcon tier={after.key} size={18} /> {after.name}!
         </div>}
       {after.min < before.min && <div className="rank-change__demo">
-          ตกยศเป็น <TierIcon tier={after.key} size={18} /> {after.name} สู้ใหม่นะ!
+          {t('ตกยศเป็น', 'Dropped to')} <TierIcon tier={after.key} size={18} /> {after.name} {t('สู้ใหม่นะ!', '— keep going!')}
         </div>}
     </div>
   );
@@ -35,8 +36,8 @@ function RankChange({ delta, rp }: { delta: number; rp: number }) {
 /** แสดง XP ที่ได้จากเกมนี้ + แจ้งเลเวลอัป */
 export function XpBadge({ xp, guest, onRegister }: { xp: XpState; guest: boolean; onRegister: () => void }) {
   if (xp.status === 'off') return null;
-  if (xp.status === 'saving') return <div className="xp-badge"><Hourglass weight="fill" className="ico" /> กำลังบันทึก XP...</div>;
-  if (xp.status === 'error') return <div className="xp-badge xp-badge--error">บันทึก XP ไม่สำเร็จ: {xp.message}</div>;
+  if (xp.status === 'saving') return <div className="xp-badge"><Hourglass weight="fill" className="ico" /> {t('กำลังบันทึก XP...', 'Saving XP...')}</div>;
+  if (xp.status === 'error') return <div className="xp-badge xp-badge--error">{t('บันทึก XP ไม่สำเร็จ:', 'Couldn\'t save XP:')} {xp.message}</div>;
 
   const before = levelFromXp(xp.total - xp.gained).level;
   const after = levelFromXp(xp.total);
@@ -50,7 +51,7 @@ export function XpBadge({ xp, guest, onRegister }: { xp: XpState; guest: boolean
           </span>
         )}
       </div>
-      {after.level > before && <div className="xp-badge__levelup bounce"><Confetti weight="fill" className="ico" /> เลเวลอัป! Lv {after.level}</div>}
+      {after.level > before && <div className="xp-badge__levelup bounce"><Confetti weight="fill" className="ico" /> {t('เลเวลอัป!', 'Level up!')} Lv {after.level}</div>}
       {xp.rpDelta !== undefined && xp.rp !== undefined && <RankChange delta={xp.rpDelta} rp={xp.rp} />}
       <span className="xp-bar">
         <span className="xp-bar__fill" style={{ transform: `scaleX(${after.current / after.needed})` }} />
@@ -60,7 +61,7 @@ export function XpBadge({ xp, guest, onRegister }: { xp: XpState; guest: boolean
       </div>
       {guest && (
         <button type="button" className="link-btn" onClick={onRegister}>
-          <FloppyDisk weight="fill" className="ico" /> สมัครสมาชิกเพื่อเก็บ XP ไว้ถาวร
+          <FloppyDisk weight="fill" className="ico" /> {t('สมัครสมาชิกเพื่อเก็บ XP ไว้ถาวร', 'Sign up to keep your XP')}
         </button>
       )}
     </div>

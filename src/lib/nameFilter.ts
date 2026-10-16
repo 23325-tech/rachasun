@@ -1,3 +1,4 @@
+import { t } from './i18n';
 // ต้องตรงกับ public.normalize_nickname / is_nickname_allowed ใน supabase/migrations/20261015010000_profiles_xp.sql
 // ฐานข้อมูลตรวจซ้ำอีกชั้นเสมอ ฝั่งนี้มีไว้บอกผู้เล่นทันทีก่อนส่ง
 
@@ -32,8 +33,8 @@ export function checkNickname(name: string): NicknameProblem | null {
 }
 
 export const NICKNAME_PROBLEM_TEXT: Record<NicknameProblem, string> = {
-  too_short: 'ชื่อสั้นไป ต้องมีอย่างน้อย 2 ตัวอักษร',
-  too_long: 'ชื่อยาวไป ไม่เกิน 16 ตัวอักษร',
-  no_letters: 'ชื่อต้องมีตัวอักษรไทยหรืออังกฤษ',
-  inappropriate: 'ชื่อนี้ใช้ไม่ได้ ลองชื่ออื่นนะ',
+  get too_short() { return t('ชื่อสั้นไป ต้องมีอย่างน้อย 2 ตัวอักษร', 'Too short — at least 2 characters'); },
+  get too_long() { return t('ชื่อยาวไป ไม่เกิน 16 ตัวอักษร', 'Too long — 16 characters max'); },
+  get no_letters() { return t('ชื่อต้องมีตัวอักษรไทยหรืออังกฤษ', 'Name needs Thai or English letters'); },
+  get inappropriate() { return t('ชื่อนี้ใช้ไม่ได้ ลองชื่ออื่นนะ', "This name isn't allowed, try another"); },
 };

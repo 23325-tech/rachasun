@@ -1,5 +1,6 @@
 import type { Level } from '../types';
 import { LEVEL_KEYS, LEVELS } from '../data/subjects';
+import { t } from '../lib/i18n';
 
 interface Props {
   value: Level;
@@ -8,7 +9,7 @@ interface Props {
 }
 
 /** เลือกระดับชั้น ประถม / ม.ต้น / ม.ปลาย / มหาลัย */
-export function LevelPicker({ value, onChange, label = 'ระดับชั้น' }: Props) {
+export function LevelPicker({ value, onChange, label = t('ระดับชั้น', 'Level') }: Props) {
   return (
     <div className="setting">
       <span className="setting__label">{label}</span>

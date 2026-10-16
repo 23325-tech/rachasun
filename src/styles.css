@@ -4069,3 +4069,52 @@ button.coin-pill {
   opacity: 0.6;
   cursor: default;
 }
+
+/* 20.1: ปุ่มสลับภาษาเล็ก */
+.lang-pill {
+  display: inline-flex;
+  flex: none;
+  padding: 2px;
+  border: 2.5px solid var(--ink);
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 3px 0 var(--ink);
+  font: inherit;
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+}
+.lang-pill span {
+  padding: 4px 6px;
+  border-radius: 999px;
+  color: var(--ink);
+  opacity: 0.45;
+}
+.lang-pill span.is-on {
+  background: var(--primary);
+  opacity: 1;
+}
+
+.hm-top .lang-pill {
+  margin-left: auto;
+}
+.hm-top .lang-pill + .coin-pill {
+  margin-left: 0;
+}
+
+/* ภาษาอังกฤษ: ป้ายวันเช็กอินยาวกว่าไทย */
+html[lang="en"] .checkin__label {
+  font-size: 0.6rem;
+  letter-spacing: -0.02em;
+}
+
+/* จอแคบ: ปุ่มสมัครเหลือแค่ไอคอน ให้ชื่อผู้เล่นมีที่ */
+@media (max-width: 400px) {
+  .hm-chip--save .hm-chip__text {
+    display: none;
+  }
+  .hm-chip--save {
+    padding-inline: 8px;
+  }
+}

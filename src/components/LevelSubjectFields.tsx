@@ -1,5 +1,6 @@
 import type { Level, Subject, Track } from '../types';
 import { adjustForLevel, LEVEL_KEYS, LEVELS, subjectOptions } from '../data/subjects';
+import { t } from '../lib/i18n';
 
 export interface LevelSubjectValue {
   level?: Level;
@@ -14,14 +15,14 @@ interface Props<T extends LevelSubjectValue> {
 }
 
 /** เลือกระดับชั้น + วิชา + แนวข้อสอบ (ใช้ในห้องออนไลน์ สุ่มจับคู่ และสร้างกลุ่ม) */
-export function LevelSubjectFields<T extends LevelSubjectValue>({ value, onChange, subjectLabel = 'วิชา' }: Props<T>) {
+export function LevelSubjectFields<T extends LevelSubjectValue>({ value, onChange, subjectLabel = t('วิชา', 'Subject') }: Props<T>) {
   const level = value.level ?? 'upper';
   const tracks = LEVELS[level].tracks;
   return (
     <>
       <div className="field-row">
         <label className="field">
-          <span className="field__label">ระดับชั้น</span>
+          <span className="field__label">{t('ระดับชั้น', 'Level')}</span>
           <select
             className="field__input"
             value={level}

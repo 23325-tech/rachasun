@@ -48,6 +48,7 @@ import { logAnswers } from './lib/analysis';
 import { markPlanDone } from './lib/studyPlan';
 import { DEFAULT_LOOK_CODE } from './lib/look';
 import { createRoom, findMatch, joinRoom, leaveRoom, type MatchSettings, type RoomSettings } from './lib/rooms';
+import { t, useLang } from './lib/i18n';
 import { VersusIntro } from './components/VersusIntro';
 
 type Screen =
@@ -115,6 +116,8 @@ function countCorrect(questions: Question[], results: AnswerResult[]): Record<Di
 }
 
 export default function App() {
+  // เปลี่ยนภาษาแล้ววาดใหม่ทั้งแอป
+  useLang();
   const [screen, setScreen] = useState<Screen>(() =>
     CHALLENGE_CODE
       ? { name: 'challenge', code: CHALLENGE_CODE }
@@ -236,7 +239,7 @@ export default function App() {
     const bots = createBots(s.botCount, s.botLevel);
     const players = createPlayers(
       [
-        { id: ME_ID, name: profile ? displayName(profile) : 'คุณ', avatar: profile?.avatar ?? DEFAULT_LOOK_CODE, isBot: false },
+        { id: ME_ID, name: profile ? displayName(profile) : t('คุณ', 'You'), avatar: profile?.avatar ?? DEFAULT_LOOK_CODE, isBot: false },
         ...bots.map((b) => ({ id: b.id, name: b.name, avatar: b.avatar, isBot: true })),
       ],
       s.count,
@@ -256,19 +259,19 @@ export default function App() {
     // ออฟไลน์: ฝึกเดี่ยว/ดวลบอทใช้โจทย์ตัวอย่างในเครื่อง
     if (!navigator.onLine) {
       if (s.mode === 'challenge') {
-        setScreen({ name: 'setup', error: 'โหมดท้าเพื่อนต้องต่อเน็ต' });
+        setScreen({ name: 'setup', error: t('โหมดท้าเพื่อนต้องต่อเน็ต', 'Challenge mode needs an internet connection') });
         return;
       }
       play(s, sampleQuiz(subjectsOf(s), totalNeeded(s)));
       return;
     }
     if (!supabase) {
-      setScreen({ name: 'setup', error: 'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ ลองเล่นโจทย์ตัวอย่างไปก่อนนะ' });
+      setScreen({ name: 'setup', error: t('เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ ลองเล่นโจทย์ตัวอย่างไปก่อนนะ', "Can't reach the server. Try the sample questions for now.") });
       return;
     }
     const loadId = ++loadIdRef.current;
     if (s.mode === 'challenge') {
-      setScreen({ name: 'loading', message: 'กำลังเตรียมชุดโจทย์คำท้า...' });
+      setScreen({ name: 'loading', message: t('กำลังเตรียมชุดโจทย์คำท้า...', 'Preparing the challenge set...') });
       try {
         const { code } = await createChallenge({
           subject: s.subject,
@@ -283,7 +286,7 @@ export default function App() {
       }
       return;
     }
-    setScreen({ name: 'loading', message: 'กำลังเตรียมโจทย์...' });
+    setScreen({ name: 'loading', message: t('กำลังเตรียมโจทย์...', 'Preparing questions...') });
     try {
       const { questions } = await loadQuiz(
         {
@@ -321,7 +324,7 @@ export default function App() {
 
   // ---------- หน้าจอที่ขึ้นกับสถานะผู้ใช้ ----------
   if (me.status === 'loading' && online)
-    return <LoadingScreen message="กำลังโหลดโปรไฟล์..." onCancel={() => setMe({ status: 'offline' })} />;
+    return <LoadingScreen message={t('กำลังโหลดโปรไฟล์...', 'Loading profile...')} onCancel={() => setMe({ status: 'offline' })} />;
 
   if (screen.name === 'account' && me.status === 'ready') {
     return (
@@ -386,7 +389,7 @@ export default function App() {
               return;
             }
             if (me.status !== 'ready') {
-              setScreen({ name: 'start', error: 'โหมดนี้ต้องเชื่อมต่ออินเทอร์เน็ต' });
+              setScreen({ name: 'start', error: t('โหมดนี้ต้องเชื่อมต่ออินเทอร์เน็ต', 'This mode needs an internet connection') });
               return;
             }
             if (a === 'online') setScreen({ name: 'online' });
@@ -499,7 +502,7 @@ export default function App() {
           }}
         />
       ) : (
-        <LoadingScreen message="กำลังเปิดร้านค้า..." onCancel={goHome} />
+        <LoadingScreen message={t('กำลังเปิดร้านค้า...', 'Opening the shop...')} onCancel={goHome} />
       );
     case 'dressing':
       return profile ? (

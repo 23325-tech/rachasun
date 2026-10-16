@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { checkNickname, NICKNAME_PROBLEM_TEXT } from '../lib/nameFilter';
 import { WarningCircle } from '@phosphor-icons/react';
+import { t } from '../lib/i18n';
 
 interface Props {
   initialNickname?: string;
@@ -37,23 +38,23 @@ export function NicknameForm({ initialNickname = '', submitLabel, onSubmit }: Pr
       }}
     >
       <label className="field">
-        <span className="field__label">ชื่อเล่น</span>
+        <span className="field__label">{t('ชื่อเล่น', 'Nickname')}</span>
         <input
           className={`field__input ${showProblem ? 'is-invalid' : ''}`}
           value={nickname}
           maxLength={20}
           autoComplete="nickname"
-          placeholder="เช่น ฟ้าใส, Somchai"
+          placeholder={t('เช่น ฟ้าใส, Somchai', 'e.g. Sky, Somchai')}
           onChange={(e) => setNickname(e.target.value)}
           onBlur={() => setTouched(true)}
         />
         <span className={`field__hint ${showProblem ? 'is-error' : ''}`}>
-          {showProblem ? NICKNAME_PROBLEM_TEXT[problem] : 'ชื่อซ้ำกับคนอื่นได้ ระบบจะเติมเลขท้ายให้ เช่น ฟ้าใส#4821'}
+          {showProblem ? NICKNAME_PROBLEM_TEXT[problem] : t('ชื่อซ้ำกับคนอื่นได้ ระบบจะเติมเลขท้ายให้ เช่น ฟ้าใส#4821', 'Names can repeat — we add a number tag, e.g. Sky#4821')}
         </span>
       </label>
       {error && <p className="form-error"><WarningCircle weight="fill" className="ico" /> {error}</p>}
       <button type="submit" className="btn btn--primary btn--block btn--big" disabled={busy}>
-        {busy ? 'กำลังบันทึก...' : submitLabel}
+        {busy ? t('กำลังบันทึก...', 'Saving...') : submitLabel}
       </button>
     </form>
   );

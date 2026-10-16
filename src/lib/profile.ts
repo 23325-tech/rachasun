@@ -1,6 +1,7 @@
 import type { User } from '@supabase/supabase-js';
 import type { Level } from '../types';
 import { ensureSession, supabase } from './supabase';
+import { t } from './i18n';
 
 export interface Profile {
   id: string;
@@ -24,7 +25,7 @@ export const displayName = (p: Pick<Profile, 'nickname' | 'tag'>) => `${p.nickna
 export const isGuest = (user: User | null) => !user || user.is_anonymous === true;
 
 function client() {
-  if (!supabase) throw new Error('เชื่อมต่อเซิร์ฟเวอร์ไม่ได้');
+  if (!supabase) throw new Error(t('เชื่อมต่อเซิร์ฟเวอร์ไม่ได้', 'Can\'t connect to the server'));
   return supabase;
 }
 
@@ -40,11 +41,11 @@ export async function loadMe(): Promise<{ user: User; profile: Profile | null; n
     await sb.auth.signOut({ scope: 'local' }).catch(() => {});
     sb = await ensureSession();
     ({ data } = await sb.auth.getUser());
-    if (!data.user) throw new Error('เข้าสู่ระบบไม่สำเร็จ ลองรีเฟรชหน้าอีกครั้ง');
+    if (!data.user) throw new Error(t('เข้าสู่ระบบไม่สำเร็จ ลองรีเฟรชหน้าอีกครั้ง', 'Sign-in failed, try refreshing the page'));
   }
   const user = data.user;
   const { data: profile, error } = await sb.from('profiles').select('*').eq('id', user.id).maybeSingle();
-  if (error) throw new Error(`โหลดโปรไฟล์ไม่สำเร็จ: ${error.message}`);
+  if (error) throw new Error(t(`โหลดโปรไฟล์ไม่สำเร็จ: ${error.message}`, `Couldn't load profile: ${error.message}`));
   let needsPassword = false;
   if (!isGuest(user) && user.email) {
     const { data: st } = await sb.rpc('my_account_status');
@@ -54,8 +55,8 @@ export async function loadMe(): Promise<{ user: User; profile: Profile | null; n
 }
 
 function friendlyDbError(message: string): string {
-  if (message.includes('nickname_allowed')) return 'ชื่อนี้ใช้ไม่ได้ ลองชื่ออื่นนะ';
-  if (message.includes('avatar_not_allowed')) return 'มีของที่ยังไม่ได้ซื้อ บันทึกไม่ได้';
+  if (message.includes('nickname_allowed')) return t('ชื่อนี้ใช้ไม่ได้ ลองชื่ออื่นนะ', 'This name isn\'t allowed, try another');
+  if (message.includes('avatar_not_allowed')) return t('มีของที่ยังไม่ได้ซื้อ บันทึกไม่ได้', 'Some items aren\'t owned yet, can\'t save');
   return message;
 }
 
@@ -117,19 +118,19 @@ export async function recordGame(g: GameRecord): Promise<XpResult> {
 
 // ---------- บัญชี ----------
 
-const AUTH_ERRORS: [RegExp, string][] = [
-  [/invalid login credentials/i, 'อีเมลหรือรหัสผ่านไม่ถูกต้อง'],
-  [/already (been )?registered|already exists|email_exists/i, 'อีเมลนี้มีบัญชีอยู่แล้ว ลองเข้าสู่ระบบแทน'],
-  [/password should be at least/i, 'รหัสผ่านต้องยาวอย่างน้อย 6 ตัวอักษร'],
-  [/invalid.*email|unable to validate email/i, 'รูปแบบอีเมลไม่ถูกต้อง'],
-  [/rate limit|too many/i, 'ลองบ่อยเกินไป รอสักครู่แล้วลองใหม่'],
-  [/already linked|identity_already_exists|identity is already/i, 'บัญชี Google นี้มีอยู่แล้ว กด "เข้าสู่ระบบด้วย Google" แทน'],
-  [/manual linking is disabled/i, 'ยังไม่ได้เปิด Manual linking ใน Supabase'],
-  [/provider is not enabled|unsupported provider/i, 'ยังไม่ได้เปิดล็อกอินด้วย Google ใน Supabase'],
+const authErrors = (): [RegExp, string][] => [
+  [/invalid login credentials/i, t('อีเมลหรือรหัสผ่านไม่ถูกต้อง', 'Wrong email or password')],
+  [/already (been )?registered|already exists|email_exists/i, t('อีเมลนี้มีบัญชีอยู่แล้ว ลองเข้าสู่ระบบแทน', 'This email already has an account, try logging in')],
+  [/password should be at least/i, t('รหัสผ่านต้องยาวอย่างน้อย 6 ตัวอักษร', 'Password must be at least 6 characters')],
+  [/invalid.*email|unable to validate email/i, t('รูปแบบอีเมลไม่ถูกต้อง', 'Invalid email format')],
+  [/rate limit|too many/i, t('ลองบ่อยเกินไป รอสักครู่แล้วลองใหม่', 'Too many attempts, wait a moment and try again')],
+  [/already linked|identity_already_exists|identity is already/i, t('บัญชี Google นี้มีอยู่แล้ว กด "เข้าสู่ระบบด้วย Google" แทน', 'This Google account already exists, use "Log in with Google" instead')],
+  [/manual linking is disabled/i, t('ยังไม่ได้เปิด Manual linking ใน Supabase', 'Manual linking is not enabled in Supabase')],
+  [/provider is not enabled|unsupported provider/i, t('ยังไม่ได้เปิดล็อกอินด้วย Google ใน Supabase', 'Google login is not enabled in Supabase')],
 ];
 
 function friendlyAuthError(message: string): string {
-  return AUTH_ERRORS.find(([re]) => re.test(message))?.[1] ?? message;
+  return authErrors().find(([re]) => re.test(message))?.[1] ?? message;
 }
 
 export type RegisterResult = 'done' | 'confirm_email';
@@ -139,7 +140,7 @@ export type RegisterResult = 'done' | 'confirm_email';
  * ถ้า Supabase เปิด "Confirm email" ไว้ ต้องยืนยันอีเมลก่อนจึงตั้งรหัสผ่านได้
  */
 export async function registerWithEmail(email: string, password: string): Promise<RegisterResult> {
-  if (password.length < 6) throw new Error('รหัสผ่านต้องยาวอย่างน้อย 6 ตัวอักษร');
+  if (password.length < 6) throw new Error(t('รหัสผ่านต้องยาวอย่างน้อย 6 ตัวอักษร', 'Password must be at least 6 characters'));
   const sb = await ensureSession();
   const { data, error } = await sb.auth.updateUser({ email: email.trim() });
   if (error) throw new Error(friendlyAuthError(error.message));

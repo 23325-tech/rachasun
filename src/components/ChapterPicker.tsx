@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { Level, Subject } from '../types';
 import { chaptersOf } from '../data/chapters';
+import { t } from '../lib/i18n';
 
 interface Props {
   level: Level;
@@ -25,14 +26,14 @@ export function ChapterPicker({ level, subject, value, onChange }: Props) {
   return (
     <div className="setting">
       <span className="setting__label">
-        บท {value.length ? `(เลือก ${value.length} บท)` : '(ไม่เลือก = ทุกบท)'}
+        {t('บท', 'Chapters')} {value.length ? t(`(เลือก ${value.length} บท)`, `(${value.length} selected)`) : t('(ไม่เลือก = ทุกบท)', '(none = all chapters)')}
         {value.length > 0 && (
           <button type="button" className="link-btn chapter-picker__clear" onClick={() => onChange([])}>
-            ล้าง
+            {t('ล้าง', 'Clear')}
           </button>
         )}
       </span>
-      <div className="chapter-picker" role="group" aria-label="เลือกบท">
+      <div className="chapter-picker" role="group" aria-label={t('เลือกบท', 'Choose chapters')}>
         {shown.map((c) => (
           <button
             key={c.id}
@@ -48,7 +49,7 @@ export function ChapterPicker({ level, subject, value, onChange }: Props) {
       </div>
       {chapters.length > PREVIEW && (
         <button type="button" className="link-btn chapter-picker__more" onClick={() => setExpanded(!expanded)}>
-          {expanded ? 'ย่อ ▲' : `ดูทั้งหมด ${chapters.length} บท ▼`}
+          {expanded ? t('ย่อ ▲', 'Less ▲') : t(`ดูทั้งหมด ${chapters.length} บท ▼`, `Show all ${chapters.length} chapters ▼`)}
         </button>
       )}
     </div>

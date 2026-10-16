@@ -2,26 +2,27 @@ import { Coffee, Fire, Smiley, type Icon } from '@phosphor-icons/react';
 import type { Difficulty } from '../types';
 import { shuffle } from '../lib/shuffle';
 import { botCode } from '../lib/look';
+import { t } from '../lib/i18n';
 
 export type BotLevel = 'chill' | 'normal' | 'pro';
 
 export const BOT_LEVELS: { value: BotLevel; label: string; icon: Icon }[] = [
-  { value: 'chill', label: 'ชิลๆ', icon: Coffee },
-  { value: 'normal', label: 'ปกติ', icon: Smiley },
-  { value: 'pro', label: 'โหด', icon: Fire },
+  { value: 'chill', get label() { return t('ชิลๆ', 'Chill'); }, icon: Coffee },
+  { value: 'normal', get label() { return t('ปกติ', 'Normal'); }, icon: Smiley },
+  { value: 'pro', get label() { return t('โหด', 'Brutal'); }, icon: Fire },
 ];
 
 const BOT_ROSTER = [
-  { name: 'หมีพูห์', avatar: botCode('หมีพูห์') },
-  { name: 'แมวส้ม', avatar: botCode('แมวส้ม') },
-  { name: 'หมาชิบะ', avatar: botCode('หมาชิบะ') },
-  { name: 'จิ้งจอก', avatar: botCode('จิ้งจอก') },
-  { name: 'แพนด้า', avatar: botCode('แพนด้า') },
-  { name: 'กบน้อย', avatar: botCode('กบน้อย') },
-  { name: 'ไดโน', avatar: botCode('ไดโน') },
-  { name: 'หุ่นยนต์', avatar: botCode('หุ่นยนต์') },
-  { name: 'ยูนิคอร์น', avatar: botCode('ยูนิคอร์น') },
-  { name: 'นกฮูก', avatar: botCode('นกฮูก') },
+  { get name() { return t('หมีพูห์', 'Bear'); }, avatar: botCode('หมีพูห์') },
+  { get name() { return t('แมวส้ม', 'Ginger'); }, avatar: botCode('แมวส้ม') },
+  { get name() { return t('หมาชิบะ', 'Shiba'); }, avatar: botCode('หมาชิบะ') },
+  { get name() { return t('จิ้งจอก', 'Foxy'); }, avatar: botCode('จิ้งจอก') },
+  { get name() { return t('แพนด้า', 'Panda'); }, avatar: botCode('แพนด้า') },
+  { get name() { return t('กบน้อย', 'Froggy'); }, avatar: botCode('กบน้อย') },
+  { get name() { return t('ไดโน', 'Dino'); }, avatar: botCode('ไดโน') },
+  { get name() { return t('หุ่นยนต์', 'Robo'); }, avatar: botCode('หุ่นยนต์') },
+  { get name() { return t('ยูนิคอร์น', 'Unicorn'); }, avatar: botCode('ยูนิคอร์น') },
+  { get name() { return t('นกฮูก', 'Owl'); }, avatar: botCode('นกฮูก') },
 ];
 
 /** ความแม่นพื้นฐาน (โอกาสตอบถูก) ตามระดับบอท และความยากของข้อ */

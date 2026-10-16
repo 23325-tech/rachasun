@@ -14,14 +14,15 @@ import {
 } from '@phosphor-icons/react';
 import type { Difficulty, Level, Subject, Track } from '../types';
 import { SUBJECT_ICON } from '../components/subjectIcons';
+import { t } from '../lib/i18n';
 
 export const SUBJECTS: Record<Subject, { name: string; icon: Icon; color: string; topics: string }> = {
-  math: { name: 'คณิตศาสตร์', icon: SUBJECT_ICON.math, color: '#ff5d73', topics: 'พีชคณิต · แคลคูลัส · เรขาคณิต' },
-  science: { name: 'วิทยาศาสตร์', icon: SUBJECT_ICON.science, color: '#14b8c4', topics: 'สิ่งมีชีวิต · สาร · แรงและพลังงาน' },
-  physics: { name: 'ฟิสิกส์', icon: SUBJECT_ICON.physics, color: '#3d8bff', topics: 'กลศาสตร์ · ไฟฟ้า · คลื่น' },
-  chemistry: { name: 'เคมี', icon: SUBJECT_ICON.chemistry, color: '#22c58b', topics: 'ปริมาณสาร · กรด-เบส · พันธะ' },
-  biology: { name: 'ชีววิทยา', icon: SUBJECT_ICON.biology, color: '#ff9f1c', topics: 'เซลล์ · พันธุกรรม · ร่างกาย' },
-  english: { name: 'ภาษาอังกฤษ', icon: SUBJECT_ICON.english, color: '#b05cff', topics: 'Grammar · Vocab · Reading' },
+  math: { get name() { return t('คณิตศาสตร์', 'Math'); }, icon: SUBJECT_ICON.math, color: '#ff5d73', get topics() { return t('พีชคณิต · แคลคูลัส · เรขาคณิต', 'Algebra · Calculus · Geometry'); } },
+  science: { get name() { return t('วิทยาศาสตร์', 'Science'); }, icon: SUBJECT_ICON.science, color: '#14b8c4', get topics() { return t('สิ่งมีชีวิต · สาร · แรงและพลังงาน', 'Living things · Matter · Forces & energy'); } },
+  physics: { get name() { return t('ฟิสิกส์', 'Physics'); }, icon: SUBJECT_ICON.physics, color: '#3d8bff', get topics() { return t('กลศาสตร์ · ไฟฟ้า · คลื่น', 'Mechanics · Electricity · Waves'); } },
+  chemistry: { get name() { return t('เคมี', 'Chemistry'); }, icon: SUBJECT_ICON.chemistry, color: '#22c58b', get topics() { return t('ปริมาณสาร · กรด-เบส · พันธะ', 'Stoichiometry · Acids & bases · Bonding'); } },
+  biology: { get name() { return t('ชีววิทยา', 'Biology'); }, icon: SUBJECT_ICON.biology, color: '#ff9f1c', get topics() { return t('เซลล์ · พันธุกรรม · ร่างกาย', 'Cells · Genetics · Human body'); } },
+  english: { get name() { return t('ภาษาอังกฤษ', 'English'); }, icon: SUBJECT_ICON.english, color: '#b05cff', get topics() { return 'Grammar · Vocab · Reading'; } },
 };
 
 export interface LevelInfo {
@@ -35,42 +36,42 @@ export interface LevelInfo {
   subjectOverride?: Partial<Record<Subject, { name: string; topics: string }>>;
 }
 
-const SCHOOL = { value: 'school' as const, label: 'สอบปกติ', icon: Chalkboard };
+const SCHOOL = { value: 'school' as const, get label() { return t('สอบปกติ', 'School exam'); }, icon: Chalkboard };
 
 export const LEVELS: Record<Level, LevelInfo> = {
   primary: {
-    name: 'ประถม',
-    short: 'ป.1-6',
+    get name() { return t('ประถม', 'Primary'); },
+    get short() { return t('ป.1-6', 'Grade 1-6'); },
     icon: Backpack,
     subjects: ['math', 'science', 'english'],
-    tracks: [SCHOOL, { value: 'entrance', label: 'สอบเข้า ม.1', icon: Target }],
+    tracks: [SCHOOL, { value: 'entrance', get label() { return t('สอบเข้า ม.1', 'Grade 7 entrance'); }, icon: Target }],
     subjectOverride: {
-      math: { name: 'คณิตศาสตร์', topics: 'จำนวน · เศษส่วน · รูปทรง' },
-      english: { name: 'ภาษาอังกฤษ', topics: 'Vocab · Grammar พื้นฐาน' },
+      math: { get name() { return t('คณิตศาสตร์', 'Math'); }, get topics() { return t('จำนวน · เศษส่วน · รูปทรง', 'Numbers · Fractions · Shapes'); } },
+      english: { get name() { return t('ภาษาอังกฤษ', 'English'); }, get topics() { return t('Vocab · Grammar พื้นฐาน', 'Vocab · Basic grammar'); } },
     },
   },
   lower: {
-    name: 'ม.ต้น',
-    short: 'ม.1-3',
+    get name() { return t('ม.ต้น', 'Lower sec.'); },
+    get short() { return t('ม.1-3', 'Grade 7-9'); },
     icon: BookOpenText,
     subjects: ['math', 'science', 'english'],
-    tracks: [SCHOOL, { value: 'entrance', label: 'สอบเข้า ม.4', icon: Target }],
-    subjectOverride: { math: { name: 'คณิตศาสตร์', topics: 'สมการ · เรขาคณิต · สถิติ' } },
+    tracks: [SCHOOL, { value: 'entrance', get label() { return t('สอบเข้า ม.4', 'Grade 10 entrance'); }, icon: Target }],
+    subjectOverride: { math: { get name() { return t('คณิตศาสตร์', 'Math'); }, get topics() { return t('สมการ · เรขาคณิต · สถิติ', 'Equations · Geometry · Statistics'); } } },
   },
   upper: {
-    name: 'ม.ปลาย',
-    short: 'ม.4-6',
+    get name() { return t('ม.ปลาย', 'Upper sec.'); },
+    get short() { return t('ม.4-6', 'Grade 10-12'); },
     icon: Books,
     subjects: ['math', 'physics', 'chemistry', 'biology', 'english'],
-    tracks: [SCHOOL, { value: 'entrance', label: 'สอบเข้ามหาลัย', icon: GraduationCap }],
+    tracks: [SCHOOL, { value: 'entrance', get label() { return t('สอบเข้ามหาลัย', 'University entrance'); }, icon: GraduationCap }],
   },
   uni: {
-    name: 'มหาลัย',
-    short: 'ปี 1-2',
+    get name() { return t('มหาลัย', 'University'); },
+    get short() { return t('ปี 1-2', 'Year 1-2'); },
     icon: GraduationCap,
     subjects: ['math', 'physics', 'chemistry', 'biology', 'english'],
-    tracks: [{ value: 'school', label: 'สอบในคณะ', icon: Bank }],
-    subjectOverride: { math: { name: 'แคลคูลัส', topics: 'ลิมิต · อนุพันธ์ · อินทิกรัล · เมทริกซ์' } },
+    tracks: [{ value: 'school', get label() { return t('สอบในคณะ', 'Faculty exam'); }, icon: Bank }],
+    subjectOverride: { math: { get name() { return t('แคลคูลัส', 'Calculus'); }, get topics() { return t('ลิมิต · อนุพันธ์ · อินทิกรัล · เมทริกซ์', 'Limits · Derivatives · Integrals · Matrices'); } } },
   },
 };
 
@@ -83,18 +84,18 @@ export const subjectInfo = (subject: Subject, level: Level = 'upper') => ({
 });
 
 export const DIFFICULTY_LABEL: Record<Difficulty, string> = {
-  easy: 'ง่าย',
-  medium: 'กลาง',
-  hard: 'ยาก',
-  challenge: 'ท้าทาย',
+  get easy() { return t('ง่าย', 'Easy'); },
+  get medium() { return t('กลาง', 'Medium'); },
+  get hard() { return t('ยาก', 'Hard'); },
+  get challenge() { return t('ท้าทาย', 'Challenge'); },
 };
 
 /** ตัวเลือกความยาก (ใช้ทุกหน้าที่ให้เลือก) */
 export const DIFFICULTY_OPTIONS: { value: Difficulty; label: string; icon: Icon }[] = [
-  { value: 'easy', label: 'ง่าย', icon: Plant },
-  { value: 'medium', label: 'กลาง', icon: Fire },
-  { value: 'hard', label: 'ยาก', icon: Skull },
-  { value: 'challenge', label: 'ท้าทาย', icon: Brain },
+  { value: 'easy', get label() { return t('ง่าย', 'Easy'); }, icon: Plant },
+  { value: 'medium', get label() { return t('กลาง', 'Medium'); }, icon: Fire },
+  { value: 'hard', get label() { return t('ยาก', 'Hard'); }, icon: Skull },
+  { value: 'challenge', get label() { return t('ท้าทาย', 'Challenge'); }, icon: Brain },
 ];
 
 /** ชื่อความยาก เช่น "กลาง" */
@@ -106,14 +107,14 @@ export const CHOICE_LABELS = ['ก', 'ข', 'ค', 'ง'] as const;
 
 /** ตัวเลือกวิชาของระดับชั้น (รวม "ทุกวิชา") สำหรับ <select> */
 export const subjectOptions = (level: Level): { value: Subject | 'all'; label: string }[] => [
-  { value: 'all', label: 'ทุกวิชา' },
+  { value: 'all', label: t('ทุกวิชา', 'All subjects') },
   ...LEVELS[level].subjects.map((s) => ({ value: s, label: subjectInfo(s, level).name })),
 ];
 
 /** ป้ายสรุปค่าตั้ง เช่น "ประถม · วิทยาศาสตร์" (ไม่มี level = ม.ปลาย) */
 export function settingsLabel(s: { level?: Level; subject: Subject | 'all' }): string {
   const level = s.level ?? 'upper';
-  const sub = s.subject === 'all' ? 'ทุกวิชา' : subjectInfo(s.subject, level).name;
+  const sub = s.subject === 'all' ? t('ทุกวิชา', 'All subjects') : subjectInfo(s.subject, level).name;
   return `${LEVELS[level].name} · ${sub}`;
 }
 

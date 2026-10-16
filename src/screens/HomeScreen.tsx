@@ -9,6 +9,7 @@ import { chibiOf, DEFAULT_LOOK_CODE } from '../lib/look';
 import { IconTile, SUBJECT_ICON, TierIcon } from '../components/icons';
 import { PlayerAvatar } from '../components/PlayerAvatar';
 import type { GameMode } from './StartScreen';
+import { getLang, setLang, t } from '../lib/i18n';
 
 const Avatar3D = lazy(() => import('../components/Avatar3D').then((m) => ({ default: m.Avatar3D })));
 
@@ -38,13 +39,13 @@ interface Props {
   checkinSlot?: ReactNode;
 }
 
-const MODES: { key: HomeAction; title: string; desc: string; icon: Icon; grad: string }[] = [
-  { key: 'solo', title: 'ฝึกเดี่ยว', desc: 'เลือกบท เลือกความยาก', icon: Target, grad: 'linear-gradient(135deg,#7c5cff,#b65cff)' },
-  { key: 'bots', title: 'ดวลกับบอท', desc: 'ยิงหัวใจ อยู่รอดคนสุดท้าย', icon: Robot, grad: 'linear-gradient(135deg,#ff5d73,#ff9a62)' },
-  { key: 'online', title: 'ออนไลน์', desc: 'สุ่มหาคู่ · ห้องเพื่อน', icon: GlobeHemisphereEast, grad: 'linear-gradient(135deg,#2fa8ff,#4fe0d0)' },
-  { key: 'challenge', title: 'ท้าเพื่อน', desc: 'ส่งลิงก์ ทำชุดเดียวกัน', icon: LinkSimple, grad: 'linear-gradient(135deg,#ffb020,#ffd65c)' },
-  { key: 'groups', title: 'กลุ่มเพื่อน', desc: 'โจทย์ประจำวัน + อันดับ', icon: UsersThree, grad: 'linear-gradient(135deg,#22c58b,#7be08f)' },
-  { key: 'analysis', title: 'วิเคราะห์ของฉัน', desc: 'แผนฝึก + AI โค้ช', icon: ChartLineUp, grad: 'linear-gradient(135deg,#5a6bff,#8f9dff)' },
+const modes = (): { key: HomeAction; title: string; desc: string; icon: Icon; grad: string }[] => [
+  { key: 'solo', title: t('ฝึกเดี่ยว', 'Solo practice'), desc: t('เลือกบท เลือกความยาก', 'Pick chapters and difficulty'), icon: Target, grad: 'linear-gradient(135deg,#7c5cff,#b65cff)' },
+  { key: 'bots', title: t('ดวลกับบอท', 'Bot battle'), desc: t('ยิงหัวใจ อยู่รอดคนสุดท้าย', 'Shoot hearts, be the last one standing'), icon: Robot, grad: 'linear-gradient(135deg,#ff5d73,#ff9a62)' },
+  { key: 'online', title: t('ออนไลน์', 'Online'), desc: t('สุ่มหาคู่ · ห้องเพื่อน', 'Matchmaking · Friend rooms'), icon: GlobeHemisphereEast, grad: 'linear-gradient(135deg,#2fa8ff,#4fe0d0)' },
+  { key: 'challenge', title: t('ท้าเพื่อน', 'Challenge a friend'), desc: t('ส่งลิงก์ ทำชุดเดียวกัน', 'Share a link, same question set'), icon: LinkSimple, grad: 'linear-gradient(135deg,#ffb020,#ffd65c)' },
+  { key: 'groups', title: t('กลุ่มเพื่อน', 'Friend groups'), desc: t('โจทย์ประจำวัน + อันดับ', 'Daily questions + leaderboard'), icon: UsersThree, grad: 'linear-gradient(135deg,#22c58b,#7be08f)' },
+  { key: 'analysis', title: t('วิเคราะห์ของฉัน', 'My analysis'), desc: t('แผนฝึก + AI โค้ช', 'Study plan + AI coach'), icon: ChartLineUp, grad: 'linear-gradient(135deg,#5a6bff,#8f9dff)' },
 ];
 
 const SUBJECT_GRAD: Record<Subject, string> = {
@@ -67,31 +68,45 @@ export function HomeScreen(p: Props) {
   return (
     <div className="screen hm">
       <header className="hm-top">
-        <button type="button" className="hm-me" onClick={p.onAccount} aria-label="เปิดหน้าบัญชี">
+        <button type="button" className="hm-me" onClick={p.onAccount} aria-label={t('เปิดหน้าบัญชี', 'Open account')}>
           <PlayerAvatar code={code} size={34} />
           <span className="hm-me__text">
-            <strong>{profile ? displayName(profile) : 'ผู้เล่น'}</strong>
+            <strong>{profile ? displayName(profile) : t('ผู้เล่น', 'Player')}</strong>
             <small>
               Lv {lv.level} · {lv.current}/{lv.needed} XP
             </small>
           </span>
         </button>
+        <button
+          type="button"
+          className="lang-pill"
+          onClick={() => setLang(getLang() === 'th' ? 'en' : 'th')}
+          aria-label={t('เปลี่ยนเป็นภาษาอังกฤษ', 'Switch to Thai')}
+        >
+          <span className={getLang() === 'th' ? 'is-on' : ''}>TH</span>
+          <span className={getLang() === 'en' ? 'is-on' : ''}>EN</span>
+        </button>
         {p.coins !== undefined && (
-          <button type="button" className="coin-pill" onClick={p.onShop} aria-label="เหรียญ เปิดร้านค้า">
+          <button type="button" className="coin-pill" onClick={p.onShop} aria-label={t('เหรียญ เปิดร้านค้า', 'Coins, open shop')}>
             <Coin weight="fill" size={18} /> {p.coins.toLocaleString()}
           </button>
         )}
         {profile && (p.guest || p.needsPassword) && (
-          <button type="button" className="hm-chip hm-chip--save" onClick={p.onAccount}>
+          <button
+            type="button"
+            className="hm-chip hm-chip--save"
+            onClick={p.onAccount}
+            aria-label={p.guest ? t('สมัครเก็บ XP', 'Save XP') : t('ตั้งรหัส', 'Set password')}
+          >
             {p.guest ? <FloppyDisk weight="fill" size={16} /> : <Key weight="fill" size={16} />}
-            {p.guest ? 'สมัครเก็บ XP' : 'ตั้งรหัส'}
+            <span className="hm-chip__text">{p.guest ? t('สมัครเก็บ XP', 'Save XP') : t('ตั้งรหัส', 'Set password')}</span>
           </button>
         )}
       </header>
 
       {p.offline && (
         <div className="offline-banner" role="status">
-          <WifiSlash weight="bold" size={16} /> ออฟไลน์อยู่ — เล่นฝึกเดี่ยว/ดวลบอทด้วยโจทย์ตัวอย่างได้ (ไม่ได้ XP)
+          <WifiSlash weight="bold" size={16} /> {t('ออฟไลน์อยู่ — เล่นฝึกเดี่ยว/ดวลบอทด้วยโจทย์ตัวอย่างได้ (ไม่ได้ XP)', 'You\'re offline — play solo/bot battles with sample questions (no XP)')}
         </div>
       )}
       {p.installSlot}
@@ -111,7 +126,7 @@ export function HomeScreen(p: Props) {
           </span>
           <span className="hm-stats">
             <span>
-              <Heart weight="fill" size={13} /> ชนะ {profile?.wins ?? 0}
+              <Heart weight="fill" size={13} /> {t('ชนะ', 'Wins')} {profile?.wins ?? 0}
             </span>
             <span>
               <Sparkle weight="fill" size={13} /> {(profile?.xp ?? 0).toLocaleString()} XP
@@ -121,19 +136,19 @@ export function HomeScreen(p: Props) {
         {profile && (
           <button type="button" className={`hm-dress ${p.dressNew ? 'is-new' : ''}`} onClick={p.onDress}>
             <TShirt weight="fill" size={18} />
-            {p.dressNew ? 'แต่งตัวละครของคุณ!' : 'แต่งตัว'}
+            {p.dressNew ? t('แต่งตัวละครของคุณ!', 'Dress up your character!') : t('แต่งตัว', 'Dress up')}
           </button>
         )}
         {profile && (
           <button type="button" className="hm-shop" onClick={p.onShop}>
-            <Storefront weight="fill" size={18} /> ร้านค้า
+            <Storefront weight="fill" size={18} /> {t('ร้านค้า', 'Shop')}
           </button>
         )}
       </section>
 
       {p.checkinSlot}
 
-      <div className="hm-levels" role="radiogroup" aria-label="ระดับชั้น">
+      <div className="hm-levels" role="radiogroup" aria-label={t('ระดับชั้น', 'Level')}>
         {LEVEL_KEYS.map((k) => (
           <button
             key={k}
@@ -152,15 +167,15 @@ export function HomeScreen(p: Props) {
         <div className="alert" role="alert">
           <p className="alert__msg">{p.error}</p>
           <button type="button" className="btn btn--ghost btn--block" onClick={p.onDismissError}>
-            ตกลง
+            {t('ตกลง', 'OK')}
           </button>
         </div>
       )}
 
       <section>
-        <h2 className="section-title">วันนี้เล่นอะไรดี</h2>
+        <h2 className="section-title">{t('วันนี้เล่นอะไรดี', 'What to play today')}</h2>
         <div className="hm-modes">
-          {MODES.map((m) => (
+          {modes().map((m) => (
             <button key={m.key} type="button" className="hm-mode" onClick={() => p.onAction(m.key)}>
               <IconTile icon={m.icon} grad={m.grad} />
               <span className="hm-mode__text">
@@ -173,8 +188,8 @@ export function HomeScreen(p: Props) {
             <button type="button" className="hm-mode hm-mode--mock" onClick={() => p.onAction('mock')}>
               <IconTile icon={Exam} grad="linear-gradient(135deg,#6a3df0,#8f6bff)" size={52} iconSize={30} />
               <span className="hm-mode__text">
-                <strong>จำลองสอบ A-Level</strong>
-                <small>เต็มชุด 90 นาที · เทียบคะแนนกับคนอื่น</small>
+                <strong>{t('จำลองสอบ A-Level', 'A-Level mock exam')}</strong>
+                <small>{t('เต็มชุด 90 นาที · เทียบคะแนนกับคนอื่น', 'Full set, 90 min · compare with others')}</small>
               </span>
               <Crown weight="fill" size={20} className="hm-mode__badge" />
             </button>
@@ -183,7 +198,7 @@ export function HomeScreen(p: Props) {
       </section>
 
       <section>
-        <h2 className="section-title">ฝึกตามวิชา</h2>
+        <h2 className="section-title">{t('ฝึกตามวิชา', 'Practice by subject')}</h2>
         <div className="hm-subjects" style={{ '--n': LEVELS[p.level].subjects.length } as CSSProperties}>
           {LEVELS[p.level].subjects.map((s) => (
             <button key={s} type="button" className="hm-subject" onClick={() => p.onSubject(s)}>

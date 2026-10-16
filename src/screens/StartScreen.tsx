@@ -6,6 +6,7 @@ import { BOT_LEVELS, type BotLevel } from '../game/bots';
 import { heartsFor } from '../game/battle';
 import type { Icon } from '@phosphor-icons/react';
 import { Rainbow, WarningCircle } from '@phosphor-icons/react';
+import { t } from '../lib/i18n';
 
 export type SubjectFilter = Subject | 'all';
 
@@ -46,7 +47,11 @@ interface Props {
   offline?: boolean;
 }
 
-const MODE_TITLE: Record<GameMode, string> = { solo: 'ฝึกเดี่ยว', bots: 'ดวลกับบอท', challenge: 'สร้างคำท้า' };
+const MODE_TITLE: Record<GameMode, string> = {
+  get solo() { return t('ฝึกเดี่ยว', 'Solo practice'); },
+  get bots() { return t('ดวลกับบอท', 'Bot battle'); },
+  get challenge() { return t('สร้างคำท้า', 'Create a challenge'); },
+};
 
 function Segmented<T extends string | number>({
   label,
@@ -98,15 +103,15 @@ export function StartScreen({
   const levelInfo = LEVELS[s.level];
   const subjectName =
     s.subject === 'all'
-      ? 'ทุกวิชา'
-      : subjectInfo(s.subject, s.level).name + (s.chapters.length && s.mode !== 'challenge' ? ` (${s.chapters.length} บท)` : '');
+      ? t('ทุกวิชา', 'All subjects')
+      : subjectInfo(s.subject, s.level).name + (s.chapters.length && s.mode !== 'challenge' ? t(` (${s.chapters.length} บท)`, ` (${s.chapters.length} ch.)`) : '');
   const difficultyLabel = DIFFICULTIES.find((d) => d.value === s.difficulty)!.label;
   const minutes = Math.max(1, Math.round((s.count * AVG_SEC[s.difficulty]) / 60));
 
   return (
     <div className="screen home round-setup">
       <header className="quiz__top">
-        <button type="button" className="icon-btn" onClick={onBack} aria-label="กลับ">
+        <button type="button" className="icon-btn" onClick={onBack} aria-label={t('กลับ', 'Back')}>
           ←
         </button>
         <div className="quiz__progress">
@@ -116,14 +121,14 @@ export function StartScreen({
 
       {offline && (
         <div className="offline-banner" role="status">
-          ออฟไลน์อยู่ — เล่นด้วยโจทย์ตัวอย่างในเครื่อง (ไม่ได้ XP)
+          {t('ออฟไลน์อยู่ — เล่นด้วยโจทย์ตัวอย่างในเครื่อง (ไม่ได้ XP)', 'You\'re offline — playing sample questions (no XP)')}
         </div>
       )}
 
 
       <section aria-labelledby="pick-subject">
         <h2 id="pick-subject" className="section-title">
-          วันนี้จะฝึกวิชาอะไรดี?
+          {t('วันนี้จะฝึกวิชาอะไรดี?', 'Which subject today?')}
         </h2>
         <div className="subject-grid">
           <button
@@ -136,8 +141,8 @@ export function StartScreen({
               <Rainbow weight="fill" className="ico" />
             </span>
             <span className="subject-card__body">
-              <span className="subject-card__name">ทุกวิชา</span>
-              <span className="subject-card__topics">คละ {levelInfo.subjects.length} วิชา ท้าทายสุด</span>
+              <span className="subject-card__name">{t('ทุกวิชา', 'All subjects')}</span>
+              <span className="subject-card__topics">{t(`คละ ${levelInfo.subjects.length} วิชา ท้าทายสุด`, `Mix of ${levelInfo.subjects.length} subjects — toughest`)}</span>
             </span>
             <span className="subject-card__check" aria-hidden>
               ✓
@@ -170,28 +175,28 @@ export function StartScreen({
         </div>
       </section>
 
-      <section className="settings-card" aria-label="ตั้งค่ารอบนี้">
+      <section className="settings-card" aria-label={t('ตั้งค่ารอบนี้', 'Round settings')}>
         {s.subject !== 'all' && s.mode !== 'challenge' && (
           <ChapterPicker level={s.level} subject={s.subject} value={s.chapters} onChange={(v) => set('chapters', v)} />
         )}
-        <Segmented label="ความยาก" options={DIFFICULTIES} value={s.difficulty} onChange={(v) => set('difficulty', v)} />
+        <Segmented label={t('ความยาก', 'Difficulty')} options={DIFFICULTIES} value={s.difficulty} onChange={(v) => set('difficulty', v)} />
         {levelInfo.tracks.length > 1 && (
-          <Segmented<Track> label="แนวข้อสอบ" options={levelInfo.tracks} value={s.track} onChange={(v) => set('track', v)} />
+          <Segmented<Track> label={t('แนวข้อสอบ', 'Exam type')} options={levelInfo.tracks} value={s.track} onChange={(v) => set('track', v)} />
         )}
         {s.mode === 'bots' && (
           <>
             <Segmented
-              label="จำนวนบอท"
-              options={BOT_COUNTS.map((n) => ({ value: n, label: `${n} ตัว` }))}
+              label={t('จำนวนบอท', 'Bots')}
+              options={BOT_COUNTS.map((n) => ({ value: n, label: t(`${n} ตัว`, `${n}`) }))}
               value={s.botCount}
               onChange={(v) => set('botCount', v)}
             />
-            <Segmented label="ความเก่งบอท" options={BOT_LEVELS} value={s.botLevel} onChange={(v) => set('botLevel', v)} />
+            <Segmented label={t('ความเก่งบอท', 'Bot skill')} options={BOT_LEVELS} value={s.botLevel} onChange={(v) => set('botLevel', v)} />
           </>
         )}
         <Segmented
-          label="จำนวนข้อ"
-          options={COUNTS.map((n) => ({ value: n, label: `${n} ข้อ` }))}
+          label={t('จำนวนข้อ', 'Questions')}
+          options={COUNTS.map((n) => ({ value: n, label: t(`${n} ข้อ`, `${n}`) }))}
           value={s.count}
           onChange={(v) => set('count', v)}
         />
@@ -201,7 +206,7 @@ export function StartScreen({
         <div className="alert" role="alert">
           <p className="alert__msg"><WarningCircle weight="fill" className="ico" /> {error}</p>
           <button type="button" className="btn btn--ghost btn--block" onClick={() => onPlaySample(s)}>
-            เล่นโจทย์ตัวอย่างในเครื่องแทน
+            {t('เล่นโจทย์ตัวอย่างในเครื่องแทน', 'Play sample questions instead')}
           </button>
         </div>
       )}
@@ -209,13 +214,13 @@ export function StartScreen({
       <div className="cta-bar">
         <p className="cta-bar__summary">
           {s.mode === 'bots'
-            ? `${s.botCount + 1} คน · ${s.count} ข้อ · หัวใจคนละ ${heartsFor(s.count)} ดวง`
+            ? t(`${s.botCount + 1} คน · ${s.count} ข้อ · หัวใจคนละ ${heartsFor(s.count)} ดวง`, `${s.botCount + 1} players · ${s.count} questions · ${heartsFor(s.count)} hearts each`)
             : s.mode === 'challenge'
-              ? `${levelInfo.name} · ${subjectName} · ${difficultyLabel} · ${s.count} ข้อ · ส่งลิงก์ให้เพื่อนเล่นต่อ`
-              : `${levelInfo.name} · ${subjectName} · ${difficultyLabel} · ${s.count} ข้อ · ราว ${minutes} นาที`}
+              ? `${levelInfo.name} · ${subjectName} · ${difficultyLabel} · ${t(`${s.count} ข้อ · ส่งลิงก์ให้เพื่อนเล่นต่อ`, `${s.count} questions · share the link with friends`)}`
+              : `${levelInfo.name} · ${subjectName} · ${difficultyLabel} · ${t(`${s.count} ข้อ · ราว ${minutes} นาที`, `${s.count} questions · about ${minutes} min`)}`}
         </p>
         <button type="button" className="btn btn--primary btn--block btn--big cta-bar__btn" onClick={() => onStart(s)}>
-          {s.mode === 'bots' ? 'เริ่มดวลเลย!' : s.mode === 'challenge' ? 'สร้างคำท้า' : 'เริ่มฝึกเลย!'}
+          {s.mode === 'bots' ? t('เริ่มดวลเลย!', 'Start battle!') : s.mode === 'challenge' ? t('สร้างคำท้า', 'Create a challenge') : t('เริ่มฝึกเลย!', 'Start practice!')}
         </button>
       </div>
     </div>

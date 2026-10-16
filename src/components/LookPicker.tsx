@@ -2,6 +2,7 @@ import { lazy, Suspense, type ReactNode } from 'react';
 import { Shuffle } from '@phosphor-icons/react';
 import { encodeLook, lookOf, randomLook, toChibi, WARDROBE, type Look } from '../lib/look';
 import type { Slot, WardrobeItem } from '../../supabase/functions/_shared/wardrobe';
+import { t } from '../lib/i18n';
 
 // โหลด three.js แยกไฟล์ หน้าอื่นไม่ต้องโหลด
 const Avatar3D = lazy(() => import('./Avatar3D').then((m) => ({ default: m.Avatar3D })));
@@ -48,14 +49,14 @@ export function LookPicker({ code, onChange }: Props) {
         </Suspense>
         <button type="button" className="look-picker__shuffle" onClick={() => onChange(encodeLook(randomLook()))}>
           <Shuffle weight="bold" size={18} />
-          สุ่ม
+          {t('สุ่ม', 'Shuffle')}
         </button>
       </div>
-      {row('สีผิว', 'skin', (it) => swatch(it.value))}
-      {row('สีผม', 'hair', (it) => swatch(it.value))}
-      {row('ทรงผม', 'style', (it) => <span className="look-opt__text">{it.name.replace('ผม', '')}</span>)}
-      {row('ชุด', 'outfit', (it) => swatch(it.value.split('-')[1]))}
-      <p className="muted look-picker__note">แต่งตัวเพิ่มได้ทีหลังในห้องแต่งตัว</p>
+      {row(t('สีผิว', 'Skin'), 'skin', (it) => swatch(it.value))}
+      {row(t('สีผม', 'Hair color'), 'hair', (it) => swatch(it.value))}
+      {row(t('ทรงผม', 'Hairstyle'), 'style', (it) => <span className="look-opt__text">{it.name.replace('ผม', '')}</span>)}
+      {row(t('ชุด', 'Outfit'), 'outfit', (it) => swatch(it.value.split('-')[1]))}
+      <p className="muted look-picker__note">{t('แต่งตัวเพิ่มได้ทีหลังในห้องแต่งตัว', 'More outfits later in the dressing room')}</p>
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { CaretRight, Sparkle, TShirt } from '@phosphor-icons/react';
 import { PlayerAvatar } from './PlayerAvatar';
+import { t } from '../lib/i18n';
 
 const SEEN_KEY = 'bg_dressing_seen';
 
@@ -27,9 +28,9 @@ export function DressEntry({ code, onOpen }: { code: string; onOpen: () => void 
       <PlayerAvatar code={code} size={isNew ? 58 : 40} framing="full" className="is-bare" />
       <span className="dress-entry__text">
         <strong>
-          {isNew && <Sparkle weight="fill" size={16} />} {isNew ? 'แต่งตัวละครของคุณ!' : 'ห้องแต่งตัว'}
+          {isNew && <Sparkle weight="fill" size={16} />} {isNew ? t('แต่งตัวละครของคุณ!', 'Dress up your character!') : t('ห้องแต่งตัว', 'Dressing room')}
         </strong>
-        <small>{isNew ? 'เลือกทรงผม ชุด หมวก ของในมือ และลองของในร้านได้' : 'เปลี่ยนชุด ทรงผม และลองของใหม่'}</small>
+        <small>{isNew ? t('เลือกทรงผม ชุด หมวก ของในมือ และลองของในร้านได้', 'Pick hair, outfits, hats, held items and try on shop items') : t('เปลี่ยนชุด ทรงผม และลองของใหม่', 'Change outfits, hair and try new items')}</small>
       </span>
       {isNew ? <CaretRight weight="bold" size={20} /> : <TShirt weight="fill" size={22} />}
     </button>
