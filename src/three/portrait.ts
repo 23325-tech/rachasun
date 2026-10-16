@@ -8,6 +8,7 @@ const SIZE = 192;
 let renderer: THREE.WebGLRenderer | null = null;
 let scene: THREE.Scene;
 let camera: THREE.PerspectiveCamera;
+let fullCamera: THREE.PerspectiveCamera;
 const cache = new Map<string, string>();
 const pending = new Map<string, Promise<string>>();
 let queue: Promise<unknown> = Promise.resolve();
@@ -21,6 +22,10 @@ function setup() {
   camera = new THREE.PerspectiveCamera(26, 1, 0.1, 30);
   camera.position.set(0, 1.62, 4.1);
   camera.lookAt(0, 1.38, 0);
+  // เต็มตัว (เห็นชุดและของในมือ)
+  fullCamera = new THREE.PerspectiveCamera(30, 1, 0.1, 30);
+  fullCamera.position.set(0, 1.3, 5.6);
+  fullCamera.lookAt(0, 1.08, 0);
   scene.add(new THREE.HemisphereLight(0xffffff, 0x8f7cc8, 1.7));
   const key = new THREE.DirectionalLight(0xffffff, 2.2);
   key.position.set(2.5, 4, 3);
@@ -28,10 +33,11 @@ function setup() {
 }
 
 /** คืน data URL ของภาพหน้าตัวละคร */
-export function portraitOf(code: string): Promise<string> {
-  const hit = cache.get(code);
+export function portraitOf(code: string, framing: 'bust' | 'full' = 'bust'): Promise<string> {
+  const key = `${framing}:${code}`;
+  const hit = cache.get(key);
   if (hit) return Promise.resolve(hit);
-  const p = pending.get(code);
+  const p = pending.get(key);
   if (p) return p;
   // วาดทีละตัวตามคิว (ใช้ renderer เดียวกัน)
   const job = queue.then(() => {
@@ -40,15 +46,15 @@ export function portraitOf(code: string): Promise<string> {
     chibi.root.rotation.y = -0.25;
     chibi.update(0.4);
     scene.add(chibi.root);
-    renderer!.render(scene, camera);
+    renderer!.render(scene, framing === 'full' ? fullCamera : camera);
     const url = renderer!.domElement.toDataURL('image/png');
     scene.remove(chibi.root);
     chibi.dispose();
-    cache.set(code, url);
-    pending.delete(code);
+    cache.set(key, url);
+    pending.delete(key);
     return url;
   });
   queue = job.catch(() => {});
-  pending.set(code, job);
+  pending.set(key, job);
   return job;
 }

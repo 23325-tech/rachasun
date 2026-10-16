@@ -18,6 +18,8 @@ import { createPlayers, type BattlePlayer } from './game/battle';
 import { createBots, type Bot } from './game/bots';
 import { StartScreen, withLevel, type GameSettings } from './screens/StartScreen';
 import { AnalysisScreen } from './screens/AnalysisScreen';
+import { DressingRoomScreen } from './screens/DressingRoomScreen';
+import { DressEntry, markDressingSeen } from './components/DressEntry';
 import { MockMenuScreen } from './screens/MockMenuScreen';
 import { MockExamScreen } from './screens/MockExamScreen';
 import { MockResultScreen } from './screens/MockResultScreen';
@@ -58,6 +60,7 @@ type Screen =
   | { name: 'groups'; initialCode?: string }
   | { name: 'group'; groupId: string }
   | { name: 'analysis' }
+  | { name: 'dressing' }
   | { name: 'mock' }
   | { name: 'mockExam'; session: MockSession }
   | { name: 'mockResult'; review: MockReview };
@@ -360,7 +363,20 @@ export default function App() {
               ? setScreen({ name: 'online' })
               : setScreen({ name: 'start', error: 'โหมดออนไลน์ต้องเชื่อมต่อ Supabase' })
           }
-          profileSlot={profile && <ProfileCard profile={profile} guest={guest} needsPassword={needsPassword} onOpen={openAccount} />}
+          profileSlot={
+            profile && (
+              <>
+                <ProfileCard profile={profile} guest={guest} needsPassword={needsPassword} onOpen={openAccount} />
+                <DressEntry
+                  code={profile.avatar}
+                  onOpen={() => {
+                    markDressingSeen();
+                    setScreen({ name: 'dressing' });
+                  }}
+                />
+              </>
+            )
+          }
         />
       );
     case 'analysis':
@@ -437,6 +453,18 @@ export default function App() {
           }}
         />
       );
+    case 'dressing':
+      return profile ? (
+        <DressingRoomScreen
+          code={profile.avatar}
+          onBack={goHome}
+          onSave={async (avatar) => {
+            const updated = await updateProfile(profile.id, { avatar });
+            setMe((m) => (m.status === 'ready' ? { ...m, profile: updated } : m));
+            goHome();
+          }}
+        />
+      ) : null;
     case 'loading':
       return <LoadingScreen message={screen.message} onCancel={goHome} />;
     case 'groups':

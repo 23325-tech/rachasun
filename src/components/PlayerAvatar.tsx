@@ -5,10 +5,12 @@ interface Props {
   code?: string | null;
   size?: number;
   className?: string;
+  /** bust = ครึ่งตัว (ค่าเริ่มต้น), full = เต็มตัว */
+  framing?: 'bust' | 'full';
 }
 
 /** ภาพหน้าตัวละครแบบวงกลม (วาดจากโมเดล 3D ครั้งเดียวแล้วแคช) */
-export function PlayerAvatar({ code, size = 40, className = '' }: Props) {
+export function PlayerAvatar({ code, size = 40, className = '', framing = 'bust' }: Props) {
   const [url, setUrl] = useState<string | null>(null);
 
   useEffect(() => {
@@ -16,13 +18,13 @@ export function PlayerAvatar({ code, size = 40, className = '' }: Props) {
     let alive = true;
     // โหลด three.js เฉพาะตอนต้องวาดจริง
     import('../three/portrait')
-      .then((m) => m.portraitOf(code))
+      .then((m) => m.portraitOf(code, framing))
       .then((u) => alive && setUrl(u))
       .catch(() => {});
     return () => {
       alive = false;
     };
-  }, [code]);
+  }, [code, framing]);
 
   return (
     <span className={`player-avatar ${code ? '' : 'is-empty'} ${className}`} style={{ width: size, height: size }} aria-hidden>

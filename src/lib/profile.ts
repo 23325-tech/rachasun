@@ -47,7 +47,8 @@ export async function loadMe(): Promise<{ user: User; profile: Profile | null; n
 }
 
 function friendlyDbError(message: string): string {
-  if (message.includes('nickname_allowed')) return 'ชื่อนี้ใช้ไม่ได้ ลองชื่ออื่นนะ 🙏';
+  if (message.includes('nickname_allowed')) return 'ชื่อนี้ใช้ไม่ได้ ลองชื่ออื่นนะ';
+  if (message.includes('avatar_not_allowed')) return 'มีของที่ยังไม่ได้ซื้อ บันทึกไม่ได้';
   return message;
 }
 

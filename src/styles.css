@@ -3083,3 +3083,242 @@ button {
   margin: 0;
   text-align: center;
 }
+
+/* ห้องแต่งตัว */
+.dressing__stage {
+  position: relative;
+  height: 300px;
+  border: var(--border);
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at 85% 12%, rgba(255, 255, 255, 0.9) 0 26px, transparent 27px),
+    radial-gradient(circle at 12% 70%, rgba(255, 255, 255, 0.7) 0 18px, transparent 19px),
+    linear-gradient(180deg, #e9e1ff 0%, #f7f3ff 62%, #fffbea 100%);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+.dressing__canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+.dressing__podium {
+  position: absolute;
+  left: 50%;
+  bottom: 26px;
+  width: 190px;
+  height: 38px;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  border: 3px solid var(--ink);
+  background: linear-gradient(180deg, var(--primary), var(--primary-dark));
+  box-shadow: 0 5px 0 var(--ink);
+}
+.dressing__reset {
+  position: absolute;
+  z-index: 2;
+  top: 10px;
+  right: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 10px;
+  border: 2.5px solid var(--ink);
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 3px 0 var(--ink);
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+.dressing__hint {
+  position: absolute;
+  z-index: 2;
+  bottom: 4px;
+  width: 100%;
+  margin: 0;
+  text-align: center;
+  font-size: 0.7rem;
+  color: var(--ink-soft);
+  pointer-events: none;
+}
+.dressing__tabs {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 2px 2px 6px;
+  scrollbar-width: none;
+}
+.dressing__tabs::-webkit-scrollbar {
+  display: none;
+}
+.dressing__tabs button {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 12px;
+  border: var(--border);
+  border-radius: 999px;
+  background: var(--card);
+  box-shadow: 0 3px 0 var(--ink);
+  font-size: 0.88rem;
+  cursor: pointer;
+}
+.dressing__tabs button.is-active {
+  background: var(--bg-1);
+  color: #fff;
+}
+.dressing__items {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.ward-item {
+  --r: #9a8cc0;
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  padding: 22px 6px 10px;
+  border: var(--border);
+  border-radius: 18px;
+  background: var(--card);
+  box-shadow: var(--shadow);
+  text-align: center;
+  overflow: hidden;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: transform 0.12s, box-shadow 0.12s;
+}
+.ward-item:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 var(--ink);
+}
+.ward-item::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 18px;
+  background: var(--r);
+  border-bottom: 2px solid var(--ink);
+}
+.ward-item--rare {
+  --r: #4fa3ff;
+}
+.ward-item--epic {
+  --r: #b46cff;
+}
+.ward-item--legend {
+  --r: linear-gradient(90deg, #ffcc00, #ff9f1c);
+  background: var(--cream);
+}
+.ward-item.is-wearing {
+  background: #e6fbf1;
+  border-color: var(--good-dark);
+  box-shadow: 0 5px 0 var(--good-dark);
+}
+.ward-item__rarity {
+  position: absolute;
+  top: 1px;
+  left: 0;
+  right: 0;
+  font-size: 0.66rem;
+  font-weight: 600;
+  color: #fff;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.3);
+}
+.ward-item__art {
+  display: grid;
+  place-items: center;
+  width: 68px;
+  height: 68px;
+  border: 2px solid var(--ink);
+  border-radius: 16px;
+  background: radial-gradient(circle at 50% 35%, #ffffff, #ece4ff);
+  overflow: hidden;
+}
+.ward-item__art .player-avatar {
+  border-radius: 0;
+}
+.ward-item__swatch {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 2.5px solid var(--ink);
+  background: var(--sw);
+}
+.ward-item__name {
+  font-size: 0.78rem;
+  line-height: 1.25;
+  min-height: 2.5em;
+}
+.ward-item__price {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 9px;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: var(--primary);
+  font-weight: 600;
+  font-size: 0.76rem;
+}
+.ward-item__price.is-free {
+  background: #fff;
+}
+.ward-item.is-wearing .ward-item__price {
+  background: var(--good);
+  color: #fff;
+}
+.dressing__bar {
+  display: grid;
+  gap: 8px;
+}
+.dressing__locked {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+/* ทางเข้าห้องแต่งตัว */
+.dress-entry {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 6px 14px 6px 8px;
+  border: var(--border);
+  border-radius: 18px;
+  background: var(--card);
+  box-shadow: 0 4px 0 var(--ink);
+  text-align: left;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.dress-entry:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 var(--ink);
+}
+.dress-entry.is-new {
+  background: var(--primary);
+  padding: 8px 14px 8px 8px;
+}
+.dress-entry__text {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+}
+.dress-entry__text strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 600;
+}
+.dress-entry__text small {
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+}
+.dress-entry.is-new .dress-entry__text small {
+  color: var(--ink);
+}
