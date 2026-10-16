@@ -2972,3 +2972,114 @@ button {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ภาพหน้าตัวละคร (แทนอวตารอิโมจิ) */
+.player-avatar {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 2.5px solid var(--ink);
+  background: radial-gradient(circle at 50% 35%, #ffffff, #e7defd);
+  overflow: hidden;
+  vertical-align: middle;
+}
+.player-avatar img {
+  width: 118%;
+  height: 118%;
+  object-fit: cover;
+  object-position: 50% 30%;
+}
+.player-avatar.is-empty {
+  border-style: dashed;
+  background: rgba(255, 255, 255, 0.6);
+}
+.player-avatar.is-bare {
+  border: 0;
+  background: transparent;
+}
+
+/* ออกแบบตัวละครตอนสร้างโปรไฟล์ */
+.look-picker {
+  display: grid;
+  gap: 10px;
+}
+.look-picker__stage {
+  position: relative;
+  height: 230px;
+  margin: -4px -4px 4px;
+  border: 2.5px solid var(--ink);
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 85% 15%, rgba(255, 255, 255, 0.9) 0 20px, transparent 21px),
+    linear-gradient(180deg, #e9e1ff 0%, #f7f3ff 65%, #fffbea 100%);
+  overflow: hidden;
+}
+.look-picker__canvas,
+.avatar3d {
+  position: absolute;
+  inset: 0;
+}
+.look-picker__shuffle {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  border: var(--border);
+  border-radius: 999px;
+  background: var(--primary);
+  box-shadow: 0 3px 0 var(--ink);
+  font-weight: 600;
+  cursor: pointer;
+}
+.look-picker__shuffle:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 var(--ink);
+}
+.look-row {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+}
+.look-row__label {
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+}
+.look-row__opts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.look-opt {
+  display: grid;
+  place-items: center;
+  min-width: 36px;
+  height: 36px;
+  padding: 0 4px;
+  border: 2px solid var(--ink);
+  border-radius: 12px;
+  background: #fff;
+  cursor: pointer;
+}
+.look-opt.is-active {
+  background: var(--primary);
+  box-shadow: 0 3px 0 var(--ink);
+}
+.look-opt__swatch {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid var(--ink);
+}
+.look-opt__text {
+  padding: 0 6px;
+  font-size: 0.85rem;
+}
+.look-picker__note {
+  margin: 0;
+  text-align: center;
+}

@@ -16,6 +16,7 @@ import {
 import { levelFromXp } from '../lib/level';
 import { nextTier, tierOf } from '../lib/rank';
 import { NicknameForm } from '../components/NicknameForm';
+import { PlayerAvatar } from '../components/PlayerAvatar';
 
 interface Props {
   user: User | null;
@@ -80,7 +81,9 @@ export function AccountScreen({ user, profile, needsPassword, onBack, onChanged 
 
       {profile && lv && (
         <section className="settings-card account__profile">
-          <div className="account__avatar">{profile.avatar}</div>
+          <div className="account__avatar">
+            <PlayerAvatar code={profile.avatar} size={84} />
+          </div>
           <div className="account__name">{displayName(profile)}</div>
           <div className={`tier-badge tier-badge--big tier-badge--${tierOf(profile.rp ?? 0).key}`}>
             {tierOf(profile.rp ?? 0).icon} {tierOf(profile.rp ?? 0).name} · {profile.rp ?? 0} RP
@@ -108,15 +111,14 @@ export function AccountScreen({ user, profile, needsPassword, onBack, onChanged 
           </div>
           {!editing ? (
             <button type="button" className="btn btn--ghost btn--block" onClick={() => setEditing(true)}>
-              ✏️ แก้ชื่อ / อวตาร
+              แก้ชื่อเล่น
             </button>
           ) : (
             <NicknameForm
               initialNickname={profile.nickname}
-              initialAvatar={profile.avatar}
               submitLabel="บันทึก"
-              onSubmit={async (nickname, avatar) => {
-                await updateProfile(profile.id, { nickname, avatar });
+              onSubmit={async (nickname) => {
+                await updateProfile(profile.id, { nickname });
                 await onChanged();
                 setEditing(false);
               }}

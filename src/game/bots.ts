@@ -1,5 +1,6 @@
 import type { Difficulty } from '../types';
 import { shuffle } from '../lib/shuffle';
+import { botCode } from '../lib/look';
 
 export type BotLevel = 'chill' | 'normal' | 'pro';
 
@@ -10,16 +11,16 @@ export const BOT_LEVELS: { value: BotLevel; label: string; icon: string }[] = [
 ];
 
 const BOT_ROSTER = [
-  { name: 'หมีพูห์', avatar: '🐻' },
-  { name: 'แมวส้ม', avatar: '🐱' },
-  { name: 'หมาชิบะ', avatar: '🐶' },
-  { name: 'จิ้งจอก', avatar: '🦊' },
-  { name: 'แพนด้า', avatar: '🐼' },
-  { name: 'กบน้อย', avatar: '🐸' },
-  { name: 'ไดโน', avatar: '🦖' },
-  { name: 'หุ่นยนต์', avatar: '🤖' },
-  { name: 'ยูนิคอร์น', avatar: '🦄' },
-  { name: 'นกฮูก', avatar: '🦉' },
+  { name: 'หมีพูห์', avatar: botCode('หมีพูห์') },
+  { name: 'แมวส้ม', avatar: botCode('แมวส้ม') },
+  { name: 'หมาชิบะ', avatar: botCode('หมาชิบะ') },
+  { name: 'จิ้งจอก', avatar: botCode('จิ้งจอก') },
+  { name: 'แพนด้า', avatar: botCode('แพนด้า') },
+  { name: 'กบน้อย', avatar: botCode('กบน้อย') },
+  { name: 'ไดโน', avatar: botCode('ไดโน') },
+  { name: 'หุ่นยนต์', avatar: botCode('หุ่นยนต์') },
+  { name: 'ยูนิคอร์น', avatar: botCode('ยูนิคอร์น') },
+  { name: 'นกฮูก', avatar: botCode('นกฮูก') },
 ];
 
 /** ความแม่นพื้นฐาน (โอกาสตอบถูก) ตามระดับบอท และความยากของข้อ */

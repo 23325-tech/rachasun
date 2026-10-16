@@ -17,7 +17,6 @@ export interface Profile {
   level: Level;
 }
 
-export const AVATARS = ['😎', '🤓', '🦊', '🐼', '🐸', '🦄', '🐯', '🐙', '🦖', '🐧', '🤖', '👻', '🐱', '🐶', '🦉', '🐵'];
 
 export const displayName = (p: Pick<Profile, 'nickname' | 'tag'>) => `${p.nickname}#${p.tag}`;
 

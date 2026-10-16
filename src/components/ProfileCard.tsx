@@ -1,6 +1,7 @@
 import { displayName, type Profile } from '../lib/profile';
 import { levelFromXp } from '../lib/level';
 import { tierOf } from '../lib/rank';
+import { PlayerAvatar } from './PlayerAvatar';
 
 interface Props {
   profile: Profile;
@@ -15,7 +16,7 @@ export function ProfileCard({ profile, guest, needsPassword, onOpen }: Props) {
   return (
     <button type="button" className="profile-card" onClick={onOpen} aria-label="เปิดหน้าบัญชี">
       <span className="profile-card__avatar" aria-hidden>
-        {profile.avatar}
+        <PlayerAvatar code={profile.avatar} size={44} className="is-bare" />
       </span>
       <span className="profile-card__body">
         <span className="profile-card__row">

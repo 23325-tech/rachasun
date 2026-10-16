@@ -1,5 +1,6 @@
 import type { BattlePlayer } from '../game/battle';
 import { XpBadge, type XpState } from '../components/XpBadge';
+import { PlayerAvatar } from '../components/PlayerAvatar';
 
 const MEDAL: Record<number, string> = { 1: '🥇', 2: '🥈', 3: '🥉' };
 
@@ -59,7 +60,7 @@ export function BattleResultScreen({
           <li key={p.id} className={`ranking__item ${p.id === meId ? 'is-me' : ''} ${p.rank === 1 ? 'is-winner' : ''}`}>
             <span className="ranking__rank">{MEDAL[p.rank ?? 0] ?? p.rank}</span>
             <span className="ranking__avatar" aria-hidden>
-              {p.avatar}
+              <PlayerAvatar code={p.avatar} size={36} />
             </span>
             <span className="ranking__name">
               {p.id === meId ? 'คุณ' : p.name}

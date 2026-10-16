@@ -4,6 +4,7 @@ import { startDaily } from '../lib/asyncPlay';
 import { AsyncPlayScreen } from './AsyncPlayScreen';
 import { settingsLabel, difficultyText } from '../data/subjects';
 import { XpBadge, type XpState } from '../components/XpBadge';
+import { PlayerAvatar } from '../components/PlayerAvatar';
 
 interface Props {
   groupId: string;
@@ -160,7 +161,9 @@ export function GroupScreen({ groupId, guest, onBack, onLeft, onRegister, onXpAw
             return (
               <li key={`${r.nickname}-${r.tag}`} className={`ranking__item ${r.isMe ? 'is-me' : ''} ${i === 0 && ranked ? 'is-winner' : ''}`}>
                 <span className="ranking__rank">{ranked ? MEDAL[i] ?? i + 1 : '–'}</span>
-                <span className="ranking__avatar">{r.avatar}</span>
+                <span className="ranking__avatar">
+                  <PlayerAvatar code={r.avatar} size={36} />
+                </span>
                 <span className="ranking__name">
                   {r.isMe ? 'คุณ' : r.nickname}
                   {period === 'week' && r.played > 0 && <span className="ranking__bot">{r.played} วัน</span>}

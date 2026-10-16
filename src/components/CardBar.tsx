@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { CardCounts, CardKind } from '../game/battle';
+import { PlayerAvatar } from './PlayerAvatar';
 
 export type ActiveCard = Exclude<CardKind, 'shield'>;
 
@@ -112,7 +113,9 @@ export function CardBar({ cards, questionType, opponents, answered, open, usedCa
                       onUse(picking, o.id);
                     }}
                   >
-                    <span className="target-btn__avatar">{o.avatar}</span>
+                    <span className="target-btn__avatar">
+                      <PlayerAvatar code={o.avatar} size={28} />
+                    </span>
                     <span className="target-btn__name">{o.name}</span>
                     {disabled && <span className="muted">ตอบแล้ว</span>}
                   </button>

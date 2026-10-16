@@ -41,6 +41,7 @@ import { GroupScreen } from './screens/GroupScreen';
 import { createChallenge } from './lib/asyncPlay';
 import { logAnswers } from './lib/analysis';
 import { markPlanDone } from './lib/studyPlan';
+import { DEFAULT_LOOK_CODE } from './lib/look';
 import { createRoom, findMatch, joinRoom, leaveRoom, type MatchSettings, type RoomSettings } from './lib/rooms';
 
 type Screen =
@@ -213,7 +214,7 @@ export default function App() {
     const bots = createBots(s.botCount, s.botLevel);
     const players = createPlayers(
       [
-        { id: ME_ID, name: profile ? displayName(profile) : 'คุณ', avatar: profile?.avatar ?? '😎', isBot: false },
+        { id: ME_ID, name: profile ? displayName(profile) : 'คุณ', avatar: profile?.avatar ?? DEFAULT_LOOK_CODE, isBot: false },
         ...bots.map((b) => ({ id: b.id, name: b.name, avatar: b.avatar, isBot: true })),
       ],
       s.count,

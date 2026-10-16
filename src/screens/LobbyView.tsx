@@ -3,6 +3,7 @@ import { DIFFICULTY_OPTIONS } from '../data/subjects';
 import { LevelSubjectFields } from '../components/LevelSubjectFields';
 import { heartsFor } from '../game/battle';
 import { inviteLink, updateRoomMode, updateRoomSettings, type Room, type RoomPlayer, type RoomSettings } from '../lib/rooms';
+import { PlayerAvatar } from '../components/PlayerAvatar';
 
 interface Props {
   room: Room;
@@ -74,7 +75,9 @@ export function LobbyView({ room, players, online, myId, onLeave, onRoomChange, 
         <ul className="lobby-players">
           {players.map((p) => (
             <li key={p.user_id} className={`lobby-player ${p.user_id === myId ? 'is-me' : ''}`}>
-              <span className="lobby-player__avatar">{p.avatar}</span>
+              <span className="lobby-player__avatar">
+                <PlayerAvatar code={p.avatar} size={38} />
+              </span>
               <span className="lobby-player__name">
                 {p.nickname}
                 <span className="lobby-player__tag">#{p.tag}</span>
@@ -93,7 +96,9 @@ export function LobbyView({ room, players, online, myId, onLeave, onRoomChange, 
           ))}
           {Array.from({ length: Math.max(0, 2 - players.length) }, (_, i) => (
             <li key={`empty-${i}`} className="lobby-player is-empty">
-              <span className="lobby-player__avatar">❔</span>
+              <span className="lobby-player__avatar">
+                <PlayerAvatar size={38} />
+              </span>
               <span className="lobby-player__name">รอเพื่อนเข้าห้อง...</span>
             </li>
           ))}

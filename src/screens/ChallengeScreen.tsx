@@ -3,6 +3,7 @@ import { LEVELS, subjectInfo, difficultyText } from '../data/subjects';
 import { challengeLink, fetchChallengeBoard, startChallenge, type ChallengeBoard } from '../lib/asyncPlay';
 import { AsyncPlayScreen } from './AsyncPlayScreen';
 import { XpBadge, type XpState } from '../components/XpBadge';
+import { PlayerAvatar } from '../components/PlayerAvatar';
 
 interface Props {
   code: string;
@@ -135,7 +136,9 @@ export function ChallengeScreen({ code, guest, autoPlay, onHome, onRegister, onX
       </header>
 
       <section className="challenge-hero pop-in">
-        <div className="challenge-hero__avatar">{board.creator?.avatar ?? '❔'}</div>
+        <div className="challenge-hero__avatar">
+          <PlayerAvatar code={board.creator?.avatar} size={70} className="is-bare" />
+        </div>
         <h1 className="challenge-hero__title">
           {iAmCreator ? 'คำท้าของคุณ' : `${board.creator?.nickname ?? 'เพื่อน'} ท้าคุณ!`}
         </h1>
@@ -156,7 +159,9 @@ export function ChallengeScreen({ code, guest, autoPlay, onHome, onRegister, onX
             {board.rows.map((r, i) => (
               <li key={`${r.nickname}-${r.tag}`} className={`ranking__item ${r.isMe ? 'is-me' : ''} ${i === 0 && r.finished ? 'is-winner' : ''}`}>
                 <span className="ranking__rank">{r.finished ? MEDAL[i] ?? i + 1 : '…'}</span>
-                <span className="ranking__avatar">{r.avatar}</span>
+                <span className="ranking__avatar">
+                  <PlayerAvatar code={r.avatar} size={36} />
+                </span>
                 <span className="ranking__name">
                   {r.isMe ? 'คุณ' : r.nickname}
                   {r.isCreator && <span className="ranking__bot">ผู้ท้า</span>}

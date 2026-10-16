@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { settingsLabel, trackLabel, difficultyText } from '../data/subjects';
 import type { Room, RoomPlayer } from '../lib/rooms';
 import { callGame, serverNow } from '../lib/roomGame';
+import { PlayerAvatar } from '../components/PlayerAvatar';
 
 interface Props {
   room: Room;
@@ -77,7 +78,9 @@ export function MatchmakingView({ room, players, myId, onCancel }: Props) {
           const p = players[i];
           return (
             <li key={p?.user_id ?? `empty-${i}`} className={`match-slot ${p ? 'is-filled pop-in' : ''} ${p?.user_id === myId ? 'is-me' : ''}`}>
-              <span className="match-slot__avatar">{p ? p.avatar : '❔'}</span>
+              <span className="match-slot__avatar">
+                <PlayerAvatar code={p?.avatar} size={40} />
+              </span>
               <span className="match-slot__name">{p ? (p.user_id === myId ? 'คุณ' : p.nickname) : 'ว่าง'}</span>
             </li>
           );

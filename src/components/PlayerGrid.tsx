@@ -1,4 +1,5 @@
 import type { BattlePlayer, DamageReason } from '../game/battle';
+import { PlayerAvatar } from './PlayerAvatar';
 
 export type PlayerStatus = 'thinking' | 'locked' | 'correct' | 'wrong' | 'timeout' | 'out' | 'skipped';
 
@@ -51,7 +52,7 @@ export function PlayerGrid({ players, maxHearts, meId, status, hits, hitStage }:
               .join(' ')}
           >
             <div className="pcard__avatar" aria-hidden>
-              {p.avatar}
+              <PlayerAvatar code={p.avatar} size={42} />
               {hit && hitStage === 'aim' && <span className="pcard__crosshair">🎯</span>}
               {hit && hitStage === 'bang' && <span className="pcard__boom">{blocked ? '🛡️' : '💥'}</span>}
             </div>
