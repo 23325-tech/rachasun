@@ -106,3 +106,31 @@ export const ROLE_TEXT: Record<ClanRole, () => string> = {
   officer: () => t('รองหัวหน้า', 'Officer'),
   member: () => t('สมาชิก', 'Member'),
 };
+
+// ---------- ลีกแคลนรายสัปดาห์ ----------
+
+/** นับคะแนนจากสมาชิกที่ได้ XP มากสุดกี่คน (ตรงกับ clan_week_score ใน SQL) */
+export const LEAGUE_TOP = 20;
+
+export const TIERS: { name: () => string; color: string }[] = [
+  { name: () => t('บรอนซ์', 'Bronze'), color: '#d08a4e' },
+  { name: () => t('ซิลเวอร์', 'Silver'), color: '#a9b4c4' },
+  { name: () => t('โกลด์', 'Gold'), color: '#f5b400' },
+  { name: () => t('แพลทินัม', 'Platinum'), color: '#4fd1c5' },
+  { name: () => t('เพชร', 'Diamond'), color: '#7c9cff' },
+];
+
+export interface LeagueView {
+  week: string;
+  endsAt: string;
+  tier: number;
+  groupNo: number;
+  myClanId: string;
+  standings: { clanId: string; name: string; emblem: string; members: number; score: number }[];
+  contributors: { nickname: string; avatar: string; xp: number; isMe: boolean }[];
+  lastResult: { week: string; tier: number; rank: number | null; score: number; move: -1 | 0 | 1 } | null;
+  reward: { week: string; coins: number; rank: number; tier: number } | null;
+}
+
+export const fetchLeague = () => rpc<LeagueView | null>('league_view');
+export const markRewardSeen = (week: string) => rpc<void>('league_reward_seen', { p_week: week });

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Crown, MagnifyingGlass, PaperPlaneTilt, ShareNetwork, ShieldStar, SignOut, UserMinus, UsersThree } from '@phosphor-icons/react';
 import { ClanEmblem } from '../components/ClanEmblem';
+import { ClanLeague } from '../components/ClanLeague';
 import { PlayerAvatar } from '../components/PlayerAvatar';
 import { levelFromXp } from '../lib/level';
 import { t } from '../lib/i18n';
@@ -308,6 +309,8 @@ function ClanHome({ clan, meId, busy, act }: { clan: MyClan; meId: string | null
           </button>
         )}
       </section>
+
+      <ClanLeague refreshKey={clan.id} />
 
       <section className="settings-card">
         <h2 className="section-title section-title--dark">

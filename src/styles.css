@@ -6277,3 +6277,124 @@ html[lang="en"] .checkin__label {
 .class-code {
   margin: 0;
 }
+
+/* 26.3: ลีกแคลน */
+.league {
+  display: grid;
+  gap: 8px;
+}
+.league__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+.league__tier {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 12px;
+  border: 2.5px solid var(--ink);
+  border-radius: 999px;
+  box-shadow: 0 3px 0 var(--ink);
+  color: #fff;
+  font-weight: 700;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.35);
+}
+.league__left {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.8rem;
+}
+.league__rule,
+.league__note,
+.league__alone {
+  margin: 0;
+  font-size: 0.75rem;
+}
+.league__last {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: 0.85rem;
+}
+.league__up,
+.league__down {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0 8px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+}
+.league__up {
+  background: #dff8ea;
+  color: var(--good-dark);
+}
+.league__down {
+  background: #ffe8ec;
+  color: #c2304a;
+}
+.league__table,
+.league__members {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.league__table li,
+.league__members li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 6px;
+  border-top: 1.5px solid #eee8fb;
+  font-size: 0.85rem;
+}
+.league__table li.is-up {
+  border-left: 4px solid #22c58b;
+}
+.league__table li.is-down {
+  border-left: 4px solid #ff5d73;
+}
+.league__table li.is-mine,
+.league__members li.is-me {
+  background: #fffbe8;
+}
+.league__members li.is-out {
+  opacity: 0.55;
+}
+.league__rank {
+  flex: none;
+  width: 22px;
+  font-weight: 700;
+  text-align: center;
+}
+.league__name {
+  flex: 1;
+  display: grid;
+  min-width: 0;
+  overflow: hidden;
+  line-height: 1.2;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.league__name strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.league__name small {
+  color: var(--ink-soft, #6b6290);
+}
+.league__score {
+  flex: none;
+}
+.league__sub {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 6px 0 0;
+  font-size: 0.9rem;
+}
