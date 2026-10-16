@@ -1,3 +1,4 @@
+import { Hourglass, Minus, Target, ThumbsUp, Trophy, type Icon } from '@phosphor-icons/react';
 import type { Level, Question } from '../types';
 import { ensureSession, supabase } from './supabase';
 
@@ -69,9 +70,11 @@ export function statusOf(stat: ChapterStat | undefined): ChapterStatus {
 export const accuracyOf = (stat: ChapterStat) => (stat.recent ? stat.recentCorrect / stat.recent : 0);
 
 export const STATUS_TEXT: Record<ChapterStatus, string> = {
-  strong: '💪 ถนัด',
-  ok: '👍 พอใช้',
-  weak: '🎯 ควรฝึก',
-  few: '⏳ ข้อมูลยังไม่พอ',
-  none: '— ยังไม่เคยทำ',
+  strong: 'ถนัด',
+  ok: 'พอใช้',
+  weak: 'ควรฝึก',
+  few: 'ข้อมูลยังไม่พอ',
+  none: 'ยังไม่เคยทำ',
 };
+
+export const STATUS_ICON: Record<ChapterStatus, Icon> = { strong: Trophy, ok: ThumbsUp, weak: Target, few: Hourglass, none: Minus };

@@ -4,6 +4,8 @@ import { challengeLink, fetchChallengeBoard, startChallenge, type ChallengeBoard
 import { AsyncPlayScreen } from './AsyncPlayScreen';
 import { XpBadge, type XpState } from '../components/XpBadge';
 import { PlayerAvatar } from '../components/PlayerAvatar';
+import { RankMedal } from '../components/icons';
+import { Hourglass,House,LinkSimple,SmileySad,Star,Trophy,WarningCircle } from '@phosphor-icons/react';
 
 interface Props {
   code: string;
@@ -15,7 +17,6 @@ interface Props {
   onXpAwarded: () => void;
 }
 
-const MEDAL = ['🥇', '🥈', '🥉'];
 
 function timeLeft(expiresAt: string) {
   const ms = new Date(expiresAt).getTime() - Date.now();
@@ -63,7 +64,7 @@ export function ChallengeScreen({ code, guest, autoPlay, onHome, onRegister, onX
     return (
       <AsyncPlayScreen
         playId={playId}
-        title="🔗 คำท้า"
+        title="คำท้า"
         onQuit={() => {
           setPlayId(null);
           reload();
@@ -83,7 +84,7 @@ export function ChallengeScreen({ code, guest, autoPlay, onHome, onRegister, onX
   if (board === undefined) {
     return (
       <div className="screen loading">
-        <div className="loading__brain">🔗</div>
+        <div className="loading__brain"><LinkSimple weight="fill" className="ico" /></div>
         <p className="loading__msg">{busy ? 'กำลังเตรียมคำท้า...' : 'กำลังโหลดคำท้า...'}</p>
       </div>
     );
@@ -92,10 +93,10 @@ export function ChallengeScreen({ code, guest, autoPlay, onHome, onRegister, onX
   if (board === null) {
     return (
       <div className="screen loading">
-        <div className="loading__brain">😕</div>
+        <div className="loading__brain"><SmileySad weight="fill" className="ico" /></div>
         <p className="loading__msg">ไม่พบคำท้านี้ ตรวจลิงก์อีกครั้งนะ</p>
         <button type="button" className="btn btn--ghost" onClick={onHome}>
-          🏠 หน้าแรก
+          <House weight="fill" className="ico" /> หน้าแรก
         </button>
       </div>
     );
@@ -104,7 +105,7 @@ export function ChallengeScreen({ code, guest, autoPlay, onHome, onRegister, onX
   const s = board.settings;
   const level = LEVELS[s.level ?? 'upper'];
   const sub = s.subject === 'all' ? null : subjectInfo(s.subject, s.level);
-  const subject = `${level.emoji} ${level.name} · ${sub ? `${sub.emoji} ${sub.name}` : '🌈 ทุกวิชา'}`;
+  const subject = `${level.name} · ${sub ? sub.name : 'ทุกวิชา'}`;
   const mine = board.rows.find((r) => r.isMe);
   const iAmCreator = !!mine?.isCreator;
   const canStart = !board.me && !board.expired;
@@ -132,7 +133,7 @@ export function ChallengeScreen({ code, guest, autoPlay, onHome, onRegister, onX
         <button type="button" className="icon-btn" onClick={onHome} aria-label="กลับหน้าแรก">
           ←
         </button>
-        <div className="quiz__progress">🔗 คำท้า {board.code}</div>
+        <div className="quiz__progress"><LinkSimple weight="fill" className="ico" /> คำท้า {board.code}</div>
       </header>
 
       <section className="challenge-hero pop-in">
@@ -145,20 +146,20 @@ export function ChallengeScreen({ code, guest, autoPlay, onHome, onRegister, onX
         <p className="challenge-hero__meta">
           {subject} · {difficultyText(s.difficulty)} · {board.count} ข้อ
         </p>
-        <p className={`challenge-hero__time ${board.expired ? 'is-expired' : ''}`}>⏳ {timeLeft(board.expiresAt)}</p>
+        <p className={`challenge-hero__time ${board.expired ? 'is-expired' : ''}`}><Hourglass weight="fill" className="ico" /> {timeLeft(board.expiresAt)}</p>
       </section>
 
       <XpBadge xp={xp} guest={guest} onRegister={onRegister} />
 
       <section className="settings-card">
-        <h2 className="section-title section-title--dark">🏆 อันดับ ({board.rows.filter((r) => r.finished).length} คนเล่นแล้ว)</h2>
+        <h2 className="section-title section-title--dark"><Trophy weight="fill" className="ico" /> อันดับ ({board.rows.filter((r) => r.finished).length} คนเล่นแล้ว)</h2>
         {board.rows.length === 0 ? (
           <p className="muted">ยังไม่มีใครเล่น เป็นคนแรกเลย!</p>
         ) : (
           <ol className="ranking">
             {board.rows.map((r, i) => (
               <li key={`${r.nickname}-${r.tag}`} className={`ranking__item ${r.isMe ? 'is-me' : ''} ${i === 0 && r.finished ? 'is-winner' : ''}`}>
-                <span className="ranking__rank">{r.finished ? MEDAL[i] ?? i + 1 : '…'}</span>
+                <span className="ranking__rank">{r.finished ? <RankMedal rank={i + 1} /> : '…'}</span>
                 <span className="ranking__avatar">
                   <PlayerAvatar code={r.avatar} size={36} />
                 </span>
@@ -166,24 +167,30 @@ export function ChallengeScreen({ code, guest, autoPlay, onHome, onRegister, onX
                   {r.isMe ? 'คุณ' : r.nickname}
                   {r.isCreator && <span className="ranking__bot">ผู้ท้า</span>}
                 </span>
-                <span className="ranking__score">{r.finished ? `⭐ ${r.score}` : 'กำลังเล่น'}</span>
+                <span className="ranking__score">{r.finished ? (
+                    <>
+                      <Star weight="fill" className="ico" /> {r.score}
+                    </>
+                  ) : (
+                    'กำลังเล่น'
+                  )}</span>
               </li>
             ))}
           </ol>
         )}
       </section>
 
-      {error && <p className="form-error">😵 {error}</p>}
+      {error && <p className="form-error"><WarningCircle weight="fill" className="ico" /> {error}</p>}
 
       <div className="cta-bar">
         {(canStart || canResume) && (
           <button type="button" className="btn btn--primary btn--block btn--big" disabled={busy} onClick={play}>
-            {busy ? 'กำลังเริ่ม...' : canResume ? 'เล่นต่อ ▶' : 'รับคำท้า! ⚔️'}
+            {busy ? 'กำลังเริ่ม...' : canResume ? 'เล่นต่อ' : 'รับคำท้า!'}
           </button>
         )}
         {!board.expired && (
           <button type="button" className={`btn btn--block ${canStart || canResume ? 'btn--ghost' : 'btn--primary btn--big'}`} onClick={share}>
-            {copied ? '✅ คัดลอกลิงก์แล้ว' : '📤 ส่งลิงก์ท้าเพื่อน'}
+            {copied ? 'คัดลอกลิงก์แล้ว' : 'ส่งลิงก์ท้าเพื่อน'}
           </button>
         )}
       </div>

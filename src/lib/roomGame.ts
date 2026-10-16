@@ -72,7 +72,7 @@ const GAME_ERRORS: Record<string, string> = {
   need_two_players: 'ต้องมีผู้เล่นอย่างน้อย 2 คน',
   not_host: 'เฉพาะเจ้าของห้องเท่านั้น',
   no_questions: 'เตรียมโจทย์ไม่สำเร็จ ลองใหม่อีกครั้ง',
-  too_late: 'หมดเวลาแล้ว ⏰',
+  too_late: 'หมดเวลาแล้ว',
   round_closed: 'ข้อนี้ปิดไปแล้ว',
   not_alive: 'คุณตกรอบแล้ว',
   not_in_room: 'คุณไม่ได้อยู่ในห้องนี้',

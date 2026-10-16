@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { checkNickname, NICKNAME_PROBLEM_TEXT } from '../lib/nameFilter';
+import { WarningCircle } from '@phosphor-icons/react';
 
 interface Props {
   initialNickname?: string;
@@ -50,7 +51,7 @@ export function NicknameForm({ initialNickname = '', submitLabel, onSubmit }: Pr
           {showProblem ? NICKNAME_PROBLEM_TEXT[problem] : 'ชื่อซ้ำกับคนอื่นได้ ระบบจะเติมเลขท้ายให้ เช่น ฟ้าใส#4821'}
         </span>
       </label>
-      {error && <p className="form-error">😵 {error}</p>}
+      {error && <p className="form-error"><WarningCircle weight="fill" className="ico" /> {error}</p>}
       <button type="submit" className="btn btn--primary btn--block btn--big" disabled={busy}>
         {busy ? 'กำลังบันทึก...' : submitLabel}
       </button>

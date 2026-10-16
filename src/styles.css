@@ -3604,3 +3604,35 @@ button {
 .hm-subject .icon-tile {
   box-shadow: 0 4px 0 var(--ink), inset 0 3px 0 rgba(255, 255, 255, 0.35);
 }
+
+/* ไอคอนในบรรทัดข้อความ (แทนอิโมจิ) */
+.ico {
+  flex: none;
+  vertical-align: -0.14em;
+}
+
+.plan__advice-list {
+  display: grid;
+  gap: 8px;
+  margin: 0 0 10px;
+  padding: 0;
+  list-style: none;
+}
+.plan__advice-list li {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  line-height: 1.55;
+}
+.plan__advice-list li .ico {
+  margin-top: 0.3em;
+  color: #e9a800;
+}
+
+/* ไอคอนวิชาบนการ์ด: ใช้สีของวิชาบนกล่องขาว */
+.subject-card__emoji {
+  color: var(--c);
+}
+.subject-card--all .subject-card__emoji {
+  color: #ff7a59;
+}

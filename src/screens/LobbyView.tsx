@@ -4,6 +4,7 @@ import { LevelSubjectFields } from '../components/LevelSubjectFields';
 import { heartsFor } from '../game/battle';
 import { inviteLink, updateRoomMode, updateRoomSettings, type Room, type RoomPlayer, type RoomSettings } from '../lib/rooms';
 import { PlayerAvatar } from '../components/PlayerAvatar';
+import { Cards, Crown, Hourglass, Scissors, ShieldCheck, Sword, Users, WarningCircle } from '@phosphor-icons/react';
 
 interface Props {
   room: Room;
@@ -59,14 +60,14 @@ export function LobbyView({ room, players, online, myId, onLeave, onRoomChange, 
           ✕
         </button>
         <div className="quiz__progress">ห้องรอเล่น</div>
-        <div className="quiz__score">👥 {players.length}/8</div>
+        <div className="quiz__score"><Users weight="fill" className="ico" /> {players.length}/8</div>
       </header>
 
       <section className="code-card pop-in">
         <span className="code-card__label">รหัสห้อง</span>
         <span className="code-card__code">{room.code}</span>
         <button type="button" className="btn btn--primary btn--block" onClick={share}>
-          {copied ? '✅ คัดลอกลิงก์แล้ว' : '📤 ชวนเพื่อน'}
+          {copied ? 'คัดลอกลิงก์แล้ว' : 'ชวนเพื่อน'}
         </button>
       </section>
 
@@ -85,7 +86,7 @@ export function LobbyView({ room, players, online, myId, onLeave, onRoomChange, 
               </span>
               {p.user_id === room.host_id && (
                 <span className="lobby-player__host" title="เจ้าของห้อง" aria-label="เจ้าของห้อง">
-                  👑
+                  <Crown weight="fill" className="ico" />
                 </span>
               )}
               <span
@@ -143,7 +144,7 @@ export function LobbyView({ room, players, online, myId, onLeave, onRoomChange, 
             className={`segmented__opt ${room.mode === 'classic' ? 'is-active' : ''}`}
             onClick={() => updateRoomMode(room.id, 'classic').then(onRoomChange).catch((e) => setError(String(e.message ?? e)))}
           >
-            ⚔️ ไม่มีไอเทม
+            <Sword weight="fill" className="ico" /> ไม่มีไอเทม
           </button>
           <button
             type="button"
@@ -151,16 +152,16 @@ export function LobbyView({ room, players, online, myId, onLeave, onRoomChange, 
             className={`segmented__opt ${room.mode === 'items' ? 'is-active' : ''}`}
             onClick={() => updateRoomMode(room.id, 'items').then(onRoomChange).catch((e) => setError(String(e.message ?? e)))}
           >
-            🃏 การ์ดพลัง
+            <Cards weight="fill" className="ico" /> การ์ดพลัง
           </button>
         </div>
         <p className="lobby-summary">
           หัวใจคนละ {heartsFor(s.count)} ดวง · ตอบช้าสุดโดนยิง!
-          {room.mode === 'items' && <> · ได้การ์ดสุ่มทุก 3 ข้อ (🛡️ โล่ / ✂️ 50/50)</>}
+          {room.mode === 'items' && <> · ได้การ์ดสุ่มทุก 3 ข้อ (<ShieldCheck weight="fill" className="ico" /> โล่ / <Scissors weight="fill" className="ico" /> 50/50)</>}
         </p>
       </section>
 
-      {error && <p className="form-error">😵 {error}</p>}
+      {error && <p className="form-error"><WarningCircle weight="fill" className="ico" /> {error}</p>}
 
       <div className="cta-bar">
         {isHost ? (
@@ -180,10 +181,10 @@ export function LobbyView({ room, players, online, myId, onLeave, onRoomChange, 
               }
             }}
           >
-            {players.length < 2 ? 'รอเพื่อนอย่างน้อย 1 คน' : starting ? 'กำลังเริ่ม...' : 'เริ่มเกม! ⚔️'}
+            {players.length < 2 ? 'รอเพื่อนอย่างน้อย 1 คน' : starting ? 'กำลังเริ่ม...' : 'เริ่มเกม!'}
           </button>
         ) : (
-          <p className="cta-bar__summary">⏳ รอเจ้าของห้องกดเริ่มเกม...</p>
+          <p className="cta-bar__summary"><Hourglass weight="fill" className="ico" /> รอเจ้าของห้องกดเริ่มเกม...</p>
         )}
       </div>
     </div>

@@ -17,6 +17,8 @@ import { levelFromXp } from '../lib/level';
 import { nextTier, tierOf } from '../lib/rank';
 import { NicknameForm } from '../components/NicknameForm';
 import { PlayerAvatar } from '../components/PlayerAvatar';
+import { TierIcon } from '../components/icons';
+import { DoorOpen, Key, WarningCircle } from '@phosphor-icons/react';
 
 interface Props {
   user: User | null;
@@ -58,10 +60,10 @@ export function AccountScreen({ user, profile, needsPassword, onBack, onChanged 
       if (tab === 'register') {
         const r = await registerWithEmail(email, password);
         if (r === 'confirm_email') {
-          setNotice(`ส่งอีเมลยืนยันไปที่ ${email} แล้ว 📬 กดลิงก์ในอีเมล แล้วกลับมาตั้งรหัสผ่านที่หน้านี้`);
+          setNotice(`ส่งอีเมลยืนยันไปที่ ${email} แล้ว กดลิงก์ในอีเมล แล้วกลับมาตั้งรหัสผ่านที่หน้านี้`);
           return;
         }
-        setNotice('สมัครสำเร็จ! ความก้าวหน้าทั้งหมดถูกบันทึกในบัญชีแล้ว 🎉');
+        setNotice('สมัครสำเร็จ! ความก้าวหน้าทั้งหมดถูกบันทึกในบัญชีแล้ว');
       } else {
         await loginWithEmail(email, password);
       }
@@ -86,15 +88,15 @@ export function AccountScreen({ user, profile, needsPassword, onBack, onChanged 
           </div>
           <div className="account__name">{displayName(profile)}</div>
           <div className={`tier-badge tier-badge--big tier-badge--${tierOf(profile.rp ?? 0).key}`}>
-            {tierOf(profile.rp ?? 0).icon} {tierOf(profile.rp ?? 0).name} · {profile.rp ?? 0} RP
+            <TierIcon tier={tierOf(profile.rp ?? 0).key} size={20} /> {tierOf(profile.rp ?? 0).name} · {profile.rp ?? 0} RP
           </div>
           <div className="account__next-tier">
             {(() => {
               const n = nextTier(profile.rp ?? 0);
-              return n ? `อีก ${n.needed} RP ถึง ${n.tier.icon} ${n.tier.name} (ได้ RP จากโหมดสุ่มหาคู่แข่ง)` : 'ยศสูงสุดแล้ว! 👑';
+              return n ? `อีก ${n.needed} RP ถึงยศ${n.tier.name} (ได้ RP จากโหมดสุ่มหาคู่แข่ง)` : 'ยศสูงสุดแล้ว!';
             })()}
           </div>
-          <div className="account__badge">{guest ? '👤 แขก' : `✅ ${user?.email ?? 'สมาชิก'}`}</div>
+          <div className="account__badge">{guest ? 'แขก' : `${user?.email ?? 'สมาชิก'}`}</div>
           <div className="stats">
             <div className="stat">
               <div className="stat__num">Lv {lv.level}</div>
@@ -152,8 +154,8 @@ export function AccountScreen({ user, profile, needsPassword, onBack, onChanged 
 
           <p className="account__hint">
             {tab === 'register'
-              ? '💾 สมัครเพื่อเก็บ XP และสถิติไว้ถาวร เล่นต่อได้ทุกเครื่อง (XP ที่เล่นแบบแขกมาแล้วติดไปด้วย)'
-              : '⚠️ ถ้าเข้าสู่ระบบบัญชีอื่น XP ที่เล่นแบบแขกในเครื่องนี้จะไม่ถูกรวม'}
+              ? 'สมัครเพื่อเก็บ XP และสถิติไว้ถาวร เล่นต่อได้ทุกเครื่อง (XP ที่เล่นแบบแขกมาแล้วติดไปด้วย)'
+              : 'ถ้าเข้าสู่ระบบบัญชีอื่น XP ที่เล่นแบบแขกในเครื่องนี้จะไม่ถูกรวม'}
           </p>
 
           <form
@@ -203,7 +205,7 @@ export function AccountScreen({ user, profile, needsPassword, onBack, onChanged 
                 }
                 run(
                   () => sendPasswordReset(email),
-                  `ส่งลิงก์ตั้งรหัสผ่านใหม่ไปที่ ${email} แล้ว 📬 เปิดลิงก์ในอีเมลบนเครื่องนี้ แล้วตั้งรหัสผ่านใหม่`,
+                  `ส่งลิงก์ตั้งรหัสผ่านใหม่ไปที่ ${email} แล้ว เปิดลิงก์ในอีเมลบนเครื่องนี้ แล้วตั้งรหัสผ่านใหม่`,
                 );
               }}
             >
@@ -232,12 +234,12 @@ export function AccountScreen({ user, profile, needsPassword, onBack, onChanged 
                   await setPassword(password);
                   setPw('');
                   await onChanged();
-                }, 'ตั้งรหัสผ่านเรียบร้อย ✅ ใช้เข้าสู่ระบบเครื่องอื่นได้แล้ว');
+                }, 'ตั้งรหัสผ่านเรียบร้อย ใช้เข้าสู่ระบบเครื่องอื่นได้แล้ว');
             }}
           >
             {needsPassword && (
               <p className="form-warning">
-                🔑 ยืนยันอีเมลแล้ว แต่ยังไม่ได้ตั้งรหัสผ่าน ตั้งตอนนี้เพื่อใช้เข้าสู่ระบบจากเครื่องอื่น
+                <Key weight="fill" className="ico" /> ยืนยันอีเมลแล้ว แต่ยังไม่ได้ตั้งรหัสผ่าน ตั้งตอนนี้เพื่อใช้เข้าสู่ระบบจากเครื่องอื่น
               </p>
             )}
             <label className="field">
@@ -271,13 +273,13 @@ export function AccountScreen({ user, profile, needsPassword, onBack, onChanged 
               })
             }
           >
-            🚪 ออกจากระบบ
+            <DoorOpen weight="fill" className="ico" /> ออกจากระบบ
           </button>
         </section>
       )}
 
       {notice && <p className="form-notice">{notice}</p>}
-      {error && <p className="form-error">😵 {error}</p>}
+      {error && <p className="form-error"><WarningCircle weight="fill" className="ico" /> {error}</p>}
     </div>
   );
 }

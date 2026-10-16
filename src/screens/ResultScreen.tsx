@@ -1,7 +1,9 @@
+import { createElement } from 'react';
 import type { AnswerResult, Question } from '../types';
 import { SUBJECTS } from '../data/subjects';
 import { MathText } from '../components/MathText';
 import { XpBadge, type XpState } from '../components/XpBadge';
+import { Alarm, ArrowsClockwise, Barbell, Check, Fire, House, Plant, Trophy, X } from '@phosphor-icons/react';
 
 interface Props {
   questions: Question[];
@@ -14,10 +16,10 @@ interface Props {
 }
 
 function rankFor(accuracy: number) {
-  if (accuracy >= 0.9) return { emoji: '🏆', title: 'สุดยอด!' };
-  if (accuracy >= 0.7) return { emoji: '🔥', title: 'เก่งมาก!' };
-  if (accuracy >= 0.5) return { emoji: '💪', title: 'ดีเลย สู้ต่อ!' };
-  return { emoji: '🌱', title: 'ฝึกอีกนิดนะ!' };
+  if (accuracy >= 0.9) return { icon: Trophy, title: 'สุดยอด!' };
+  if (accuracy >= 0.7) return { icon: Fire, title: 'เก่งมาก!' };
+  if (accuracy >= 0.5) return { icon: Barbell, title: 'ดีเลย สู้ต่อ!' };
+  return { icon: Plant, title: 'ฝึกอีกนิดนะ!' };
 }
 
 export function ResultScreen({ questions, results, onReplay, onHome, xp, guest, onRegister }: Props) {
@@ -31,7 +33,9 @@ export function ResultScreen({ questions, results, onReplay, onHome, xp, guest, 
   return (
     <div className="screen result">
       <header className="result__hero pop-in">
-        <div className="result__emoji bounce">{rank.emoji}</div>
+        <div className="result__emoji bounce">
+          <rank.icon weight="fill" size={72} />
+        </div>
         <h1 className="result__title">{rank.title}</h1>
         <div className="result__score">{total.toLocaleString()} คะแนน</div>
       </header>
@@ -60,8 +64,8 @@ export function ResultScreen({ questions, results, onReplay, onHome, xp, guest, 
           const r = results[i];
           return (
             <li key={q.id} className={`review__item ${r?.correct ? 'is-correct' : 'is-wrong'}`}>
-              <span className="review__mark">{r?.correct ? '✓' : r?.timedOut ? '⏰' : '✗'}</span>
-              <span className="review__subject">{SUBJECTS[q.subject].emoji}</span>
+              <span className="review__mark">{r?.correct ? <Check weight="bold" /> : r?.timedOut ? <Alarm weight="fill" /> : <X weight="bold" />}</span>
+              <span className="review__subject">{createElement(SUBJECTS[q.subject].icon, { weight: 'fill', size: 20, color: SUBJECTS[q.subject].color })}</span>
               <MathText className="review__prompt" text={q.prompt} />
               <span className="review__pts">+{r?.points ?? 0}</span>
             </li>
@@ -71,10 +75,10 @@ export function ResultScreen({ questions, results, onReplay, onHome, xp, guest, 
 
       <div className="bottom-bar bottom-bar--row">
         <button type="button" className="btn btn--ghost" onClick={onHome}>
-          🏠 หน้าแรก
+          <House weight="fill" className="ico" /> หน้าแรก
         </button>
         <button type="button" className="btn btn--primary btn--grow" onClick={onReplay}>
-          เล่นอีกครั้ง 🔁
+          เล่นอีกครั้ง <ArrowsClockwise weight="fill" className="ico" />
         </button>
       </div>
     </div>

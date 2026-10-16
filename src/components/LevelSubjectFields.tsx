@@ -29,7 +29,7 @@ export function LevelSubjectFields<T extends LevelSubjectValue>({ value, onChang
           >
             {LEVEL_KEYS.map((k) => (
               <option key={k} value={k}>
-                {LEVELS[k].emoji} {LEVELS[k].name}
+                {LEVELS[k].name}
               </option>
             ))}
           </select>
@@ -58,7 +58,7 @@ export function LevelSubjectFields<T extends LevelSubjectValue>({ value, onChang
               className={`segmented__opt ${value.track === t.value ? 'is-active' : ''}`}
               onClick={() => onChange({ ...value, track: t.value })}
             >
-              {t.icon} {t.label}
+              <t.icon weight="fill" size={16} /> {t.label}
             </button>
           ))}
         </div>

@@ -21,6 +21,7 @@ import { ChoiceList } from '../components/ChoiceList';
 import { FillAnswerInput } from '../components/FillAnswerInput';
 import { PlayerGrid, type HitStage, type PlayerStatus } from '../components/PlayerGrid';
 import { DIFFICULTY_LABEL, SUBJECTS } from '../data/subjects';
+import { Eye, FlagCheckered, Lightbulb, Lightning, LockSimple, SkipForward, SmileyMeh, Users, WarningCircle } from '@phosphor-icons/react';
 
 export const ME_ID = 'me';
 
@@ -266,7 +267,7 @@ export function BattleScreen({ questions, questionCount, initialPlayers, bots, o
         </button>
         <div className="quiz__progress">
           {sudden ? (
-            <span className="sudden-tag">⚡ SUDDEN DEATH</span>
+            <span className="sudden-tag"><Lightning weight="fill" className="ico" /> SUDDEN DEATH</span>
           ) : (
             <>
               ข้อ {round + 1}/{questionCount}
@@ -274,7 +275,7 @@ export function BattleScreen({ questions, questionCount, initialPlayers, bots, o
           )}
         </div>
         <div className="quiz__score" aria-label="ผู้เล่นที่เหลือ">
-          👥 {alivePlayers(players).length}/{players.length}
+          <Users weight="fill" className="ico" /> {alivePlayers(players).length}/{players.length}
         </div>
       </header>
 
@@ -294,12 +295,12 @@ export function BattleScreen({ questions, questionCount, initialPlayers, bots, o
         />
       )}
 
-      {sudden && phase === 'question' && <div className="sudden-banner pop-in">⚡ ผิดหรือช้าสุด = ตกรอบทันที!</div>}
+      {sudden && phase === 'question' && <div className="sudden-banner pop-in"><Lightning weight="fill" className="ico" /> ผิดหรือช้าสุด = ตกรอบทันที!</div>}
 
       <article key={`q-${round}`} className="card question-card pop-in">
         <div className="question-card__meta">
           <span className="tag" style={{ background: subject.color }}>
-            {subject.emoji} {subject.name}
+            <subject.icon weight="fill" size={16} /> {subject.name}
           </span>
           <span className="tag tag--ghost">{DIFFICULTY_LABEL[q.difficulty]}</span>
         </div>
@@ -328,7 +329,7 @@ export function BattleScreen({ questions, questionCount, initialPlayers, bots, o
         )
       ) : null}
 
-      {phase === 'question' && myAnswer && <p className="waiting">🔒 ล็อกคำตอบแล้ว รอคนอื่นอยู่...</p>}
+      {phase === 'question' && myAnswer && <p className="waiting"><LockSimple weight="fill" className="ico" /> ล็อกคำตอบแล้ว รอคนอื่นอยู่...</p>}
 
       {phase === 'reveal' && outcome && (
         <div className="reveal-sheet slide-up">
@@ -339,18 +340,18 @@ export function BattleScreen({ questions, questionCount, initialPlayers, bots, o
           )}
           <div className="shot-list">
             {outcome.damages.length === 0 ? (
-              <p className="shot-list__none">😮 ไม่มีใครโดนยิงข้อนี้</p>
+              <p className="shot-list__none"><SmileyMeh weight="fill" className="ico" /> ไม่มีใครโดนยิงข้อนี้</p>
             ) : (
               outcome.damages.map((d) => (
                 <p key={d.playerId} className={`shot-list__item ${d.playerId === ME_ID ? 'is-me' : ''}`}>
-                  💥 <strong>{nameOf(d.playerId)}</strong> โดนยิง ({REASON_TEXT[d.reason]})
+                  <Lightning weight="fill" className="ico" /> <strong>{nameOf(d.playerId)}</strong> โดนยิง ({REASON_TEXT[d.reason]})
                   {outcome.eliminated.includes(d.playerId) && <span className="shot-list__out"> ตกรอบ!</span>}
                 </p>
               ))
             )}
           </div>
           <details className="explain" onToggle={(e) => setExplainOpen((e.target as HTMLDetailsElement).open)}>
-            <summary>💡 ดูคำอธิบาย</summary>
+            <summary><Lightbulb weight="fill" className="ico" /> ดูคำอธิบาย</summary>
             <MathText text={q.explanation} />
           </details>
           {!outcome.gameOver && !fast && spectate !== 'asking' && (
@@ -359,14 +360,14 @@ export function BattleScreen({ questions, questionCount, initialPlayers, bots, o
               <span className="auto-next__label">ข้อต่อไป ➜</span>
             </button>
           )}
-          {outcome.gameOver && <p className="game-over pop-in">🏁 จบเกม!</p>}
+          {outcome.gameOver && <p className="game-over pop-in"><FlagCheckered weight="fill" className="ico" /> จบเกม!</p>}
         </div>
       )}
 
       {spectate === 'asking' && (
         <div className="overlay">
           <div className="overlay__card pop-in">
-            <div className="overlay__emoji">😵</div>
+            <div className="overlay__emoji"><WarningCircle weight="fill" className="ico" /></div>
             <h2>คุณตกรอบแล้ว!</h2>
             <p>อันดับที่ {players.find((p) => p.id === ME_ID)!.rank} จาก {players.length}</p>
             <button
@@ -377,10 +378,10 @@ export function BattleScreen({ questions, questionCount, initialPlayers, bots, o
                 nextRound();
               }}
             >
-              👀 ดูต่อ (เร่งความเร็ว)
+              <Eye weight="fill" className="ico" /> ดูต่อ (เร่งความเร็ว)
             </button>
             <button type="button" className="btn btn--ghost btn--block" onClick={skipToEnd}>
-              ⏭️ ข้ามไปดูผล
+              <SkipForward weight="fill" className="ico" /> ข้ามไปดูผล
             </button>
           </div>
         </div>
@@ -388,7 +389,7 @@ export function BattleScreen({ questions, questionCount, initialPlayers, bots, o
 
       {fast && (
         <button type="button" className="btn btn--ghost skip-fab" onClick={skipToEnd}>
-          ⏭️ ข้ามไปดูผล
+          <SkipForward weight="fill" className="ico" /> ข้ามไปดูผล
         </button>
       )}
     </div>

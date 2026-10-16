@@ -5,6 +5,7 @@ import { LobbyView } from './LobbyView';
 import { MatchmakingView } from './MatchmakingView';
 import { OnlineBattleView } from './OnlineBattleView';
 import { BattleResultScreen } from './BattleResultScreen';
+import { Brain, DoorOpen } from '@phosphor-icons/react';
 
 interface Props {
   roomId: string;
@@ -88,7 +89,7 @@ export function RoomScreen({ roomId, myId, guest, onLeave, onGone, onRegister, o
   if (!room) {
     return (
       <div className="screen loading">
-        <div className="loading__brain">🚪</div>
+        <div className="loading__brain"><DoorOpen weight="fill" className="ico" /></div>
         <p className="loading__msg">กำลังเข้าห้อง...</p>
       </div>
     );
@@ -119,7 +120,7 @@ export function RoomScreen({ roomId, myId, guest, onLeave, onGone, onRegister, o
   if (state.phase === 'preparing') {
     return (
       <div className="screen loading">
-        <div className="loading__brain">🧠</div>
+        <div className="loading__brain"><Brain weight="fill" className="ico" /></div>
         <p className="loading__msg">กำลังเตรียมโจทย์ให้ทุกคน...</p>
         <p className="loading__sub">ถ้าคลังโจทย์ไม่พอ AI จะสร้างเพิ่ม อาจใช้เวลา 10-40 วินาที</p>
         <div className="loading__dots" aria-hidden>
@@ -138,7 +139,7 @@ export function RoomScreen({ roomId, myId, guest, onLeave, onGone, onRegister, o
         players={state.players}
         meId={myId}
         onHome={onLeave}
-        homeLabel="🚪 ออกจากห้อง"
+        homeLabel="ออกจากห้อง"
         onReplay={
           room.kind === 'public'
             ? onFindAgain
@@ -146,8 +147,8 @@ export function RoomScreen({ roomId, myId, guest, onLeave, onGone, onRegister, o
               ? () => void callGame('rematch', { roomId }).catch(() => {})
               : undefined
         }
-        replayLabel={room.kind === 'public' ? 'หาเกมใหม่ 🎲' : 'เล่นอีกรอบ (กลับล็อบบี้) 🔁'}
-        waitingLabel="⏳ รอเจ้าของห้องเริ่มรอบใหม่..."
+        replayLabel={room.kind === 'public' ? 'หาเกมใหม่' : 'เล่นอีกรอบ (กลับล็อบบี้)'}
+        waitingLabel="รอเจ้าของห้องเริ่มรอบใหม่..."
         xp={
           myXp
             ? { status: 'saved', gained: myXp.gained, total: myXp.total, rpDelta: myXp.rpDelta, rp: myXp.rp }

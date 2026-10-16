@@ -3,6 +3,7 @@ import type { Difficulty, Level, Subject, Track } from '../types';
 import { settingsLabel, DIFFICULTY_OPTIONS } from '../data/subjects';
 import { LevelSubjectFields } from '../components/LevelSubjectFields';
 import { createGroup, joinGroup, myGroups, type MyGroup } from '../lib/groups';
+import { CheckCircle,DoorOpen,HandPointing,Key,Plus,Target,Trophy,Users,WarningCircle } from '@phosphor-icons/react';
 
 interface Props {
   initialCode?: string;
@@ -54,7 +55,7 @@ export function GroupsScreen({ initialCode = '', onOpen, onBack }: Props) {
         <button type="button" className="icon-btn" onClick={onBack} aria-label="กลับ">
           ←
         </button>
-        <div className="quiz__progress">🏆 กลุ่มเพื่อน</div>
+        <div className="quiz__progress"><Trophy weight="fill" className="ico" /> กลุ่มเพื่อน</div>
       </header>
 
       <section className="settings-card">
@@ -62,7 +63,7 @@ export function GroupsScreen({ initialCode = '', onOpen, onBack }: Props) {
         {groups === null ? (
           <p className="muted">กำลังโหลด...</p>
         ) : groups.length === 0 ? (
-          <p className="muted">ยังไม่มีกลุ่ม สร้างกลุ่มหรือขอรหัสจากเพื่อนได้เลย 👇</p>
+          <p className="muted">ยังไม่มีกลุ่ม สร้างกลุ่มหรือขอรหัสจากเพื่อนได้เลย <HandPointing weight="fill" className="ico" /></p>
         ) : (
           <ul className="group-list">
             {groups.map((g) => (
@@ -71,11 +72,19 @@ export function GroupsScreen({ initialCode = '', onOpen, onBack }: Props) {
                   <span className="group-item__body">
                     <span className="group-item__name">{g.name}</span>
                     <span className="group-item__meta">
-                      {settingsLabel(g.settings)} · 👥 {g.members}
+                      {settingsLabel(g.settings)} · <Users weight="fill" className="ico" /> {g.members}
                     </span>
                   </span>
                   <span className={`group-item__today ${g.playedToday ? 'is-done' : ''}`}>
-                    {g.playedToday ? `✅ ⭐${g.todayScore}` : '🎯 เล่นวันนี้'}
+                    {g.playedToday ? (
+                      <>
+                        <CheckCircle weight="fill" className="ico" /> {g.todayScore} คะแนน
+                      </>
+                    ) : (
+                      <>
+                        <Target weight="fill" className="ico" /> เล่นวันนี้
+                      </>
+                    )}
                   </span>
                 </button>
               </li>
@@ -85,7 +94,7 @@ export function GroupsScreen({ initialCode = '', onOpen, onBack }: Props) {
       </section>
 
       <section className="settings-card">
-        <h2 className="section-title section-title--dark">🔑 เข้ากลุ่มด้วยรหัส</h2>
+        <h2 className="section-title section-title--dark"><Key weight="fill" className="ico" /> เข้ากลุ่มด้วยรหัส</h2>
         <form
           className="join-form"
           onSubmit={(e) => {
@@ -104,7 +113,7 @@ export function GroupsScreen({ initialCode = '', onOpen, onBack }: Props) {
             aria-label="รหัสกลุ่ม 6 ตัว"
           />
           <button type="submit" className="btn btn--primary btn--block" disabled={cleanCode.length !== 6 || busy}>
-            เข้ากลุ่ม 🚪
+            เข้ากลุ่ม <DoorOpen weight="fill" className="ico" />
           </button>
         </form>
       </section>
@@ -112,7 +121,7 @@ export function GroupsScreen({ initialCode = '', onOpen, onBack }: Props) {
       <section className="settings-card">
         {!creating ? (
           <button type="button" className="btn btn--ghost btn--block" onClick={() => setCreating(true)}>
-            ➕ สร้างกลุ่มใหม่
+            <Plus weight="fill" className="ico" /> สร้างกลุ่มใหม่
           </button>
         ) : (
           <form
@@ -122,7 +131,7 @@ export function GroupsScreen({ initialCode = '', onOpen, onBack }: Props) {
               if (!busy) run(async () => onOpen((await createGroup(name, { ...pick, difficulty })).id));
             }}
           >
-            <h2 className="section-title section-title--dark">➕ สร้างกลุ่มใหม่</h2>
+            <h2 className="section-title section-title--dark"><Plus weight="fill" className="ico" /> สร้างกลุ่มใหม่</h2>
             <label className="field">
               <span className="field__label">ชื่อกลุ่ม</span>
               <input
@@ -148,13 +157,13 @@ export function GroupsScreen({ initialCode = '', onOpen, onBack }: Props) {
             </div>
             <p className="muted">โจทย์ประจำวัน 10 ข้อ เล่นได้วันละครั้ง วันใหม่เริ่มเที่ยงคืน</p>
             <button type="submit" className="btn btn--primary btn--block" disabled={busy || name.trim().length < 2}>
-              {busy ? 'กำลังสร้าง...' : 'สร้างกลุ่ม ✨'}
+              {busy ? 'กำลังสร้าง...' : 'สร้างกลุ่ม'}
             </button>
           </form>
         )}
       </section>
 
-      {error && <p className="form-error">😵 {error}</p>}
+      {error && <p className="form-error"><WarningCircle weight="fill" className="ico" /> {error}</p>}
     </div>
   );
 }

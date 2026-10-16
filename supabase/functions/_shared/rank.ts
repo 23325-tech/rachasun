@@ -11,17 +11,16 @@ export const RP_LAST = -25;
 export interface Tier {
   key: 'bronze' | 'silver' | 'gold' | 'platinum' | 'diamond' | 'legend';
   name: string;
-  icon: string;
   min: number;
 }
 
 export const TIERS: Tier[] = [
-  { key: 'bronze', name: 'ทองแดง', icon: '🥉', min: 0 },
-  { key: 'silver', name: 'เงิน', icon: '🥈', min: 200 },
-  { key: 'gold', name: 'ทอง', icon: '🥇', min: 500 },
-  { key: 'platinum', name: 'แพลทินัม', icon: '💠', min: 900 },
-  { key: 'diamond', name: 'เพชร', icon: '💎', min: 1400 },
-  { key: 'legend', name: 'ตำนาน', icon: '👑', min: 2000 },
+  { key: 'bronze', name: 'ทองแดง', min: 0 },
+  { key: 'silver', name: 'เงิน', min: 200 },
+  { key: 'gold', name: 'ทอง', min: 500 },
+  { key: 'platinum', name: 'แพลทินัม', min: 900 },
+  { key: 'diamond', name: 'เพชร', min: 1400 },
+  { key: 'legend', name: 'ตำนาน', min: 2000 },
 ];
 
 /** แต้มที่ได้/เสียจากอันดับ (อันดับร่วมใช้เลขอันดับเดียวกัน) */

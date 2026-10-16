@@ -35,5 +35,5 @@ export const NICKNAME_PROBLEM_TEXT: Record<NicknameProblem, string> = {
   too_short: 'ชื่อสั้นไป ต้องมีอย่างน้อย 2 ตัวอักษร',
   too_long: 'ชื่อยาวไป ไม่เกิน 16 ตัวอักษร',
   no_letters: 'ชื่อต้องมีตัวอักษรไทยหรืออังกฤษ',
-  inappropriate: 'ชื่อนี้ใช้ไม่ได้ ลองชื่ออื่นนะ 🙏',
+  inappropriate: 'ชื่อนี้ใช้ไม่ได้ ลองชื่ออื่นนะ',
 };

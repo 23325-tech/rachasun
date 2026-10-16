@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { REPORT_REASONS, reportQuestion, type ReportReason } from '../lib/questionBank';
+import { CheckCircle, Flag } from '@phosphor-icons/react';
 
 type Status = 'closed' | 'open' | 'sending' | 'sent' | 'duplicate' | 'error';
 
@@ -22,16 +23,16 @@ export function ReportPanel({ questionId }: { questionId: string }) {
   if (status === 'closed') {
     return (
       <button type="button" className="report-link" onClick={() => setStatus('open')}>
-        🚩 รายงานข้อผิด
+        <Flag weight="fill" className="ico" /> รายงานข้อผิด
       </button>
     );
   }
-  if (status === 'sent') return <p className="report-done">✅ ขอบคุณ! ส่งรายงานแล้ว</p>;
+  if (status === 'sent') return <p className="report-done"><CheckCircle weight="fill" className="ico" /> ขอบคุณ! ส่งรายงานแล้ว</p>;
   if (status === 'duplicate') return <p className="report-done">คุณรายงานข้อนี้ไปแล้ว</p>;
 
   return (
     <div className="report">
-      <div className="report__title">🚩 ข้อนี้ผิดตรงไหน?</div>
+      <div className="report__title"><Flag weight="fill" className="ico" /> ข้อนี้ผิดตรงไหน?</div>
       <div className="chips">
         {REPORT_REASONS.map((r) => (
           <button

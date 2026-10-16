@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useInstallPrompt } from '../hooks/usePwa';
+import { DownloadSimple } from '@phosphor-icons/react';
 
 /** ชวนติดตั้งแอพลงหน้าจอหลัก (ซ่อนเองเมื่อเปิดจากแอพที่ติดตั้งแล้ว) */
 export function InstallBanner() {
@@ -30,12 +31,12 @@ export function InstallBanner() {
       <div className="install-banner__actions">
         {kind === 'button' ? (
           <button type="button" className="btn btn--primary install-banner__btn" onClick={install}>
-            📲 ติดตั้ง
+            <DownloadSimple weight="fill" className="ico" /> ติดตั้ง
           </button>
         ) : (
           !showIosHelp && (
             <button type="button" className="btn btn--primary install-banner__btn" onClick={() => setShowIosHelp(true)}>
-              📲 วิธีติดตั้ง
+              <DownloadSimple weight="fill" className="ico" /> วิธีติดตั้ง
             </button>
           )
         )}

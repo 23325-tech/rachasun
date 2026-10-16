@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { createElement, useEffect, useState } from 'react';
 import { listMocks, MOCK_ICON, type MockAttemptSummary, type MockExam, type MockPaper } from '../lib/mock';
+import { Exam, WarningCircle, Wrench } from '@phosphor-icons/react';
 
 interface Props {
   onBack: () => void;
@@ -48,7 +49,7 @@ export function MockMenuScreen({ onBack, onStart, onReview }: Props) {
     return (
       <button type="button" className="mock-paper__btn" disabled={!!busy} onClick={() => begin(p.id, half)}>
         <span>{label}</span>
-        <strong>{busy === `${p.id}:${half}` ? 'กำลังเปิด...' : resuming ? 'ทำต่อ ▶' : 'เริ่มสอบ ▶'}</strong>
+        <strong>{busy === `${p.id}:${half}` ? 'กำลังเปิด...' : resuming ? 'ทำต่อ' : 'เริ่มสอบ'}</strong>
       </button>
     );
   };
@@ -59,7 +60,7 @@ export function MockMenuScreen({ onBack, onStart, onReview }: Props) {
         <button type="button" className="icon-btn" onClick={onBack} aria-label="กลับ">
           ←
         </button>
-        <div className="quiz__progress">📝 จำลองสอบ A-Level</div>
+        <div className="quiz__progress"><Exam weight="fill" className="ico" /> จำลองสอบ A-Level</div>
       </header>
 
       <section className="settings-card">
@@ -70,7 +71,7 @@ export function MockMenuScreen({ onBack, onStart, onReview }: Props) {
         </p>
       </section>
 
-      {error && <p className="form-error">😵 {error}</p>}
+      {error && <p className="form-error"><WarningCircle weight="fill" className="ico" /> {error}</p>}
       {!data && !error && <p className="muted analysis__loading">กำลังโหลดชุดข้อสอบ...</p>}
 
       {data &&
@@ -80,7 +81,7 @@ export function MockMenuScreen({ onBack, onStart, onReview }: Props) {
           return (
             <section key={exam} className="settings-card mock-exam-card">
               <h2 className="section-title section-title--dark">
-                {MOCK_ICON[exam]} {papers[0].title}
+                {createElement(MOCK_ICON[exam], { weight: 'fill', size: 22 })} {papers[0].title}
               </h2>
               {papers.map((p) => (
                 <div key={p.id} className="mock-paper">
@@ -95,7 +96,7 @@ export function MockMenuScreen({ onBack, onStart, onReview }: Props) {
 
       {data && !data.papers.length && (
         <section className="settings-card analysis__empty">
-          <p className="analysis__big">🛠️</p>
+          <p className="analysis__big"><Wrench weight="fill" className="ico" /></p>
           <p>กำลังเตรียมชุดข้อสอบ ลองกลับมาใหม่อีกสักพักนะ</p>
         </section>
       )}

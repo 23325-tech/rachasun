@@ -3,6 +3,7 @@ import { settingsLabel, trackLabel, difficultyText } from '../data/subjects';
 import type { Room, RoomPlayer } from '../lib/rooms';
 import { callGame, serverNow } from '../lib/roomGame';
 import { PlayerAvatar } from '../components/PlayerAvatar';
+import { DiceFive, MagnifyingGlass, Users } from '@phosphor-icons/react';
 
 interface Props {
   room: Room;
@@ -47,16 +48,16 @@ export function MatchmakingView({ room, players, myId, onCancel }: Props) {
         <button type="button" className="icon-btn" onClick={onCancel} aria-label="ยกเลิกการหา">
           ✕
         </button>
-        <div className="quiz__progress">🎲 สุ่มหาคู่แข่ง</div>
+        <div className="quiz__progress"><DiceFive weight="fill" className="ico" /> สุ่มหาคู่แข่ง</div>
         <div className="quiz__score">
-          👥 {players.length}/{MATCH_FULL}
+          <Users weight="fill" className="ico" /> {players.length}/{MATCH_FULL}
         </div>
       </header>
 
       <div className="radar" aria-hidden>
         <span className="radar__ring" />
         <span className="radar__ring radar__ring--2" />
-        <span className="radar__center">🔍</span>
+        <span className="radar__center"><MagnifyingGlass weight="fill" className="ico" /></span>
       </div>
 
       <p className="match-status" role="status">
@@ -68,7 +69,7 @@ export function MatchmakingView({ room, players, myId, onCancel }: Props) {
       </p>
       <p className="match-sub">
         {subjectLabel} · {difficultyText(s.difficulty)} · {trackLabel(s.level, s.track)} · 10 ข้อ
-        {room.mode === 'items' ? ' · 🃏 การ์ดพลัง' : ''}
+        {room.mode === 'items' ? ' · การ์ดพลัง' : ''}
         <br />
         ค้นหามาแล้ว {Math.floor(searching / 60)}:{String(searching % 60).padStart(2, '0')}
       </p>

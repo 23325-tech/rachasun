@@ -1,29 +1,15 @@
 // ไอคอนกลางของแอพ (ใช้แทนอิโมจิ) — ไอคอนทึบในกล่องสีขอบหนาตามสไตล์เดิม
 import type { CSSProperties } from 'react';
 import {
-  Atom,
   Crown,
   Diamond,
-  Dna,
-  Flask,
-  Lightning,
-  MathOperations,
   Medal,
   ShieldStar,
-  Translate,
   type Icon,
 } from '@phosphor-icons/react';
-import type { Subject } from '../types';
 import type { Tier } from '../lib/rank';
 
-export const SUBJECT_ICON: Record<Subject, Icon> = {
-  math: MathOperations,
-  science: Atom,
-  physics: Lightning,
-  chemistry: Flask,
-  biology: Dna,
-  english: Translate,
-};
+export { SUBJECT_ICON } from './subjectIcons';
 
 export const TIER_STYLE: Record<Tier['key'], { icon: Icon; color: string }> = {
   bronze: { icon: Medal, color: '#c47a3a' },
@@ -46,4 +32,11 @@ export function IconTile({ icon: I, grad, size = 46, iconSize = 26 }: { icon: Ic
       <I weight="fill" size={iconSize} />
     </span>
   );
+}
+
+const MEDAL_COLOR = ['#e9a800', '#9aa3b5', '#c47a3a'];
+
+/** อันดับ 1-3 เป็นเหรียญสี อันดับอื่นเป็นตัวเลข */
+export function RankMedal({ rank, size = 24 }: { rank: number; size?: number }) {
+  return rank >= 1 && rank <= 3 ? <Medal weight="fill" size={size} color={MEDAL_COLOR[rank - 1]} /> : <>{rank}</>;
 }

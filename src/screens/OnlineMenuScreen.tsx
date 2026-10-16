@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { DIFFICULTY_OPTIONS } from '../data/subjects';
 import { LevelSubjectFields } from '../components/LevelSubjectFields';
 import type { MatchSettings } from '../lib/rooms';
+import { Cards, DiceFive, GlobeHemisphereEast, House, Key, Medal, Sword, WarningCircle } from '@phosphor-icons/react';
 
 const DIFFICULTIES = DIFFICULTY_OPTIONS.map((d) => ({ value: d.value, label: `${d.icon} ${d.label}` }));
 
@@ -39,13 +40,13 @@ export function OnlineMenuScreen({ initialMatch, onFind, onCreate, onJoin, onBac
         <button type="button" className="icon-btn" onClick={onBack} aria-label="กลับ">
           ←
         </button>
-        <div className="quiz__progress">🌐 ออนไลน์</div>
+        <div className="quiz__progress"><GlobeHemisphereEast weight="fill" className="ico" /> ออนไลน์</div>
       </header>
 
       <section className="settings-card online-card online-card--match">
-        <div className="online-card__icon">🎲</div>
+        <div className="online-card__icon"><DiceFive weight="fill" className="ico" /></div>
         <h2 className="online-card__title">สุ่มหาคู่แข่ง</h2>
-        <p className="online-card__desc">จับคู่กับผู้เล่นจริงที่เลือกเหมือนกัน · 10 ข้อ · 2-8 คน · 🏅 นับแต้มแรงค์</p>
+        <p className="online-card__desc">จับคู่กับผู้เล่นจริงที่เลือกเหมือนกัน · 10 ข้อ · 2-8 คน · <Medal weight="fill" className="ico" /> นับแต้มแรงค์</p>
         <div className="match-settings">
           <LevelSubjectFields value={match} onChange={setMatch} />
           <div className="segmented">
@@ -66,14 +67,14 @@ export function OnlineMenuScreen({ initialMatch, onFind, onCreate, onJoin, onBac
               className={`segmented__opt ${match.mode === 'classic' ? 'is-active' : ''}`}
               onClick={() => setMatch({ ...match, mode: 'classic' })}
             >
-              ⚔️ ไม่มีไอเทม
+              <Sword weight="fill" className="ico" /> ไม่มีไอเทม
             </button>
             <button
               type="button"
               className={`segmented__opt ${match.mode === 'items' ? 'is-active' : ''}`}
               onClick={() => setMatch({ ...match, mode: 'items' })}
             >
-              🃏 การ์ดพลัง
+              <Cards weight="fill" className="ico" /> การ์ดพลัง
             </button>
           </div>
         </div>
@@ -83,14 +84,14 @@ export function OnlineMenuScreen({ initialMatch, onFind, onCreate, onJoin, onBac
           disabled={busy !== null}
           onClick={() => run('find', () => onFind(match))}
         >
-          {busy === 'find' ? 'กำลังหา...' : 'หาเกม! 🔍'}
+          {busy === 'find' ? 'กำลังหา...' : 'หาเกม!'}
         </button>
       </section>
 
       <div className="divider divider--light">หรือเล่นกับเพื่อน</div>
 
       <section className="settings-card online-card">
-        <div className="online-card__icon">🏠</div>
+        <div className="online-card__icon"><House weight="fill" className="ico" /></div>
         <h2 className="online-card__title">สร้างห้องใหม่</h2>
         <p className="online-card__desc">ได้รหัสห้องไปส่งให้เพื่อน เล่นได้ 2-8 คน</p>
         <button
@@ -99,12 +100,12 @@ export function OnlineMenuScreen({ initialMatch, onFind, onCreate, onJoin, onBac
           disabled={busy !== null}
           onClick={() => run('create', onCreate)}
         >
-          {busy === 'create' ? 'กำลังสร้างห้อง...' : 'สร้างห้อง ✨'}
+          {busy === 'create' ? 'กำลังสร้างห้อง...' : 'สร้างห้อง'}
         </button>
       </section>
 
       <section className="settings-card online-card">
-        <div className="online-card__icon">🔑</div>
+        <div className="online-card__icon"><Key weight="fill" className="ico" /></div>
         <h2 className="online-card__title">มีรหัสห้องแล้ว?</h2>
         <form
           className="join-form"
@@ -127,12 +128,12 @@ export function OnlineMenuScreen({ initialMatch, onFind, onCreate, onJoin, onBac
             aria-label="รหัสห้อง 5 ตัว"
           />
           <button type="submit" className="btn btn--primary btn--block" disabled={cleanCode.length !== 5 || busy !== null}>
-            {busy === 'join' ? 'กำลังเข้าห้อง...' : 'เข้าห้อง 🚪'}
+            {busy === 'join' ? 'กำลังเข้าห้อง...' : 'เข้าห้อง'}
           </button>
         </form>
       </section>
 
-      {error && <p className="form-error">😵 {error}</p>}
+      {error && <p className="form-error"><WarningCircle weight="fill" className="ico" /> {error}</p>}
     </div>
   );
 }

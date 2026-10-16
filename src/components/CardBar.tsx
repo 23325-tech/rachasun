@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, createElement } from 'react';
 import type { CardCounts, CardKind } from '../game/battle';
 import { PlayerAvatar } from './PlayerAvatar';
+import { Cards, Crosshair, Hourglass, HourglassHigh, Scissors, ShieldCheck, SkipForward, type Icon } from '@phosphor-icons/react';
 
 export type ActiveCard = Exclude<CardKind, 'shield'>;
 
@@ -25,12 +26,12 @@ interface Props {
   onUse: (card: ActiveCard, target?: string) => void;
 }
 
-const INFO: Record<CardKind, { icon: string; name: string; hint: string }> = {
-  shield: { icon: '🛡️', name: 'โล่', hint: 'กันอัตโนมัติ' },
-  fifty: { icon: '✂️', name: '50/50', hint: 'ตัดตัวเลือกผิด 2 ข้อ' },
-  slow: { icon: '⏳', name: 'ลดเวลา', hint: 'เวลาเพื่อนเหลือครึ่ง' },
-  extra: { icon: '⌛', name: 'เพิ่มเวลา', hint: '+50% ให้ตัวเอง' },
-  counter: { icon: '🔫', name: 'ยิงสวน', hint: 'โดนยิงแล้วเด้งไปหาเพื่อน' },
+const INFO: Record<CardKind, { icon: Icon; name: string; hint: string }> = {
+  shield: { icon: ShieldCheck, name: 'โล่', hint: 'กันอัตโนมัติ' },
+  fifty: { icon: Scissors, name: '50/50', hint: 'ตัดตัวเลือกผิด 2 ข้อ' },
+  slow: { icon: Hourglass, name: 'ลดเวลา', hint: 'เวลาเพื่อนเหลือครึ่ง' },
+  extra: { icon: HourglassHigh, name: 'เพิ่มเวลา', hint: '+50% ให้ตัวเอง' },
+  counter: { icon: Crosshair, name: 'ยิงสวน', hint: 'โดนยิงแล้วเด้งไปหาเพื่อน' },
 };
 
 const ORDER: CardKind[] = ['shield', 'fifty', 'slow', 'extra', 'counter'];
@@ -40,7 +41,8 @@ export function CardBar({ cards, questionType, opponents, answered, open, usedCa
   const owned = ORDER.filter((k) => (cards[k] ?? 0) > 0);
 
   if (!owned.length) {
-    return <p className="card-bar__empty">🃏 ยังไม่มีการ์ด · ได้การ์ดสุ่มทุก 3 ข้อ</p>;
+    return <p className="card-bar__empty">
+        <Cards weight="fill" size={16} /> ยังไม่มีการ์ด · ได้การ์ดสุ่มทุก 3 ข้อ</p>;
   }
 
   const canUse = (k: ActiveCard) => {
@@ -52,7 +54,7 @@ export function CardBar({ cards, questionType, opponents, answered, open, usedCa
   };
 
   const info = (k: CardKind) =>
-    k === 'fifty' && questionType === 'fill' ? { icon: '⏭️', name: 'ข้ามข้อ', hint: 'ไม่เสียหัวใจ ไม่ได้คะแนน' } : INFO[k];
+    k === 'fifty' && questionType === 'fill' ? { icon: SkipForward, name: 'ข้ามข้อ', hint: 'ไม่เสียหัวใจ ไม่ได้คะแนน' } : INFO[k];
 
   return (
     <>
@@ -63,7 +65,9 @@ export function CardBar({ cards, questionType, opponents, answered, open, usedCa
           if (k === 'shield') {
             return (
               <div key={k} className="power-card power-card--passive" title={i.hint}>
-                <span className="power-card__icon">{i.icon}</span>
+                <span className="power-card__icon">
+                  <i.icon weight="fill" size={26} />
+                </span>
                 <span className="power-card__name">{i.name}</span>
                 <span className="power-card__count">x{count}</span>
                 <span className="power-card__hint">{i.hint}</span>
@@ -79,7 +83,9 @@ export function CardBar({ cards, questionType, opponents, answered, open, usedCa
               disabled={!canUse(k)}
               onClick={() => (k === 'slow' || k === 'counter' ? setPicking(k) : onUse(k))}
             >
-              <span className="power-card__icon">{i.icon}</span>
+              <span className="power-card__icon">
+                  <i.icon weight="fill" size={26} />
+                </span>
               <span className="power-card__name">{i.name}</span>
               <span className="power-card__count">x{count}</span>
               <span className="power-card__hint">{used ? 'ใช้แล้ว ✓' : i.hint}</span>
@@ -92,7 +98,7 @@ export function CardBar({ cards, questionType, opponents, answered, open, usedCa
       {picking && (
         <div className="overlay" onClick={() => setPicking(null)}>
           <div className="overlay__card pop-in" onClick={(e) => e.stopPropagation()}>
-            <div className="overlay__emoji">{INFO[picking].icon}</div>
+            <div className="overlay__emoji">{createElement(INFO[picking].icon, { weight: 'fill', size: 56 })}</div>
             <h2>{picking === 'slow' ? 'ลดเวลาใคร?' : 'ยิงสวนไปหาใคร?'}</h2>
             <p className="muted">
               {picking === 'slow'

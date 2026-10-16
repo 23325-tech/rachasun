@@ -1,13 +1,14 @@
+import { Coffee, Fire, Smiley, type Icon } from '@phosphor-icons/react';
 import type { Difficulty } from '../types';
 import { shuffle } from '../lib/shuffle';
 import { botCode } from '../lib/look';
 
 export type BotLevel = 'chill' | 'normal' | 'pro';
 
-export const BOT_LEVELS: { value: BotLevel; label: string; icon: string }[] = [
-  { value: 'chill', label: 'ชิลๆ', icon: '😴' },
-  { value: 'normal', label: 'ปกติ', icon: '🙂' },
-  { value: 'pro', label: 'โหด', icon: '😈' },
+export const BOT_LEVELS: { value: BotLevel; label: string; icon: Icon }[] = [
+  { value: 'chill', label: 'ชิลๆ', icon: Coffee },
+  { value: 'normal', label: 'ปกติ', icon: Smiley },
+  { value: 'pro', label: 'โหด', icon: Fire },
 ];
 
 const BOT_ROSTER = [

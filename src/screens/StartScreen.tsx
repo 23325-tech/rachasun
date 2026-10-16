@@ -4,6 +4,8 @@ import { adjustForLevel, DIFFICULTY_OPTIONS, LEVELS, subjectInfo } from '../data
 import { ChapterPicker } from '../components/ChapterPicker';
 import { BOT_LEVELS, type BotLevel } from '../game/bots';
 import { heartsFor } from '../game/battle';
+import type { Icon } from '@phosphor-icons/react';
+import { Rainbow, WarningCircle } from '@phosphor-icons/react';
 
 export type SubjectFilter = Subject | 'all';
 
@@ -53,7 +55,7 @@ function Segmented<T extends string | number>({
   onChange,
 }: {
   label: string;
-  options: { value: T; label: string; icon?: string }[];
+  options: { value: T; label: string; icon?: Icon }[];
   value: T;
   onChange: (v: T) => void;
 }) {
@@ -70,7 +72,7 @@ function Segmented<T extends string | number>({
             className={`segmented__opt ${value === o.value ? 'is-active' : ''}`}
             onClick={() => onChange(o.value)}
           >
-            {o.icon && <span aria-hidden>{o.icon}</span>} {o.label}
+            {o.icon && <o.icon weight="fill" size={16} />} {o.label}
           </button>
         ))}
       </div>
@@ -131,7 +133,7 @@ export function StartScreen({
             onClick={() => setS((prev) => ({ ...prev, subject: 'all', chapters: [] }))}
           >
             <span className="subject-card__emoji" aria-hidden>
-              🌈
+              <Rainbow weight="fill" className="ico" />
             </span>
             <span className="subject-card__body">
               <span className="subject-card__name">ทุกวิชา</span>
@@ -153,7 +155,7 @@ export function StartScreen({
                 onClick={() => setS((prev) => (prev.subject === key ? prev : { ...prev, subject: key, chapters: [] }))}
               >
                 <span className="subject-card__emoji" aria-hidden>
-                  {sub.emoji}
+                  <sub.icon weight="fill" size={30} />
                 </span>
                 <span className="subject-card__body">
                   <span className="subject-card__name">{sub.name}</span>
@@ -197,7 +199,7 @@ export function StartScreen({
 
       {error && (
         <div className="alert" role="alert">
-          <p className="alert__msg">😵 {error}</p>
+          <p className="alert__msg"><WarningCircle weight="fill" className="ico" /> {error}</p>
           <button type="button" className="btn btn--ghost btn--block" onClick={() => onPlaySample(s)}>
             เล่นโจทย์ตัวอย่างในเครื่องแทน
           </button>
@@ -207,13 +209,13 @@ export function StartScreen({
       <div className="cta-bar">
         <p className="cta-bar__summary">
           {s.mode === 'bots'
-            ? `⚔️ ${s.botCount + 1} คน · ${s.count} ข้อ · หัวใจคนละ ${heartsFor(s.count)} ดวง`
+            ? `${s.botCount + 1} คน · ${s.count} ข้อ · หัวใจคนละ ${heartsFor(s.count)} ดวง`
             : s.mode === 'challenge'
-              ? `🔗 ${levelInfo.name} · ${subjectName} · ${difficultyLabel} · ${s.count} ข้อ · ส่งลิงก์ให้เพื่อนเล่นต่อ`
-              : `${levelInfo.emoji} ${levelInfo.name} · ${subjectName} · ${difficultyLabel} · ${s.count} ข้อ · ราว ${minutes} นาที`}
+              ? `${levelInfo.name} · ${subjectName} · ${difficultyLabel} · ${s.count} ข้อ · ส่งลิงก์ให้เพื่อนเล่นต่อ`
+              : `${levelInfo.name} · ${subjectName} · ${difficultyLabel} · ${s.count} ข้อ · ราว ${minutes} นาที`}
         </p>
         <button type="button" className="btn btn--primary btn--block btn--big cta-bar__btn" onClick={() => onStart(s)}>
-          {s.mode === 'bots' ? 'เริ่มดวลเลย! ⚔️' : s.mode === 'challenge' ? 'สร้างคำท้า 🔗' : 'เริ่มฝึกเลย! 🚀'}
+          {s.mode === 'bots' ? 'เริ่มดวลเลย!' : s.mode === 'challenge' ? 'สร้างคำท้า' : 'เริ่มฝึกเลย!'}
         </button>
       </div>
     </div>

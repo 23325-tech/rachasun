@@ -1,8 +1,9 @@
 import type { BattlePlayer } from '../game/battle';
 import { XpBadge, type XpState } from '../components/XpBadge';
 import { PlayerAvatar } from '../components/PlayerAvatar';
+import { Barbell, Fire, Handshake, Star, Trophy } from '@phosphor-icons/react';
+import { RankMedal } from '../components/icons';
 
-const MEDAL: Record<number, string> = { 1: '🥇', 2: '🥈', 3: '🥉' };
 
 interface Props {
   players: BattlePlayer[];
@@ -19,20 +20,20 @@ interface Props {
 }
 
 function headline(rank: number, total: number, sharedFirst: boolean) {
-  if (rank === 1 && sharedFirst) return { emoji: '🤝', title: 'เสมอกัน!' };
-  if (rank === 1) return { emoji: '🏆', title: 'ชนะเลิศ!' };
-  if (rank <= Math.ceil(total / 2)) return { emoji: '🔥', title: 'เกือบแล้ว!' };
-  return { emoji: '💪', title: 'แก้มือรอบหน้า!' };
+  if (rank === 1 && sharedFirst) return { icon: Handshake, title: 'เสมอกัน!' };
+  if (rank === 1) return { icon: Trophy, title: 'ชนะเลิศ!' };
+  if (rank <= Math.ceil(total / 2)) return { icon: Fire, title: 'เกือบแล้ว!' };
+  return { icon: Barbell, title: 'แก้มือรอบหน้า!' };
 }
 
 export function BattleResultScreen({
   players,
   meId,
   onReplay,
-  replayLabel = 'ดวลอีกรอบ ⚔️',
+  replayLabel = 'ดวลอีกรอบ',
   waitingLabel,
   onHome,
-  homeLabel = '🏠 หน้าแรก',
+  homeLabel = 'หน้าแรก',
   xp,
   guest,
   onRegister,
@@ -46,7 +47,9 @@ export function BattleResultScreen({
   return (
     <div className="screen result">
       <header className="result__hero pop-in">
-        <div className="result__emoji bounce">{h.emoji}</div>
+        <div className="result__emoji bounce">
+          <h.icon weight="fill" size={72} />
+        </div>
         <h1 className="result__title">{h.title}</h1>
         <div className="result__score">
           อันดับ {myRank} จาก {players.length}
@@ -58,7 +61,9 @@ export function BattleResultScreen({
       <ol className="ranking">
         {sorted.map((p) => (
           <li key={p.id} className={`ranking__item ${p.id === meId ? 'is-me' : ''} ${p.rank === 1 ? 'is-winner' : ''}`}>
-            <span className="ranking__rank">{MEDAL[p.rank ?? 0] ?? p.rank}</span>
+            <span className="ranking__rank">
+              <RankMedal rank={p.rank ?? 0} />
+            </span>
             <span className="ranking__avatar" aria-hidden>
               <PlayerAvatar code={p.avatar} size={36} />
             </span>
@@ -66,7 +71,7 @@ export function BattleResultScreen({
               {p.id === meId ? 'คุณ' : p.name}
               {p.isBot && <span className="ranking__bot">BOT</span>}
             </span>
-            <span className="ranking__score">⭐ {p.score}</span>
+            <span className="ranking__score"><Star weight="fill" className="ico" /> {p.score}</span>
           </li>
         ))}
       </ol>

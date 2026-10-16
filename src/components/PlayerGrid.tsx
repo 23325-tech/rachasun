@@ -1,5 +1,7 @@
 import type { BattlePlayer, DamageReason } from '../game/battle';
 import { PlayerAvatar } from './PlayerAvatar';
+import { Alarm, ChatCircleDots, CheckCircle, Crosshair, Heart, Lightning, LockSimple, ShieldCheck, SkipForward, Skull, XCircle, type Icon } from '@phosphor-icons/react';
+import { createElement } from 'react';
 
 export type PlayerStatus = 'thinking' | 'locked' | 'correct' | 'wrong' | 'timeout' | 'out' | 'skipped';
 
@@ -16,14 +18,14 @@ interface Props {
   hitStage: HitStage;
 }
 
-const STATUS_ICON: Record<PlayerStatus, string> = {
-  thinking: '💭',
-  locked: '🔒',
-  correct: '✅',
-  wrong: '❌',
-  timeout: '⏰',
-  out: '💀',
-  skipped: '⏭️',
+const STATUS_ICON: Record<PlayerStatus, Icon> = {
+  thinking: ChatCircleDots,
+  locked: LockSimple,
+  correct: CheckCircle,
+  wrong: XCircle,
+  timeout: Alarm,
+  out: Skull,
+  skipped: SkipForward,
 };
 
 export function PlayerGrid({ players, maxHearts, meId, status, hits, hitStage }: Props) {
@@ -53,13 +55,22 @@ export function PlayerGrid({ players, maxHearts, meId, status, hits, hitStage }:
           >
             <div className="pcard__avatar" aria-hidden>
               <PlayerAvatar code={p.avatar} size={42} />
-              {hit && hitStage === 'aim' && <span className="pcard__crosshair">🎯</span>}
-              {hit && hitStage === 'bang' && <span className="pcard__boom">{blocked ? '🛡️' : '💥'}</span>}
+              {hit && hitStage === 'aim' && (
+                <span className="pcard__crosshair">
+                  <Crosshair weight="bold" size={30} />
+                </span>
+              )}
+              {hit && hitStage === 'bang' && (
+                <span className="pcard__boom">
+                  {blocked ? <ShieldCheck weight="fill" size={30} /> : <Lightning weight="fill" size={30} />}
+                </span>
+              )}
             </div>
             <div className="pcard__name">{p.id === meId ? 'คุณ' : p.name}</div>
             {(p.cards?.shield ?? 0) > 0 && (
               <span className="pcard__shield" aria-label={`มีโล่ ${p.cards?.shield} อัน`}>
-                🛡️{(p.cards?.shield ?? 0) > 1 ? p.cards?.shield : ''}
+                <ShieldCheck weight="fill" size={14} />
+                {(p.cards?.shield ?? 0) > 1 ? p.cards?.shield : ''}
               </span>
             )}
             <div className="pcard__hearts" aria-label={`หัวใจ ${p.hearts} ดวง`}>
@@ -68,13 +79,13 @@ export function PlayerGrid({ players, maxHearts, meId, status, hits, hitStage }:
                 const full = i < p.hearts;
                 return (
                   <span key={i} className={`heart ${full ? 'heart--full' : 'heart--empty'} ${breaking ? 'heart--breaking' : ''}`}>
-                    {full || breaking ? '❤️' : '🖤'}
+                    <Heart weight={full || breaking ? 'fill' : 'bold'} size={14} />
                   </span>
                 );
               })}
             </div>
             <span className={`pcard__status pcard__status--${st}`} aria-label={st}>
-              {STATUS_ICON[st]}
+              {createElement(STATUS_ICON[st], { weight: 'fill', size: 16 })}
             </span>
           </div>
         );

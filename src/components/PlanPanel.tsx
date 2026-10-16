@@ -5,6 +5,7 @@ import { chapterName } from '../data/chapters';
 import type { ChapterStat } from '../lib/analysis';
 import { bangkokWeek, DAY_NAMES, PLAN_DAYS, REASON_TEXT, type PlanItem, type PlanPrefs } from '../lib/planBuilder';
 import { loadPlan, rebuildPlan, requestAdvice, type StudyPlan } from '../lib/studyPlan';
+import { ArrowsClockwise,CalendarBlank,CalendarDots,CheckCircle,Gear,Lightbulb,Moon,Sparkle,WarningCircle } from '@phosphor-icons/react';
 
 interface Props {
   level: Level;
@@ -81,7 +82,7 @@ export function PlanPanel({ level, stats, onPractice }: Props) {
 
   const settingsForm = (
     <section className="settings-card plan__settings">
-      <h2 className="section-title section-title--dark">⚙️ ตั้งค่าแผนการฝึก</h2>
+      <h2 className="section-title section-title--dark"><Gear weight="fill" className="ico" /> ตั้งค่าแผนการฝึก</h2>
       <div className="setting">
         <span className="setting__label">วิชาที่จะโฟกัส</span>
         <div className="chapter-picker">
@@ -90,7 +91,7 @@ export function PlanPanel({ level, stats, onPractice }: Props) {
             const on = prefs.subjects.includes(s);
             return (
               <button key={s} type="button" aria-pressed={on} className={`chapter-chip ${on ? 'is-active' : ''}`} onClick={() => toggleSubject(s)}>
-                {info.emoji} {info.name}
+                <info.icon weight="fill" size={16} /> {info.name}
               </button>
             );
           })}
@@ -136,7 +137,7 @@ export function PlanPanel({ level, stats, onPractice }: Props) {
           </button>
         )}
         <button type="button" className="btn btn--primary" disabled={busy !== null} onClick={save}>
-          {busy === 'save' ? 'กำลังจัดแผน...' : plan ? 'บันทึกและจัดแผนใหม่' : 'สร้างแผนการฝึก ✨'}
+          {busy === 'save' ? 'กำลังจัดแผน...' : plan ? 'บันทึกและจัดแผนใหม่' : 'สร้างแผนการฝึก'}
         </button>
       </div>
     </section>
@@ -147,12 +148,12 @@ export function PlanPanel({ level, stats, onPractice }: Props) {
       <>
         {!plan && (
           <section className="settings-card analysis__empty">
-            <p className="analysis__big">📅</p>
+            <p className="analysis__big"><CalendarBlank weight="fill" className="ico" /></p>
             <p>ให้ระบบจัดตารางฝึกรายสัปดาห์จากจุดอ่อนของคุณ</p>
           </section>
         )}
         {settingsForm}
-        {error && <p className="form-error">😵 {error}</p>}
+        {error && <p className="form-error"><WarningCircle weight="fill" className="ico" /> {error}</p>}
       </>
     );
 
@@ -167,7 +168,7 @@ export function PlanPanel({ level, stats, onPractice }: Props) {
       <li key={index} className={`plan__item ${item.done ? 'is-done' : ''} ${big ? 'plan__item--big' : ''}`}>
         <div className="plan__item-body">
           <strong>
-            {sub.emoji} {chapterName(item.chapter)}
+            <sub.icon weight="fill" size={16} color={sub.color} /> {chapterName(item.chapter)}
           </strong>
           <span className="muted">
             {REASON_TEXT[item.reason]} · {difficultyText(item.difficulty)}
@@ -175,7 +176,7 @@ export function PlanPanel({ level, stats, onPractice }: Props) {
         </div>
         {item.done ? (
           <span className="plan__check" aria-label="ทำแล้ว">
-            ✅
+            <CheckCircle weight="fill" className="ico" />
           </span>
         ) : (
           <button type="button" className={`btn ${big ? 'btn--primary' : 'btn--ghost'}`} onClick={() => onPractice(item, index)}>
@@ -190,7 +191,7 @@ export function PlanPanel({ level, stats, onPractice }: Props) {
     <>
       <section className="settings-card">
         <div className="plan__head">
-          <h2 className="section-title section-title--dark">📅 วันนี้ (วัน{DAY_NAMES[today]})</h2>
+          <h2 className="section-title section-title--dark"><CalendarBlank weight="fill" className="ico" /> วันนี้ (วัน{DAY_NAMES[today]})</h2>
           <span className="muted">
             สัปดาห์นี้ {doneCount}/{plan.items.length}
           </span>
@@ -201,27 +202,39 @@ export function PlanPanel({ level, stats, onPractice }: Props) {
         {todays.length ? (
           <ul className="plan__list">{todays.map((x) => itemRow(x, true))}</ul>
         ) : (
-          <p className="muted">วันนี้เป็นวันพัก 😴 อยากฝึกเพิ่มก็เลือกรอบจากวันอื่นด้านล่างได้</p>
+          <p className="muted">วันนี้เป็นวันพัก <Moon weight="fill" className="ico" /> อยากฝึกเพิ่มก็เลือกรอบจากวันอื่นด้านล่างได้</p>
         )}
       </section>
 
       <section className="settings-card plan__advice">
-        <h2 className="section-title section-title--dark">✨ คำแนะนำจาก AI</h2>
+        <h2 className="section-title section-title--dark"><Sparkle weight="fill" className="ico" /> คำแนะนำจาก AI</h2>
         {plan.advice ? (
-          <p className="plan__advice-text">{plan.advice}</p>
+          <ul className="plan__advice-list">
+            {plan.advice
+              .replace(/\p{Extended_Pictographic}️?/gu, '')
+              .split('\n')
+              .map((l) => l.replace(/^\s*[-•*]\s*/, '').trim())
+              .filter(Boolean)
+              .map((l, i) => (
+                <li key={i}>
+                  <Lightbulb weight="fill" className="ico" />
+                  <span>{l}</span>
+                </li>
+              ))}
+          </ul>
         ) : (
           <p className="muted">ให้ AI ดูสถิติของคุณแล้วแนะนำว่าควรเน้นอะไร (ขอได้วันละ 1 ครั้ง)</p>
         )}
         {!adviceToday && (
           <button type="button" className="btn btn--primary btn--block" disabled={busy !== null} onClick={askAi}>
-            {busy === 'advice' ? 'AI กำลังวิเคราะห์...' : plan.advice ? 'ขอคำแนะนำใหม่ของวันนี้' : 'ขอคำแนะนำจาก AI ✨'}
+            {busy === 'advice' ? 'AI กำลังวิเคราะห์...' : plan.advice ? 'ขอคำแนะนำใหม่ของวันนี้' : 'ขอคำแนะนำจาก AI'}
           </button>
         )}
         {adviceToday && <p className="muted">ขอคำแนะนำใหม่ได้พรุ่งนี้</p>}
       </section>
 
       <section className="settings-card">
-        <h2 className="section-title section-title--dark">🗓️ ทั้งสัปดาห์</h2>
+        <h2 className="section-title section-title--dark"><CalendarDots weight="fill" className="ico" /> ทั้งสัปดาห์</h2>
         {PLAN_DAYS[plan.prefs.daysPerWeek].map((d) => (
           <div key={d} className={`plan__day ${d === today ? 'is-today' : ''}`}>
             <span className="plan__day-name">{DAY_NAMES[d]}</span>
@@ -230,15 +243,15 @@ export function PlanPanel({ level, stats, onPractice }: Props) {
         ))}
         <div className="plan__actions">
           <button type="button" className="btn btn--ghost" onClick={() => setEditing(true)}>
-            ⚙️ ปรับแผน
+            <Gear weight="fill" className="ico" /> ปรับแผน
           </button>
           <button type="button" className="btn btn--ghost" disabled={busy !== null} onClick={save}>
-            🔄 จัดแผนใหม่
+            <ArrowsClockwise weight="fill" className="ico" /> จัดแผนใหม่
           </button>
         </div>
       </section>
 
-      {error && <p className="form-error">😵 {error}</p>}
+      {error && <p className="form-error"><WarningCircle weight="fill" className="ico" /> {error}</p>}
     </>
   );
 }

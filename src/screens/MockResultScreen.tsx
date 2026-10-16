@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { MathText } from '../components/MathText';
 import { chapterName } from '../data/chapters';
 import { CHOICE5, type MockGiven, type MockReview, type MockReviewQuestion } from '../lib/mock';
+import { BookOpenText, ChartBar, CheckCircle, Confetti, Exam, XCircle } from '@phosphor-icons/react';
 
 interface Props {
   review: MockReview;
@@ -65,7 +66,7 @@ export function MockResultScreen({ review, onBack, onAnalysis }: Props) {
       </section>
 
       <section className="settings-card">
-        <h2 className="section-title section-title--dark">📖 ผลรายบท</h2>
+        <h2 className="section-title section-title--dark"><BookOpenText weight="fill" className="ico" /> ผลรายบท</h2>
         <ul className="analysis__chapters">
           {chapters.map((c) => (
             <li key={c.id} className={`analysis__row analysis__row--${c.acc >= 0.8 ? 'strong' : c.acc >= 0.6 ? 'ok' : 'weak'}`}>
@@ -82,13 +83,13 @@ export function MockResultScreen({ review, onBack, onAnalysis }: Props) {
           ))}
         </ul>
         <button type="button" className="btn btn--ghost btn--block" onClick={onAnalysis}>
-          📊 ดูแผนฝึกจากผลสอบนี้
+          <ChartBar weight="fill" className="ico" /> ดูแผนฝึกจากผลสอบนี้
         </button>
       </section>
 
       <section className="settings-card">
         <div className="plan__head">
-          <h2 className="section-title section-title--dark">📝 เฉลย</h2>
+          <h2 className="section-title section-title--dark"><Exam weight="fill" className="ico" /> เฉลย</h2>
           <div className="segmented">
             <button type="button" className={`segmented__opt ${filter === 'wrong' ? 'is-active' : ''}`} onClick={() => setFilter('wrong')}>
               ข้อที่ผิด
@@ -98,13 +99,13 @@ export function MockResultScreen({ review, onBack, onAnalysis }: Props) {
             </button>
           </div>
         </div>
-        {shown.length === 0 && <p className="muted">ไม่มีข้อที่ผิดเลย เก่งมาก! 🎉</p>}
+        {shown.length === 0 && <p className="muted">ไม่มีข้อที่ผิดเลย เก่งมาก! <Confetti weight="fill" className="ico" /></p>}
         <ol className="mock-review">
           {shown.map((q) => (
             <li key={q.i} className={`mock-review__item ${q.correct ? 'is-correct' : 'is-wrong'}`}>
               <details>
                 <summary>
-                  <span>{q.correct ? '✅' : '❌'}</span>
+                  <span>{q.correct ? <CheckCircle weight="fill" color="#149066" /> : <XCircle weight="fill" color="#d23a51" />}</span>
                   <span>ข้อ {review.questions.indexOf(q) + 1}</span>
                   <span className="muted">{chapterName(q.chapter)}</span>
                 </summary>

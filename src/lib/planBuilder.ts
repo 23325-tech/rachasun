@@ -1,4 +1,5 @@
 // สูตรจัดแผนการฝึกรายสัปดาห์ (ไม่แตะเซิร์ฟเวอร์ ทดสอบได้)
+import { ArrowsClockwise, Plant, Target, TrendUp, type Icon } from '@phosphor-icons/react';
 import type { Difficulty, Level, Subject } from '../types';
 import { chaptersOf } from '../data/chapters';
 import { accuracyOf, statusOf, type ChapterStat } from './analysis';
@@ -121,8 +122,10 @@ export function bangkokWeek(now = Date.now()): { weekStart: string; today: numbe
 export const DAY_NAMES = ['จันทร์', 'อังคาร', 'พุธ', 'พฤหัส', 'ศุกร์', 'เสาร์', 'อาทิตย์'];
 
 export const REASON_TEXT: Record<PlanReason, string> = {
-  weak: '🎯 เก็บจุดอ่อน',
-  new: '🌱 บทใหม่',
-  ok: '📈 ดันให้ถนัด',
-  review: '🔁 ทวนกันลืม',
+  weak: 'เก็บจุดอ่อน',
+  new: 'บทใหม่',
+  ok: 'ดันให้ถนัด',
+  review: 'ทวนกันลืม',
 };
+
+export const REASON_ICON: Record<PlanReason, Icon> = { weak: Target, new: Plant, ok: TrendUp, review: ArrowsClockwise };

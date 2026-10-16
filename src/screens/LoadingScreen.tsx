@@ -1,8 +1,9 @@
+import { Brain } from '@phosphor-icons/react';
 export function LoadingScreen({ message, onCancel }: { message: string; onCancel: () => void }) {
   return (
     <div className="screen loading">
       <div className="loading__brain" aria-hidden>
-        🧠
+        <Brain weight="fill" className="ico" />
       </div>
       <p className="loading__msg" role="status">
         {message}

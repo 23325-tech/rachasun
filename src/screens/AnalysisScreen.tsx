@@ -13,6 +13,7 @@ import {
   statusOf,
   type ChapterStat,
 } from '../lib/analysis';
+import { CalendarBlank, ChartBar, Plant, Target, WarningCircle } from '@phosphor-icons/react';
 
 export interface PracticeRequest {
   level: Level;
@@ -78,7 +79,7 @@ export function AnalysisScreen({ initialLevel, onBack, onPractice, onPracticePla
         <button type="button" className="icon-btn" onClick={onBack} aria-label="กลับ">
           ←
         </button>
-        <div className="quiz__progress">📊 วิเคราะห์ของฉัน</div>
+        <div className="quiz__progress"><ChartBar weight="fill" className="ico" /> วิเคราะห์ของฉัน</div>
       </header>
 
       <section className="settings-card">
@@ -91,7 +92,7 @@ export function AnalysisScreen({ initialLevel, onBack, onPractice, onPracticePla
             className={`segmented__opt ${tab === 'plan' ? 'is-active' : ''}`}
             onClick={() => setTab('plan')}
           >
-            📅 แผนฝึก
+            <CalendarBlank weight="fill" className="ico" /> แผนฝึก
           </button>
           <button
             type="button"
@@ -100,7 +101,7 @@ export function AnalysisScreen({ initialLevel, onBack, onPractice, onPracticePla
             className={`segmented__opt ${tab === 'chapters' ? 'is-active' : ''}`}
             onClick={() => setTab('chapters')}
           >
-            📊 รายบท
+            <ChartBar weight="fill" className="ico" /> รายบท
           </button>
         </div>
       </section>
@@ -109,12 +110,12 @@ export function AnalysisScreen({ initialLevel, onBack, onPractice, onPracticePla
         <PlanPanel key={level} level={level} stats={stats} onPractice={(item, index) => onPracticePlan(level, item, index)} />
       )}
 
-      {error && <p className="form-error">😵 {error}</p>}
+      {error && <p className="form-error"><WarningCircle weight="fill" className="ico" /> {error}</p>}
       {!stats && !error && <p className="muted analysis__loading">กำลังโหลดสถิติ...</p>}
 
       {tab === 'chapters' && stats && total === 0 && (
         <section className="settings-card analysis__empty">
-          <p className="analysis__big">🌱</p>
+          <p className="analysis__big"><Plant weight="fill" className="ico" /></p>
           <p>
             ยังไม่มีข้อมูลระดับ {LEVELS[level].name} เลย
             <br />
@@ -141,10 +142,10 @@ export function AnalysisScreen({ initialLevel, onBack, onPractice, onPracticePla
           </section>
 
           <section className="settings-card">
-            <h2 className="section-title section-title--dark">🎯 ควรฝึกก่อน</h2>
+            <h2 className="section-title section-title--dark"><Target weight="fill" className="ico" /> ควรฝึกก่อน</h2>
             {weakest.length === 0 ? (
               <p className="muted">
-                ยังไม่มีบทที่ต่ำกว่า 60% {recent < 20 ? `(ทำให้ครบบทละ ${MIN_ANSWERS} ข้อขึ้นไปจะวิเคราะห์ได้แม่นขึ้น)` : '👏'}
+                ยังไม่มีบทที่ต่ำกว่า 60% {recent < 20 ? `(ทำให้ครบบทละ ${MIN_ANSWERS} ข้อขึ้นไปจะวิเคราะห์ได้แม่นขึ้น)` : ''}
               </p>
             ) : (
               <ul className="analysis__weak">
@@ -155,7 +156,7 @@ export function AnalysisScreen({ initialLevel, onBack, onPractice, onPracticePla
                       <div>
                         <strong>{chapterName(s.chapter)}</strong>
                         <span className="muted">
-                          {sub.emoji} {sub.name} · ถูก {s.recentCorrect}/{s.recent} ({pct(accuracyOf(s))})
+                          <sub.icon weight="fill" size={14} /> {sub.name} · ถูก {s.recentCorrect}/{s.recent} ({pct(accuracyOf(s))})
                         </span>
                       </div>
                       <button type="button" className="btn btn--primary" onClick={() => practice(s.chapter)}>
@@ -180,7 +181,7 @@ export function AnalysisScreen({ initialLevel, onBack, onPractice, onPracticePla
             <details key={subject} className="settings-card analysis__subject" open={done > 0}>
               <summary className="analysis__subject-head" style={{ '--c': sub.color } as CSSProperties}>
                 <span>
-                  {sub.emoji} {sub.name}
+                  <sub.icon weight="fill" size={18} color={sub.color} /> {sub.name}
                 </span>
                 <span className="muted">
                   ทำแล้ว {done}/{chapters.length} บท

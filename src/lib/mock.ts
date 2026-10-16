@@ -1,3 +1,4 @@
+import { ChartBar, Dna, Flask, Lightning, MathOperations, Translate, type Icon } from '@phosphor-icons/react';
 import { ensureSession } from './supabase';
 
 export type MockExam = 'math1' | 'math2' | 'physics' | 'chemistry' | 'biology' | 'english';
@@ -101,13 +102,13 @@ export const saveMockAnswer = (attemptId: string, index: number, given: MockGive
 export const submitMock = (attemptId: string) => call<MockReview>({ action: 'submit', attemptId });
 export const reviewMock = (attemptId: string) => call<MockReview>({ action: 'review', attemptId });
 
-export const MOCK_ICON: Record<MockExam, string> = {
-  math1: '📐',
-  math2: '📊',
-  physics: '⚡',
-  chemistry: '🧪',
-  biology: '🧬',
-  english: '🔤',
+export const MOCK_ICON: Record<MockExam, Icon> = {
+  math1: MathOperations,
+  math2: ChartBar,
+  physics: Lightning,
+  chemistry: Flask,
+  biology: Dna,
+  english: Translate,
 };
 
 export const CHOICE5 = ['ก', 'ข', 'ค', 'ง', 'จ'];

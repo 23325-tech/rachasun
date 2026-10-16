@@ -1,3 +1,4 @@
+import { Timer } from '@phosphor-icons/react';
 export function TimerBar({ remainingMs, limitMs }: { remainingMs: number; limitMs: number }) {
   const ratio = Math.max(0, Math.min(1, remainingMs / limitMs));
   const seconds = Math.ceil(remainingMs / 1000);
@@ -5,7 +6,7 @@ export function TimerBar({ remainingMs, limitMs }: { remainingMs: number; limitM
   return (
     <div className={`timer timer--${level}`} role="timer" aria-label={`เหลือเวลา ${seconds} วินาที`}>
       <span className="timer__icon" aria-hidden>
-        ⏱️
+        <Timer weight="fill" className="ico" />
       </span>
       <div className="timer__track">
         <div className="timer__fill" style={{ transform: `scaleX(${ratio})` }} />

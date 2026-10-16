@@ -10,6 +10,7 @@ import { FillAnswerInput } from '../components/FillAnswerInput';
 import { PlayerGrid, type HitStage, type PlayerStatus } from '../components/PlayerGrid';
 import { CardBar, type ActiveCard } from '../components/CardBar';
 import type { CardKind } from '../game/battle';
+import { Crosshair, Eye, FlagCheckered, Gift, Hourglass, Lightbulb, Lightning, ShieldCheck, SkipForward, SmileyMeh, Users, WifiSlash } from '@phosphor-icons/react';
 
 interface Props {
   roomId: string;
@@ -22,11 +23,11 @@ const AIM_AT = 500;
 const BANG_AT = 1100;
 const REASON_TEXT = { wrong: 'ตอบผิด', timeout: 'หมดเวลา', slowest: 'ตอบช้าสุด', counter: 'โดนยิงสวน' } as const;
 const CARD_TEXT: Record<CardKind, string> = {
-  shield: '🛡️ โล่',
-  fifty: '✂️ 50/50',
-  slow: '⏳ ลดเวลาเพื่อน',
-  extra: '⌛ เพิ่มเวลาตัวเอง',
-  counter: '🔫 ยิงสวน',
+  shield: 'โล่',
+  fifty: '50/50',
+  slow: 'ลดเวลาเพื่อน',
+  extra: 'เพิ่มเวลาตัวเอง',
+  counter: 'ยิงสวน',
 };
 
 /** อัปเดตทุก 100ms ให้ตัวจับเวลาเดิน */
@@ -233,10 +234,10 @@ export function OnlineBattleView({ roomId, state: s, myId, onLeave }: Props) {
           ✕
         </button>
         <div className="quiz__progress">
-          {sudden ? <span className="sudden-tag">⚡ SUDDEN DEATH</span> : <>ข้อ {s.round + 1}/{s.questionCount}</>}
+          {sudden ? <span className="sudden-tag"><Lightning weight="fill" className="ico" /> SUDDEN DEATH</span> : <>ข้อ {s.round + 1}/{s.questionCount}</>}
         </div>
         <div className="quiz__score">
-          👥 {s.players.filter(isAlive).length}/{s.players.length}
+          <Users weight="fill" className="ico" /> {s.players.filter(isAlive).length}/{s.players.length}
         </div>
       </header>
 
@@ -251,7 +252,7 @@ export function OnlineBattleView({ roomId, state: s, myId, onLeave }: Props) {
 
       {showDealt && newCard && (
         <div className="card-toast pop-in" role="status">
-          🎁 ได้การ์ด <strong>{CARD_TEXT[newCard]}</strong>!
+          <Gift weight="fill" className="ico" /> ได้การ์ด <strong>{CARD_TEXT[newCard]}</strong>!
         </div>
       )}
 
@@ -268,16 +269,16 @@ export function OnlineBattleView({ roomId, state: s, myId, onLeave }: Props) {
             </div>
           )}
           {slowedBy && meAlive && !answeredThisRound && (
-            <p className="slowed-note shake">⏳ {nameOf(slowedBy)} ลดเวลาคุณ!</p>
+            <p className="slowed-note shake"><Hourglass weight="fill" className="ico" /> {nameOf(slowedBy)} ลดเวลาคุณ!</p>
           )}
 
-          {sudden && s.phase === 'question' && <div className="sudden-banner pop-in">⚡ ผิดหรือช้าสุด = ตกรอบทันที!</div>}
+          {sudden && s.phase === 'question' && <div className="sudden-banner pop-in"><Lightning weight="fill" className="ico" /> ผิดหรือช้าสุด = ตกรอบทันที!</div>}
 
           {q && subject && (
             <article key={`q-${s.round}`} className="card question-card pop-in">
               <div className="question-card__meta">
                 <span className="tag" style={{ background: subject.color }}>
-                  {subject.emoji} {subject.name}
+                  <subject.icon weight="fill" size={16} /> {subject.name}
                 </span>
                 <span className="tag tag--ghost">{DIFFICULTY_LABEL[q.difficulty]}</span>
               </div>
@@ -306,9 +307,9 @@ export function OnlineBattleView({ roomId, state: s, myId, onLeave }: Props) {
             />
           )}
 
-          {!meAlive && !showingReveal && <p className="waiting">👀 คุณตกรอบแล้ว กำลังดูเพื่อนแข่งต่อ...</p>}
+          {!meAlive && !showingReveal && <p className="waiting"><Eye weight="fill" className="ico" /> คุณตกรอบแล้ว กำลังดูเพื่อนแข่งต่อ...</p>}
           {s.phase === 'question' && answeredThisRound && !answerError && (
-            <p className="waiting">{myCard?.skipped ? '⏭️ ข้ามข้อนี้แล้ว รอคนอื่นอยู่...' : '🔒 ล็อกคำตอบแล้ว รอคนอื่นอยู่...'}</p>
+            <p className="waiting">{myCard?.skipped ? 'ข้ามข้อนี้แล้ว รอคนอื่นอยู่...' : 'ล็อกคำตอบแล้ว รอคนอื่นอยู่...'}</p>
           )}
 
           {s.items && myCards && meAlive && !showingReveal && q && (
@@ -335,21 +336,21 @@ export function OnlineBattleView({ roomId, state: s, myId, onLeave }: Props) {
           )}
           <div className="shot-list">
             {reveal.outcome.damages.length === 0 && reveal.disconnected.length === 0 ? (
-              <p className="shot-list__none">😮 ไม่มีใครโดนยิงข้อนี้</p>
+              <p className="shot-list__none"><SmileyMeh weight="fill" className="ico" /> ไม่มีใครโดนยิงข้อนี้</p>
             ) : (
               <>
                 {reveal.outcome.damages.map((d) =>
                   d.redirectedTo ? (
                     <p key={`${d.playerId}-r`} className="shot-list__item shot-list__item--counter">
-                      🔫 <strong>{nameOf(d.playerId)}</strong> ยิงสวน! ดาเมจเด้งไปหา <strong>{nameOf(d.redirectedTo)}</strong>
+                      <Crosshair weight="fill" className="ico" /> <strong>{nameOf(d.playerId)}</strong> ยิงสวน! ดาเมจเด้งไปหา <strong>{nameOf(d.redirectedTo)}</strong>
                     </p>
                   ) : d.blocked ? (
                     <p key={`${d.playerId}-${d.reason}`} className="shot-list__item shot-list__item--blocked">
-                      🛡️ <strong>{nameOf(d.playerId)}</strong> ใช้โล่กันกระสุนไว้ได้! ({REASON_TEXT[d.reason]})
+                      <ShieldCheck weight="fill" className="ico" /> <strong>{nameOf(d.playerId)}</strong> ใช้โล่กันกระสุนไว้ได้! ({REASON_TEXT[d.reason]})
                     </p>
                   ) : (
                   <p key={`${d.playerId}-${d.reason}`} className={`shot-list__item ${d.playerId === myId ? 'is-me' : ''}`}>
-                    💥 <strong>{nameOf(d.playerId)}</strong> โดนยิง ({REASON_TEXT[d.reason]})
+                    <Lightning weight="fill" className="ico" /> <strong>{nameOf(d.playerId)}</strong> โดนยิง ({REASON_TEXT[d.reason]})
                     {reveal.outcome.eliminated.includes(d.playerId) && <span className="shot-list__out"> ตกรอบ!</span>}
                   </p>
                   ),
@@ -358,23 +359,23 @@ export function OnlineBattleView({ roomId, state: s, myId, onLeave }: Props) {
                   .filter(([, r]) => r.skipped)
                   .map(([id]) => (
                     <p key={`skip-${id}`} className="shot-list__item">
-                      ⏭️ <strong>{nameOf(id)}</strong> ใช้การ์ดข้ามข้อนี้
+                      <SkipForward weight="fill" className="ico" /> <strong>{nameOf(id)}</strong> ใช้การ์ดข้ามข้อนี้
                     </p>
                   ))}
                 {reveal.disconnected.map((id) => (
                   <p key={id} className={`shot-list__item ${id === myId ? 'is-me' : ''}`}>
-                    📵 <strong>{nameOf(id)}</strong> หลุดการเชื่อมต่อ <span className="shot-list__out">ตกรอบ!</span>
+                    <WifiSlash weight="fill" className="ico" /> <strong>{nameOf(id)}</strong> หลุดการเชื่อมต่อ <span className="shot-list__out">ตกรอบ!</span>
                   </p>
                 ))}
               </>
             )}
           </div>
           <details className="explain">
-            <summary>💡 ดูคำอธิบาย</summary>
+            <summary><Lightbulb weight="fill" className="ico" /> ดูคำอธิบาย</summary>
             <MathText text={reveal.explanation} />
           </details>
           {s.phase === 'finished' ? (
-            <p className="game-over pop-in">🏁 จบเกม!</p>
+            <p className="game-over pop-in"><FlagCheckered weight="fill" className="ico" /> จบเกม!</p>
           ) : (
             <p className="next-in">ข้อต่อไปใน {nextIn} วินาที...</p>
           )}

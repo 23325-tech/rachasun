@@ -5,6 +5,8 @@ import { AsyncPlayScreen } from './AsyncPlayScreen';
 import { settingsLabel, difficultyText } from '../data/subjects';
 import { XpBadge, type XpState } from '../components/XpBadge';
 import { PlayerAvatar } from '../components/PlayerAvatar';
+import { RankMedal } from '../components/icons';
+import { CalendarBlank,CalendarDots,CheckCircle,Star,Trophy,Users,WarningCircle } from '@phosphor-icons/react';
 
 interface Props {
   groupId: string;
@@ -15,7 +17,6 @@ interface Props {
   onXpAwarded: () => void;
 }
 
-const MEDAL = ['🥇', '🥈', '🥉'];
 
 /** หน้ากลุ่ม: โจทย์ประจำวัน + อันดับวันนี้ / สัปดาห์นี้ */
 export function GroupScreen({ groupId, guest, onBack, onLeft, onRegister, onXpAwarded }: Props) {
@@ -47,7 +48,7 @@ export function GroupScreen({ groupId, guest, onBack, onLeft, onRegister, onXpAw
     return (
       <AsyncPlayScreen
         playId={playId}
-        title="🏆 โจทย์วันนี้"
+        title="โจทย์วันนี้"
         onQuit={() => {
           setPlayId(null);
           reload();
@@ -68,7 +69,7 @@ export function GroupScreen({ groupId, guest, onBack, onLeft, onRegister, onXpAw
   if (!board) {
     return (
       <div className="screen loading">
-        <div className="loading__brain">🏆</div>
+        <div className="loading__brain"><Trophy weight="fill" className="ico" /></div>
         <p className="loading__msg">{error || 'กำลังโหลดกลุ่ม...'}</p>
         {error && (
           <button type="button" className="btn btn--ghost" onClick={onBack}>
@@ -119,7 +120,7 @@ export function GroupScreen({ groupId, guest, onBack, onLeft, onRegister, onXpAw
           ←
         </button>
         <div className="quiz__progress">{g.name}</div>
-        <div className="quiz__score">👥 {board.rows.length}</div>
+        <div className="quiz__score"><Users weight="fill" className="ico" /> {board.rows.length}</div>
       </header>
 
       <section className="code-card pop-in">
@@ -128,7 +129,7 @@ export function GroupScreen({ groupId, guest, onBack, onLeft, onRegister, onXpAw
         </span>
         <span className="code-card__code code-card__code--small">{g.code}</span>
         <button type="button" className="btn btn--ghost btn--block" onClick={share}>
-          {copied ? '✅ คัดลอกลิงก์แล้ว' : '📤 ชวนเพื่อนเข้ากลุ่ม'}
+          {copied ? 'คัดลอกลิงก์แล้ว' : 'ชวนเพื่อนเข้ากลุ่ม'}
         </button>
       </section>
 
@@ -143,7 +144,7 @@ export function GroupScreen({ groupId, guest, onBack, onLeft, onRegister, onXpAw
             className={`segmented__opt ${period === 'day' ? 'is-active' : ''}`}
             onClick={() => setPeriod('day')}
           >
-            📅 วันนี้
+            <CalendarBlank weight="fill" className="ico" /> วันนี้
           </button>
           <button
             type="button"
@@ -152,7 +153,7 @@ export function GroupScreen({ groupId, guest, onBack, onLeft, onRegister, onXpAw
             className={`segmented__opt ${period === 'week' ? 'is-active' : ''}`}
             onClick={() => setPeriod('week')}
           >
-            🗓️ สัปดาห์นี้
+            <CalendarDots weight="fill" className="ico" /> สัปดาห์นี้
           </button>
         </div>
         <ol className="ranking">
@@ -160,7 +161,7 @@ export function GroupScreen({ groupId, guest, onBack, onLeft, onRegister, onXpAw
             const ranked = r.played > 0;
             return (
               <li key={`${r.nickname}-${r.tag}`} className={`ranking__item ${r.isMe ? 'is-me' : ''} ${i === 0 && ranked ? 'is-winner' : ''}`}>
-                <span className="ranking__rank">{ranked ? MEDAL[i] ?? i + 1 : '–'}</span>
+                <span className="ranking__rank">{ranked ? <RankMedal rank={i + 1} /> : '–'}</span>
                 <span className="ranking__avatar">
                   <PlayerAvatar code={r.avatar} size={36} />
                 </span>
@@ -168,14 +169,20 @@ export function GroupScreen({ groupId, guest, onBack, onLeft, onRegister, onXpAw
                   {r.isMe ? 'คุณ' : r.nickname}
                   {period === 'week' && r.played > 0 && <span className="ranking__bot">{r.played} วัน</span>}
                 </span>
-                <span className="ranking__score">{ranked ? `⭐ ${r.score}` : 'ยังไม่เล่น'}</span>
+                <span className="ranking__score">{ranked ? (
+                    <>
+                      <Star weight="fill" className="ico" /> {r.score}
+                    </>
+                  ) : (
+                    'ยังไม่เล่น'
+                  )}</span>
               </li>
             );
           })}
         </ol>
       </section>
 
-      {error && <p className="form-error">😵 {error}</p>}
+      {error && <p className="form-error"><WarningCircle weight="fill" className="ico" /> {error}</p>}
 
       {!confirmLeave ? (
         <button type="button" className="link-btn group-leave" onClick={() => setConfirmLeave(true)}>
@@ -205,10 +212,10 @@ export function GroupScreen({ groupId, guest, onBack, onLeft, onRegister, onXpAw
 
       <div className="cta-bar">
         {playedToday ? (
-          <p className="cta-bar__summary">✅ เล่นโจทย์วันนี้แล้ว ได้ ⭐ {meToday?.score} · พรุ่งนี้มาใหม่นะ!</p>
+          <p className="cta-bar__summary"><CheckCircle weight="fill" className="ico" /> เล่นโจทย์วันนี้แล้ว ได้ <Star weight="fill" className="ico" /> {meToday?.score} · พรุ่งนี้มาใหม่นะ!</p>
         ) : (
           <button type="button" className="btn btn--primary btn--block btn--big" disabled={busy} onClick={play}>
-            {busy ? 'กำลังเตรียมโจทย์...' : 'เล่นโจทย์วันนี้ 🎯'}
+            {busy ? 'กำลังเตรียมโจทย์...' : 'เล่นโจทย์วันนี้'}
           </button>
         )}
       </div>

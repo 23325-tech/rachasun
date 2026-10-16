@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { FillQuestion } from '../types';
+import { PaperPlaneTilt } from '@phosphor-icons/react';
 
 interface Props {
   question: FillQuestion;
@@ -49,7 +50,7 @@ export function FillAnswerInput({ question, revealed, correct, onSubmit }: Props
       </div>
       {!revealed && (
         <button type="submit" className="btn btn--primary btn--block" disabled={!value.trim()}>
-          ส่งคำตอบ 🚀
+          ส่งคำตอบ <PaperPlaneTilt weight="fill" className="ico" />
         </button>
       )}
     </form>

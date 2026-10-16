@@ -25,7 +25,7 @@ export function LevelPicker({ value, onChange, label = 'ระดับชั้
               onClick={() => onChange(key)}
             >
               <span className="level-picker__emoji" aria-hidden>
-                {lv.emoji}
+                <lv.icon weight="fill" size={24} />
               </span>
               <span className="level-picker__name">{lv.name}</span>
               <span className="level-picker__short">{lv.short}</span>

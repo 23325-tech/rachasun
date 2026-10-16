@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { MathText } from '../components/MathText';
 import { chapterName } from '../data/chapters';
 import { CHOICE5, isAnswered, saveMockAnswer, type MockGiven, type MockSession } from '../lib/mock';
+import { BookOpenText,CaretLeft,CaretRight,Timer,Warning } from '@phosphor-icons/react';
 
 interface Props {
   session: MockSession;
@@ -103,12 +104,12 @@ export function MockExamScreen({ session, onSubmit, onExit }: Props) {
           {session.half ? ' (ครึ่งชุด)' : ''}
         </div>
         <div className={`mock-timer ${remaining < 5 * 60_000 ? 'is-low' : ''}`} aria-label="เวลาที่เหลือ">
-          ⏱️ {fmt(remaining)}
+          <Timer weight="fill" className="ico" /> {fmt(remaining)}
         </div>
       </header>
 
       <button type="button" className="mock-progress" onClick={() => setShowGrid(!showGrid)}>
-        ตอบแล้ว {answeredCount}/{qs.length} ข้อ {saveError && <span className="mock-progress__err">· ⚠️ บันทึกไม่สำเร็จ ลองใหม่</span>}
+        ตอบแล้ว {answeredCount}/{qs.length} ข้อ {saveError && <span className="mock-progress__err">· <Warning weight="fill" className="ico" /> บันทึกไม่สำเร็จ ลองใหม่</span>}
         <span>{showGrid ? '▲' : '▼ ดูทุกข้อ'}</span>
       </button>
       {showGrid && (
@@ -136,7 +137,7 @@ export function MockExamScreen({ session, onSubmit, onExit }: Props) {
           <span className="tag tag--ghost">
             {q.type === 'mcq5' ? 'ปรนัย 5 ตัวเลือก' : q.type === 'fill' ? 'ระบายคำตอบเป็นตัวเลข' : 'เลือกตอบเชิงซ้อน'}
           </span>
-          {chapterName(q.chapter) && <span className="tag tag--ghost">📖 {chapterName(q.chapter)}</span>}
+          {chapterName(q.chapter) && <span className="tag tag--ghost"><BookOpenText weight="fill" className="ico" /> {chapterName(q.chapter)}</span>}
         </div>
         <MathText className="question-card__prompt" text={q.prompt} />
       </article>
@@ -200,14 +201,14 @@ export function MockExamScreen({ session, onSubmit, onExit }: Props) {
 
       <div className="mock-nav">
         <button type="button" className="btn btn--ghost" disabled={pos === 0} onClick={() => go(pos - 1)}>
-          ◀ ก่อนหน้า
+          <CaretLeft weight="bold" className="ico" /> ก่อนหน้า
         </button>
         <button type="button" className={`btn btn--ghost ${flags.has(q.i) ? 'is-flagged' : ''}`} onClick={toggleFlag}>
           {flags.has(q.i) ? '⚑ ติดธงแล้ว' : '⚐ ไว้กลับมาดู'}
         </button>
         {pos < qs.length - 1 ? (
           <button type="button" className="btn btn--primary" onClick={() => go(pos + 1)}>
-            ถัดไป ▶
+            ถัดไป <CaretRight weight="bold" className="ico" />
           </button>
         ) : (
           <button
@@ -232,7 +233,7 @@ export function MockExamScreen({ session, onSubmit, onExit }: Props) {
           setConfirming(true);
         }}
       >
-        {submitting ? 'กำลังตรวจ...' : '📤 ส่งข้อสอบ'}
+        {submitting ? 'กำลังตรวจ...' : 'ส่งข้อสอบ'}
       </button>
 
       {confirming && !submitting && (

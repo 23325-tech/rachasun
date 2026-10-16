@@ -7,6 +7,7 @@ import { MathText } from '../components/MathText';
 import { TimerBar } from '../components/TimerBar';
 import { ChoiceList } from '../components/ChoiceList';
 import { FillAnswerInput } from '../components/FillAnswerInput';
+import { Alarm, Brain, Confetti, Hourglass, Lightbulb, Star, WarningCircle, XCircle } from '@phosphor-icons/react';
 
 interface Props {
   playId: string;
@@ -109,7 +110,7 @@ export function AsyncPlayScreen({ playId, title, onDone, onQuit }: Props) {
   if (!cur || !q) {
     return (
       <div className="screen loading">
-        <div className="loading__brain">🧠</div>
+        <div className="loading__brain"><Brain weight="fill" className="ico" /></div>
         <p className="loading__msg">{error || 'กำลังโหลดโจทย์...'}</p>
         {error && (
           <button type="button" className="btn btn--ghost" onClick={load}>
@@ -133,7 +134,7 @@ export function AsyncPlayScreen({ playId, title, onDone, onQuit }: Props) {
         <div className="quiz__progress">
           {title} · ข้อ {cur.index + 1}/{cur.total}
         </div>
-        <div className="quiz__score">⭐ {result ? result.score : cur.score}</div>
+        <div className="quiz__score"><Star weight="fill" className="ico" /> {result ? result.score : cur.score}</div>
       </header>
 
       <TimerBar remainingMs={result ? 0 : remaining} limitMs={cur.limitMs} />
@@ -141,7 +142,7 @@ export function AsyncPlayScreen({ playId, title, onDone, onQuit }: Props) {
       <article key={`q-${cur.index}`} className="card question-card pop-in">
         <div className="question-card__meta">
           <span className="tag" style={{ background: subject.color }}>
-            {subject.emoji} {subject.name}
+            <subject.icon weight="fill" size={16} /> {subject.name}
           </span>
           <span className="tag tag--ghost">{DIFFICULTY_LABEL[q.difficulty]}</span>
         </div>
@@ -168,21 +169,25 @@ export function AsyncPlayScreen({ playId, title, onDone, onQuit }: Props) {
         />
       )}
 
-      {!result && given !== null && !error && <p className="waiting">⏳ กำลังตรวจคำตอบ...</p>}
-      {error && <p className="form-error">😵 {error}</p>}
+      {!result && given !== null && !error && <p className="waiting"><Hourglass weight="fill" className="ico" /> กำลังตรวจคำตอบ...</p>}
+      {error && <p className="form-error"><WarningCircle weight="fill" className="ico" /> {error}</p>}
 
       {result && (
         <div className="reveal-sheet slide-up">
           <div className={`verdict ${result.correct ? 'verdict--good' : 'verdict--bad'}`}>
             {result.correct ? (
               <>
-                <span className="verdict__emoji bounce">🎉</span>
+                <span className="verdict__emoji bounce">
+              <Confetti weight="fill" size={34} />
+            </span>
                 <span>ถูกต้อง!</span>
                 <span className="verdict__points">+{result.points}</span>
               </>
             ) : (
               <>
-                <span className="verdict__emoji shake">{result.timedOut ? '⏰' : '💥'}</span>
+                <span className="verdict__emoji shake">
+              {result.timedOut ? <Alarm weight="fill" size={34} /> : <XCircle weight="fill" size={34} />}
+            </span>
                 <span>{result.timedOut ? 'หมดเวลา!' : 'ผิดจ้า'}</span>
               </>
             )}
@@ -193,7 +198,7 @@ export function AsyncPlayScreen({ playId, title, onDone, onQuit }: Props) {
             </p>
           )}
           <div className="reveal-sheet__explain">
-            <span className="reveal-sheet__label">💡 คำอธิบาย</span>
+            <span className="reveal-sheet__label"><Lightbulb weight="fill" className="ico" /> คำอธิบาย</span>
             <MathText text={result.explanation} />
           </div>
           <button
@@ -201,7 +206,7 @@ export function AsyncPlayScreen({ playId, title, onDone, onQuit }: Props) {
             className="btn btn--primary btn--block btn--big"
             onClick={() => (result.done ? onDone({ score: result.score, xp: result.xp }) : load())}
           >
-            {isLast || result.done ? 'ดูอันดับ 🏆' : 'ข้อต่อไป ➜'}
+            {isLast || result.done ? 'ดูอันดับ' : 'ข้อต่อไป ➜'}
           </button>
         </div>
       )}
