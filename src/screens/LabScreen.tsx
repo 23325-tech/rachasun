@@ -264,7 +264,7 @@ export default function LabScreen() {
         <div className="lab-tabs">
           {TABS.map((t) => (
             <button key={t.key} type="button" className={t.key === tab ? 'is-active' : ''} onClick={() => setTab(t.key)}>
-              <t.icon weight={t.key === tab ? 'fill' : 'regular'} size={18} />
+              <t.icon weight={t.key === tab ? 'fill' : 'bold'} size={18} />
               {t.label}
             </button>
           ))}

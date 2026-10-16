@@ -3,6 +3,19 @@ import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig({
+  resolve: {
+    alias: [
+      // ใช้ชุดไอคอนที่สร้างเฉพาะตัวที่ใช้ (scripts/gen-icons.mjs) แทน Phosphor เต็มชุด
+      {
+        find: /^@phosphor-icons\/react$/,
+        // path ของไฟล์ (แปลงจาก file:// และตัด / หน้าอักษรไดรฟ์บน Windows)
+        replacement: decodeURIComponent(new URL('./src/components/phosphor.generated.tsx', import.meta.url).pathname).replace(
+          /^\/([A-Za-z]:)/,
+          '$1',
+        ),
+      },
+    ],
+  },
   plugins: [
     react(),
     VitePWA({

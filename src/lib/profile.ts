@@ -33,9 +33,16 @@ function client() {
  * needsPassword = ผูกอีเมลแล้วแต่ยังไม่ได้ตั้งรหัสผ่าน (กรณีเปิด Confirm email)
  */
 export async function loadMe(): Promise<{ user: User; profile: Profile | null; needsPassword: boolean }> {
-  const sb = await ensureSession();
-  const { data } = await sb.auth.getUser();
-  const user = data.user!;
+  let sb = await ensureSession();
+  let { data } = await sb.auth.getUser();
+  if (!data.user) {
+    // session ในเครื่องเป็นของบัญชีที่ไม่มีแล้ว (เช่น ถูกลบ) -> ล้างแล้วเข้าแบบแขกใหม่
+    await sb.auth.signOut({ scope: 'local' }).catch(() => {});
+    sb = await ensureSession();
+    ({ data } = await sb.auth.getUser());
+    if (!data.user) throw new Error('เข้าสู่ระบบไม่สำเร็จ ลองรีเฟรชหน้าอีกครั้ง');
+  }
+  const user = data.user;
   const { data: profile, error } = await sb.from('profiles').select('*').eq('id', user.id).maybeSingle();
   if (error) throw new Error(`โหลดโปรไฟล์ไม่สำเร็จ: ${error.message}`);
   let needsPassword = false;
