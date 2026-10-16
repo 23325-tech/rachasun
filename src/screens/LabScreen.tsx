@@ -1,5 +1,5 @@
-// หน้าต้นแบบดีไซน์ใหม่ (สเต็ป 16.1) เปิดด้วย ?lab — ยังไม่เชื่อมข้อมูลจริง ใช้ดูแนวทางก่อนเปลี่ยนทั้งแอพ
-import { useEffect, useState, type CSSProperties, type ReactNode } from 'react';
+// หน้าต้นแบบ (สเต็ป 16.1) ระบบตัวละคร/ไอคอนใหม่ในสไตล์เดิมของแอพ เปิดด้วย ?lab — ยังไม่เชื่อมข้อมูลจริง ใช้ดูแนวทางก่อนเปลี่ยนทั้งแอพ
+import { useState, type CSSProperties, type ReactNode } from 'react';
 import {
   Atom,
   Books,
@@ -145,7 +145,7 @@ function Pill({ icon: I, value, tone }: { icon: Icon; value: string; tone: 'coin
 function RankBadge() {
   return (
     <span className="lab-rank">
-      <ShieldStar weight="duotone" size={22} />
+      <ShieldStar weight="fill" size={22} />
       <span>
         <strong>ทอง II</strong>
         <small>620 RP</small>
@@ -173,15 +173,6 @@ export default function LabScreen() {
   const [cheer, setCheer] = useState(0);
   const [owned] = useState(new Set(['h1', 'a0', 'o1', 'i0', 'c1', 'c2', 'c3', 'c4']));
 
-  useEffect(() => {
-    // ฟอนต์ชุดใหม่: Kanit (หัวข้อ) + IBM Plex Sans Thai (เนื้อหา)
-    const link = document.createElement('link');
-    link.rel = 'stylesheet';
-    link.href =
-      'https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600&family=Kanit:wght@500;600;700;800&display=swap';
-    document.head.appendChild(link);
-    return () => link.remove();
-  }, []);
 
   const tryOn = (it: ShopItem) => {
     setLook((l) => ({ ...l, ...it.apply }));
@@ -244,7 +235,7 @@ export default function LabScreen() {
           {MODES.map((m) => (
             <button key={m.key} type="button" className={`lab-mode ${m.wide ? 'lab-mode--wide' : ''}`} style={{ '--g': m.grad } as CSSProperties}>
               <span className="lab-mode__icon">
-                <m.icon weight="duotone" size={m.wide ? 30 : 26} />
+                <m.icon weight="fill" size={m.wide ? 30 : 26} />
               </span>
               <span className="lab-mode__text">
                 <strong>{m.title}</strong>
@@ -261,7 +252,7 @@ export default function LabScreen() {
           {SUBJECTS.map((s) => (
             <div key={s.name} className="lab-subject">
               <span className="lab-subject__tile" style={{ '--g': s.grad } as CSSProperties}>
-                <s.icon weight="duotone" size={28} />
+                <s.icon weight="fill" size={28} />
               </span>
               <span>{s.name}</span>
             </div>
@@ -290,7 +281,7 @@ export default function LabScreen() {
               >
                 <span className="lab-item__rarity">{RARITY_TEXT[it.rarity]}</span>
                 <span className="lab-item__art">
-                  {it.swatch ? <span className="lab-item__swatch" style={{ background: it.swatch }} /> : <it.icon weight="duotone" size={34} />}
+                  {it.swatch ? <span className="lab-item__swatch" style={{ background: it.swatch }} /> : <it.icon weight="fill" size={34} />}
                 </span>
                 <span className="lab-item__name">{it.name}</span>
                 <span className="lab-item__price">

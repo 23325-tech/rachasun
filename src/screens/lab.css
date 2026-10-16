@@ -1,26 +1,13 @@
-/* ต้นแบบดีไซน์ใหม่ (16.1): ธีมเกมพรีเมียมโทนม่วงเข้ม แสงนีออนนุ่มๆ ไม่ใช้อิโมจิ */
+/* ต้นแบบ (16.1 รอบ 2): ระบบตัวละคร/ไอคอนใหม่ ในสไตล์เดิมของแอพ
+   พื้นไล่สีม่วง-ฟ้า การ์ดขาวขอบหนา เงาแข็งแบบการ์ตูน ฟอนต์ Mitr ไม่ใช้อิโมจิ */
 .lab {
-  --lab-bg: #0f0a26;
-  --lab-card: rgba(255, 255, 255, 0.06);
-  --lab-card-2: rgba(255, 255, 255, 0.1);
-  --lab-line: rgba(255, 255, 255, 0.12);
-  --lab-text: #f4f1ff;
-  --lab-sub: #a99fd6;
-  --lab-accent: #8b6cff;
-  --lab-gold: #ffc94a;
-  --lab-gem: #5ee0ff;
   position: relative;
   min-height: 100dvh;
-  max-width: 480px;
+  max-width: 560px;
   margin: 0 auto;
-  padding: 14px 16px 40px;
-  color: var(--lab-text);
-  font-family: 'IBM Plex Sans Thai', 'Noto Sans Thai', system-ui, sans-serif;
+  padding: calc(env(safe-area-inset-top, 0px) + 14px) 16px 40px;
+  color: var(--ink);
   overflow-x: hidden;
-}
-.lab h2,
-.lab strong {
-  font-family: 'Kanit', 'IBM Plex Sans Thai', sans-serif;
 }
 .lab button {
   font: inherit;
@@ -29,14 +16,14 @@
   touch-action: manipulation;
 }
 .lab-bg {
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  background:
-    radial-gradient(60% 40% at 15% 0%, rgba(139, 108, 255, 0.45), transparent 70%),
-    radial-gradient(50% 35% at 100% 20%, rgba(255, 92, 170, 0.25), transparent 70%),
-    radial-gradient(70% 50% at 50% 100%, rgba(47, 168, 255, 0.18), transparent 70%),
-    var(--lab-bg);
+  display: none;
+}
+/* ปุ่มกดยุบลงเหมือนปุ่มเดิมของแอพ */
+.lab-mode:active,
+.lab-item:active,
+.lab-tabs button:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 var(--ink);
 }
 
 /* แถบบน */
@@ -44,40 +31,48 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
+  gap: 8px;
 }
 .lab-me {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   min-width: 0;
+  padding: 4px 12px 4px 4px;
+  border: var(--border);
+  border-radius: 999px;
+  background: var(--card);
+  box-shadow: 0 3px 0 var(--ink);
 }
 .lab-me > span:last-child {
   display: grid;
   line-height: 1.15;
 }
+.lab-me strong {
+  font-weight: 600;
+}
 .lab-me small {
-  color: var(--lab-sub);
-  font-size: 0.75rem;
+  color: var(--ink-soft);
+  font-size: 0.72rem;
 }
 .lab-me__ring {
   display: grid;
   place-items: center;
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
-  background: conic-gradient(var(--lab-accent) 0 68%, rgba(255, 255, 255, 0.12) 68% 100%);
+  background: conic-gradient(var(--good) 0 68%, #e7e0fb 68% 100%);
 }
 .lab-me__lv {
   display: grid;
   place-items: center;
-  width: 32px;
-  height: 32px;
+  width: 27px;
+  height: 27px;
   border-radius: 50%;
-  background: #1b1440;
-  font-family: 'Kanit', sans-serif;
-  font-weight: 700;
-  font-size: 0.9rem;
+  background: var(--primary);
+  border: 2px solid var(--ink);
+  font-weight: 600;
+  font-size: 0.8rem;
 }
 .lab-top__right {
   display: flex;
@@ -86,31 +81,31 @@
 .lab-pill {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 5px 6px 5px 9px;
+  gap: 4px;
+  padding: 4px 4px 4px 8px;
+  border: var(--border);
   border-radius: 999px;
-  background: var(--lab-card-2);
-  border: 1px solid var(--lab-line);
-  font-family: 'Kanit', sans-serif;
+  background: var(--card);
+  box-shadow: 0 3px 0 var(--ink);
   font-weight: 600;
   font-size: 0.85rem;
 }
 .lab-pill--coin svg {
-  color: var(--lab-gold);
-  filter: drop-shadow(0 0 6px rgba(255, 201, 74, 0.6));
+  color: #f5a400;
 }
 .lab-pill--gem svg {
-  color: var(--lab-gem);
-  filter: drop-shadow(0 0 6px rgba(94, 224, 255, 0.6));
+  color: #19a7d6;
 }
 .lab-pill__plus {
   display: grid;
   place-items: center;
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #8b6cff, #ff5cae);
-  font-size: 0.8rem;
+  border: 2px solid var(--ink);
+  background: var(--good);
+  color: #fff;
+  font-size: 0.85rem;
   line-height: 1;
 }
 
@@ -118,46 +113,43 @@
 .lab-hero {
   position: relative;
   margin-top: 12px;
-  border-radius: 28px;
-  background: linear-gradient(180deg, rgba(139, 108, 255, 0.18), rgba(255, 255, 255, 0.03));
-  border: 1px solid var(--lab-line);
+  border: var(--border);
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at 85% 12%, rgba(255, 255, 255, 0.9) 0 26px, transparent 27px),
+    radial-gradient(circle at 12% 70%, rgba(255, 255, 255, 0.7) 0 18px, transparent 19px),
+    linear-gradient(180deg, #e9e1ff 0%, #f7f3ff 62%, #fffbea 100%);
+  box-shadow: var(--shadow);
   overflow: hidden;
 }
 .lab-hero__stage {
   position: relative;
-  height: 330px;
+  height: 320px;
 }
 .lab-hero__canvas {
   position: absolute;
   inset: 0;
 }
 .lab-hero__glow {
-  position: absolute;
-  left: 50%;
-  top: 46%;
-  width: 260px;
-  height: 260px;
-  transform: translate(-50%, -50%);
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(167, 139, 255, 0.55), transparent 65%);
-  filter: blur(6px);
+  display: none;
 }
 .lab-hero__podium {
   position: absolute;
   left: 50%;
   bottom: 30px;
-  width: 210px;
-  height: 46px;
+  width: 200px;
+  height: 40px;
   transform: translateX(-50%);
   border-radius: 50%;
-  background: radial-gradient(ellipse at center, rgba(139, 108, 255, 0.55), rgba(139, 108, 255, 0.12) 60%, transparent 72%);
-  box-shadow: 0 0 40px rgba(139, 108, 255, 0.45);
+  border: 3px solid var(--ink);
+  background: linear-gradient(180deg, var(--primary), var(--primary-dark));
+  box-shadow: 0 5px 0 var(--ink);
 }
 .lab-hero__info {
   position: absolute;
-  left: 14px;
-  right: 14px;
-  top: 14px;
+  left: 12px;
+  right: 12px;
+  top: 12px;
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
@@ -166,80 +158,85 @@
 .lab-rank {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 12px 6px 8px;
+  gap: 6px;
+  padding: 4px 10px 4px 6px;
+  border: var(--border);
   border-radius: 14px;
-  background: linear-gradient(135deg, rgba(255, 201, 74, 0.25), rgba(255, 201, 74, 0.08));
-  border: 1px solid rgba(255, 201, 74, 0.45);
-  color: var(--lab-gold);
+  background: var(--primary);
+  box-shadow: 0 3px 0 var(--ink);
 }
 .lab-rank > span {
   display: grid;
   line-height: 1.1;
 }
 .lab-rank strong {
-  font-size: 0.95rem;
+  font-size: 0.92rem;
+  font-weight: 600;
 }
 .lab-rank small {
-  color: #f5e2b0;
-  font-size: 0.72rem;
+  font-size: 0.7rem;
 }
 .lab-hero__stats {
   display: grid;
   gap: 4px;
   justify-items: end;
-  font-size: 0.78rem;
-  color: var(--lab-sub);
+  font-size: 0.75rem;
 }
 .lab-hero__stats span {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 3px 8px;
+  padding: 2px 8px;
+  border: 2px solid var(--ink);
   border-radius: 999px;
-  background: rgba(0, 0, 0, 0.25);
+  background: var(--card);
+}
+.lab-hero__stats span svg {
+  color: var(--bad);
+}
+.lab-hero__stats span:last-child svg {
+  color: var(--bg-1);
 }
 .lab-hero__hint {
   position: absolute;
-  bottom: 8px;
+  bottom: 6px;
   width: 100%;
   margin: 0;
   text-align: center;
-  font-size: 0.72rem;
-  color: var(--lab-sub);
+  font-size: 0.7rem;
+  color: var(--ink-soft);
   pointer-events: none;
 }
 
-/* ระดับชั้น */
+/* ระดับชั้น (แบบ segmented เดิม) */
 .lab-levels {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 4px;
   margin-top: 14px;
   padding: 4px;
+  border: var(--border);
   border-radius: 16px;
-  background: var(--lab-card);
-  border: 1px solid var(--lab-line);
+  background: var(--card);
+  box-shadow: 0 4px 0 var(--ink);
 }
 .lab-levels button {
-  padding: 9px 2px;
+  padding: 8px 2px;
   border: 0;
-  border-radius: 12px;
+  border-radius: 11px;
   background: transparent;
-  color: var(--lab-sub);
-  font-family: 'Kanit', sans-serif;
-  font-weight: 500;
-  transition: background 0.2s, color 0.2s;
+  font-size: 0.95rem;
 }
 .lab-levels button.is-active {
-  background: linear-gradient(135deg, #8b6cff, #b65cff);
+  background: var(--bg-1);
   color: #fff;
-  box-shadow: 0 6px 18px rgba(139, 108, 255, 0.45);
+  font-weight: 600;
+  box-shadow: 0 2px 0 var(--ink);
 }
 
 /* หัวข้อ */
 .lab-section {
-  margin-top: 22px;
+  margin-top: 20px;
 }
 .lab-section__head {
   display: flex;
@@ -249,16 +246,17 @@
 }
 .lab-section h2 {
   margin: 0;
+  color: #fff;
   font-size: 1.15rem;
   font-weight: 600;
-  letter-spacing: 0.2px;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.2);
 }
 .lab-muted {
-  color: var(--lab-sub);
+  color: rgba(255, 255, 255, 0.85);
   font-size: 0.8rem;
 }
 
-/* โหมด */
+/* โหมด: การ์ดขาว + กล่องไอคอนสีขอบหนา */
 .lab-modes {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -267,77 +265,62 @@
 .lab-mode {
   position: relative;
   display: grid;
-  gap: 10px;
+  gap: 8px;
   align-content: start;
-  min-height: 118px;
-  padding: 14px;
-  border-radius: 22px;
-  border: 1px solid var(--lab-line);
-  background: var(--lab-card);
+  padding: 12px;
+  border: var(--border);
+  border-radius: 20px;
+  background: var(--card);
+  box-shadow: var(--shadow);
   text-align: left;
-  overflow: hidden;
-  transition: transform 0.15s, background 0.2s;
+  transition: transform 0.12s, box-shadow 0.12s;
 }
 .lab-mode::after {
-  content: '';
-  position: absolute;
-  right: -30px;
-  bottom: -30px;
-  width: 110px;
-  height: 110px;
-  border-radius: 50%;
-  background: var(--g);
-  opacity: 0.18;
-  filter: blur(4px);
-}
-.lab-mode:active {
-  transform: scale(0.97);
+  display: none;
 }
 .lab-mode__icon {
   display: grid;
   place-items: center;
-  width: 44px;
-  height: 44px;
+  width: 46px;
+  height: 46px;
+  border: var(--border);
   border-radius: 14px;
   background: var(--g);
   color: #fff;
-  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  box-shadow: inset 0 -4px 0 rgba(0, 0, 0, 0.15), inset 0 3px 0 rgba(255, 255, 255, 0.35);
 }
 .lab-mode__text {
   display: grid;
-  gap: 2px;
+  gap: 1px;
 }
 .lab-mode__text strong {
   font-size: 1rem;
   font-weight: 600;
 }
 .lab-mode__text small {
-  color: var(--lab-sub);
-  font-size: 0.78rem;
+  color: var(--ink-soft);
+  font-size: 0.76rem;
   line-height: 1.35;
 }
 .lab-mode--wide {
   grid-column: 1 / -1;
   grid-template-columns: auto 1fr;
   align-items: center;
-  min-height: 0;
-  background: var(--g);
-  border-color: rgba(255, 201, 74, 0.4);
+  background: var(--primary);
 }
 .lab-mode--wide .lab-mode__icon {
   width: 52px;
   height: 52px;
-  background: linear-gradient(135deg, #ffc94a, #ff9f43);
+  background: var(--bg-1);
 }
-.lab-mode--wide::after {
-  background: radial-gradient(circle, rgba(255, 201, 74, 0.8), transparent 70%);
-  opacity: 0.35;
+.lab-mode--wide .lab-mode__text small {
+  color: var(--ink);
 }
 .lab-mode__badge {
   position: absolute;
   top: 10px;
   right: 12px;
-  color: var(--lab-gold);
+  color: var(--ink);
 }
 
 /* วิชา */
@@ -349,9 +332,10 @@
 .lab-subject {
   display: grid;
   justify-items: center;
-  gap: 6px;
+  gap: 4px;
   font-size: 0.78rem;
-  color: var(--lab-sub);
+  color: #fff;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.25);
 }
 .lab-subject__tile {
   display: grid;
@@ -359,10 +343,11 @@
   width: 100%;
   aspect-ratio: 1;
   max-width: 56px;
-  border-radius: 18px;
+  border: var(--border);
+  border-radius: 16px;
   background: var(--g);
   color: #fff;
-  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  box-shadow: 0 4px 0 var(--ink), inset 0 3px 0 rgba(255, 255, 255, 0.35);
 }
 
 /* ห้องแต่งตัว */
@@ -370,7 +355,7 @@
   display: flex;
   gap: 6px;
   overflow-x: auto;
-  padding-bottom: 4px;
+  padding: 2px 2px 6px;
   scrollbar-width: none;
 }
 .lab-tabs::-webkit-scrollbar {
@@ -380,40 +365,47 @@
   flex: none;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 12px;
+  gap: 5px;
+  padding: 7px 12px;
+  border: var(--border);
   border-radius: 999px;
-  border: 1px solid var(--lab-line);
-  background: var(--lab-card);
-  color: var(--lab-sub);
+  background: var(--card);
+  box-shadow: 0 3px 0 var(--ink);
   font-size: 0.85rem;
 }
 .lab-tabs button.is-active {
-  background: #fff;
-  color: #1b1440;
-  border-color: #fff;
+  background: var(--bg-1);
+  color: #fff;
 }
 .lab-items {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
-  margin-top: 10px;
+  margin-top: 8px;
 }
 .lab-item {
-  --r: #8f9bc7;
+  --r: #9a8cc0;
   position: relative;
   display: grid;
   justify-items: center;
   gap: 6px;
   padding: 22px 6px 10px;
+  border: var(--border);
   border-radius: 18px;
-  border: 1.5px solid color-mix(in srgb, var(--r) 55%, transparent);
-  background: linear-gradient(180deg, color-mix(in srgb, var(--r) 22%, transparent), rgba(255, 255, 255, 0.03));
+  background: var(--card);
+  box-shadow: var(--shadow);
   text-align: center;
-  transition: transform 0.15s;
+  overflow: hidden;
+  transition: transform 0.12s, box-shadow 0.12s;
 }
-.lab-item:active {
-  transform: scale(0.96);
+/* แถบสีระดับความหายากด้านบน */
+.lab-item::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 18px;
+  background: var(--r);
+  border-bottom: 2px solid var(--ink);
 }
 .lab-item--rare {
   --r: #4fa3ff;
@@ -422,36 +414,39 @@
   --r: #b46cff;
 }
 .lab-item--legend {
-  --r: #ffc94a;
-  box-shadow: 0 0 22px rgba(255, 201, 74, 0.25);
+  --r: linear-gradient(90deg, #ffcc00, #ff9f1c);
+  background: var(--cream);
 }
 .lab-item.is-wearing {
-  outline: 2px solid #fff;
-  outline-offset: 2px;
+  background: #e6fbf1;
+  box-shadow: 0 5px 0 var(--good-dark);
+  border-color: var(--good-dark);
 }
 .lab-item__rarity {
   position: absolute;
-  top: 6px;
-  left: 8px;
-  font-size: 0.62rem;
+  top: 1px;
+  left: 0;
+  right: 0;
+  font-size: 0.66rem;
   font-weight: 600;
-  letter-spacing: 0.3px;
-  color: var(--r);
+  color: #fff;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.3);
 }
 .lab-item__art {
   display: grid;
   place-items: center;
-  width: 56px;
-  height: 56px;
-  border-radius: 16px;
-  background: rgba(0, 0, 0, 0.22);
-  color: #fff;
+  width: 54px;
+  height: 54px;
+  border: 2px solid var(--ink);
+  border-radius: 14px;
+  background: #f3eeff;
+  color: var(--bg-1);
 }
 .lab-item__swatch {
-  width: 34px;
-  height: 34px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
-  border: 2px solid rgba(255, 255, 255, 0.8);
+  border: 2px solid var(--ink);
 }
 .lab-item__name {
   font-size: 0.78rem;
@@ -462,22 +457,23 @@
   display: inline-flex;
   align-items: center;
   gap: 3px;
-  padding: 3px 9px;
+  padding: 2px 9px;
+  border: 2px solid var(--ink);
   border-radius: 999px;
-  background: rgba(0, 0, 0, 0.3);
-  font-family: 'Kanit', sans-serif;
-  font-size: 0.78rem;
+  background: var(--primary);
+  font-weight: 600;
+  font-size: 0.76rem;
 }
 .lab-item__price svg {
-  color: var(--lab-gold);
+  color: var(--ink);
 }
-.lab-item--epic .lab-item__price svg,
-.lab-item--legend .lab-item__price svg {
-  color: var(--lab-gem);
+.lab-item.is-wearing .lab-item__price {
+  background: var(--good);
+  color: #fff;
 }
 .lab-foot {
-  margin-top: 28px;
+  margin-top: 24px;
   text-align: center;
   font-size: 0.75rem;
-  color: var(--lab-sub);
+  color: rgba(255, 255, 255, 0.85);
 }
