@@ -1,10 +1,27 @@
 import { useEffect, useState } from 'react';
-import { ChatCircleText, Copy, Eye, UserMinus, UsersFour } from '@phosphor-icons/react';
+import { ChatCircleText, Copy, Eye, ShareNetwork, UserMinus, UserPlus, UsersFour } from '@phosphor-icons/react';
 import { ensureSession } from '../lib/supabase';
 import { t } from '../lib/i18n';
 
 /** Basic ID ของ LINE OA (เช่น @123abcd) ใส่เมื่อได้จากผู้ดูแล ว่าง = ไม่แสดงปุ่มแอดเพื่อน */
 const LINE_OA_ID = '';
+const OA_NAME = 'Brain Gym';
+const addFriendUrl = () => `https://line.me/R/ti/p/${encodeURIComponent(LINE_OA_ID)}`;
+
+/** ข้อความที่นักเรียนส่งให้ผู้ปกครอง: วิธีแอดเพื่อน + รหัส */
+function inviteText(code: string) {
+  return [
+    'รับสรุปการเรียนของลูกทาง LINE ทุกวันอาทิตย์ (Brain Gym)',
+    '',
+    LINE_OA_ID ? `1. แอดเพื่อน LINE: ${addFriendUrl()}` : `1. แอดเพื่อนบัญชี LINE "${OA_NAME}"`,
+    LINE_OA_ID ? `   (หรือเปิด LINE > เพิ่มเพื่อน > ค้นหา > ไอดี > พิมพ์ ${LINE_OA_ID})` : null,
+    `2. พิมพ์รหัสนี้ส่งในแชท: ${code}`,
+    '',
+    'รหัสใช้ได้ครั้งเดียว ภายใน 24 ชั่วโมง',
+  ]
+    .filter((l) => l !== null)
+    .join('\n');
+}
 
 interface Links {
   links: { id: string; name: string; createdAt: string }[];
@@ -123,20 +140,61 @@ export function ParentLineSettings() {
           >
             <Copy weight="bold" className="ico" /> {copied ? t('คัดลอกแล้ว', 'Copied') : t('คัดลอก', 'Copy')}
           </button>
-          <ol className="parent-line__steps">
-            <li>
-              {t('ผู้ปกครองแอดเพื่อน LINE OA ของ Brain Gym', 'Your parent adds the Brain Gym LINE OA as a friend')}
-              {LINE_OA_ID && (
-                <>
-                  {' '}
-                  <a href={`https://line.me/R/ti/p/${encodeURIComponent(LINE_OA_ID)}`} target="_blank" rel="noreferrer">
-                    {LINE_OA_ID}
-                  </a>
-                </>
-              )}
-            </li>
-            <li>{t('พิมพ์รหัสนี้ส่งในแชท', 'They send this code in the chat')}</li>
-          </ol>
+          <button
+            type="button"
+            className="btn btn--primary btn--block"
+            onClick={async () => {
+              const text = inviteText(data.code!.code);
+              try {
+                if (navigator.share) await navigator.share({ title: 'Brain Gym', text });
+                else {
+                  await navigator.clipboard.writeText(text);
+                  setCopied(true);
+                }
+              } catch {
+                /* ผู้ใช้ยกเลิก */
+              }
+            }}
+          >
+            <ShareNetwork weight="bold" className="ico" /> {t('ส่งรหัสและวิธีทำให้ผู้ปกครอง', 'Send code and steps to your parent')}
+          </button>
+
+          <div className="parent-line__how">
+            <strong>{t('ผู้ปกครองทำแบบนี้', 'What your parent does')}</strong>
+            <ol className="parent-line__steps">
+              <li>
+                <b>{t('แอดเพื่อน LINE ของ Brain Gym', 'Add Brain Gym on LINE')}</b>
+                {LINE_OA_ID ? (
+                  <>
+                    <a className="parent-line__add" href={addFriendUrl()} target="_blank" rel="noreferrer">
+                      <UserPlus weight="bold" /> {t('แอดเพื่อน', 'Add friend')} {LINE_OA_ID}
+                    </a>
+                    <small>
+                      {t(
+                        `ถ้ากดไม่ได้ ให้เปิดแอป LINE > แตะ "เพิ่มเพื่อน" (รูปคนมีเครื่องหมาย +) > "ค้นหา" > เลือก "ไอดี" > พิมพ์ ${LINE_OA_ID} > กด "เพิ่ม"`,
+                        `If the button doesn't work: open LINE > "Add friends" > "Search" > choose "ID" > type ${LINE_OA_ID} > tap "Add"`,
+                      )}
+                    </small>
+                  </>
+                ) : (
+                  <small>
+                    {t(
+                      `เปิดแอป LINE > แตะ "เพิ่มเพื่อน" > "ค้นหา" > เลือก "ไอดี" > พิมพ์ไอดีของบัญชี ${OA_NAME} > กด "เพิ่ม"`,
+                      `Open LINE > "Add friends" > "Search" > choose "ID" > type the ${OA_NAME} account ID > tap "Add"`,
+                    )}
+                  </small>
+                )}
+              </li>
+              <li>
+                <b>{t('พิมพ์รหัสส่งในแชท', 'Send the code in the chat')}</b>
+                <small>{t(`พิมพ์ ${data.code.code} แล้วกดส่ง จะได้ข้อความตอบว่า "เชื่อมเรียบร้อยแล้ว"`, `Type ${data.code.code} and send. A "linked" reply comes back.`)}</small>
+              </li>
+              <li>
+                <b>{t('รอรับสรุปทุกวันอาทิตย์ 19:00 น.', 'Get a summary every Sunday at 19:00')}</b>
+                <small>{t('อยากดูก่อนก็พิมพ์ "สรุป" ได้ทุกเมื่อ', 'Type "สรุป" any time to see it now')}</small>
+              </li>
+            </ol>
+          </div>
         </div>
       ) : (
         data.links.length < 3 && (
