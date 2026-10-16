@@ -49,4 +49,5 @@ npm run dev
 npx supabase functions deploy <ชื่อฟังก์ชัน> --project-ref <PROJECT_REF> --use-api
 ```
 
-- Secrets ของ Supabase: `GEMINI_API_KEY` (และ `GEMINI_MODEL` ถ้าต้องการเปลี่ยนโมเดล)
+- Secrets ของ Supabase: `GEMINI_API_KEY` (และ `GEMINI_MODEL` ถ้าต้องการเปลี่ยนโมเดล), `BANK_FILL_SECRET` (รหัสลับให้ pg_cron เรียก `bank-fill` ค่าเดียวกับ Vault ชื่อ `bank_fill_secret`)
+- เติมคลังอัตโนมัติ: pg_cron `bank-fill-nightly` ทุก 10 นาที ตี 2-ตี 5 เวลาไทย (วันละ ~100 ข้อ, คืนวันจันทร์ออกชุดจำลอง A-Level ใหม่)
