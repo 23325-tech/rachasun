@@ -17,6 +17,8 @@ import { ProfileSetupScreen } from './screens/ProfileSetupScreen';
 import { AccountScreen } from './screens/AccountScreen';
 import { ProfileCard } from './components/ProfileCard';
 import type { XpState } from './components/XpBadge';
+import { InstallBanner } from './components/InstallBanner';
+import { useOnline } from './hooks/usePwa';
 import { OnlineMenuScreen } from './screens/OnlineMenuScreen';
 import { RoomScreen } from './screens/RoomScreen';
 import { ChallengeScreen } from './screens/ChallengeScreen';
@@ -109,6 +111,7 @@ export default function App() {
     track: 'school',
     mode: 'classic',
   });
+  const online = useOnline();
   // กันผลโหลดที่ถูกยกเลิกไปแล้วมาเปลี่ยนหน้าจอทีหลัง
   const loadIdRef = useRef(0);
 
@@ -117,9 +120,16 @@ export default function App() {
     try {
       setMe({ status: 'ready', ...(await loadMe()) });
     } catch (e) {
-      setMe({ status: 'offline', error: e instanceof Error ? e.message : String(e) });
+      // เน็ตหลุด: ไม่ต้องแสดง error ยาว แถบออฟไลน์บอกอยู่แล้ว
+      setMe({ status: 'offline', error: navigator.onLine ? (e instanceof Error ? e.message : String(e)) : undefined });
     }
   }, []);
+
+  // เน็ตกลับมา -> โหลดโปรไฟล์ใหม่
+  useEffect(() => {
+    if (online && me.status === 'offline' && supabase) refreshMe();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [online]);
 
   useEffect(() => {
     if (!supabase) return;
@@ -178,6 +188,15 @@ export default function App() {
 
   const start = async (s: GameSettings) => {
     setSettings(s);
+    // ออฟไลน์: ฝึกเดี่ยว/ดวลบอทใช้โจทย์ตัวอย่างในเครื่อง
+    if (!navigator.onLine) {
+      if (s.mode === 'challenge') {
+        setScreen({ name: 'start', error: 'โหมดท้าเพื่อนต้องต่อเน็ต' });
+        return;
+      }
+      play(s, sampleQuiz(subjectsOf(s), totalNeeded(s)));
+      return;
+    }
     if (!supabase) {
       setScreen({ name: 'start', error: 'ยังไม่ได้ตั้งค่า Supabase ในไฟล์ .env.local' });
       return;
@@ -223,7 +242,8 @@ export default function App() {
   const roomGone = useCallback((reason: string) => setScreen({ name: 'start', error: reason }), []);
 
   // ---------- หน้าจอที่ขึ้นกับสถานะผู้ใช้ ----------
-  if (me.status === 'loading') return <LoadingScreen message="กำลังโหลดโปรไฟล์..." onCancel={() => setMe({ status: 'offline' })} />;
+  if (me.status === 'loading' && online)
+    return <LoadingScreen message="กำลังโหลดโปรไฟล์..." onCancel={() => setMe({ status: 'offline' })} />;
 
   if (screen.name === 'account' && me.status === 'ready') {
     return (
@@ -258,6 +278,8 @@ export default function App() {
           error={screen.name === 'start' ? (screen.error ?? (me.status === 'offline' ? me.error ?? null : null)) : null}
           onStart={start}
           onPlaySample={playSample}
+          offline={!online}
+          installSlot={<InstallBanner />}
           onGroups={() =>
             me.status === 'ready'
               ? setScreen({ name: 'groups' })

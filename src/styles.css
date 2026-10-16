@@ -905,6 +905,65 @@ button {
   color: var(--ink-soft);
 }
 
+/* ---------- PWA ---------- */
+.offline-banner {
+  padding: 8px 12px;
+  border-radius: 14px;
+  border: 2.5px solid var(--ink);
+  background: #fff6c7;
+  font-size: 0.88rem;
+  font-weight: 500;
+}
+.install-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border: var(--border);
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 4px 0 var(--ink);
+}
+.install-banner__icon {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  border: 2px solid var(--ink);
+}
+.install-banner__body {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+  font-size: 0.85rem;
+}
+.install-banner__body span {
+  color: var(--ink-soft);
+}
+.install-banner__steps {
+  margin: 4px 0 0;
+  padding-left: 18px;
+  line-height: 1.6;
+}
+.install-banner__actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.install-banner__btn {
+  padding: 6px 10px;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+.install-banner__close {
+  border: 0;
+  background: none;
+  font-size: 1rem;
+  cursor: pointer;
+  color: var(--ink-soft);
+}
+
 /* ---------- ยศ ---------- */
 .tier-badge {
   flex: none;

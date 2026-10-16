@@ -45,6 +45,10 @@ interface Props {
   profileSlot?: ReactNode;
   onOnline: () => void;
   onGroups: () => void;
+  /** ออฟไลน์อยู่: เล่นได้เฉพาะโจทย์ตัวอย่าง */
+  offline?: boolean;
+  /** แถบชวนติดตั้งแอพ */
+  installSlot?: ReactNode;
 }
 
 function Segmented<T extends string | number>({
@@ -79,7 +83,7 @@ function Segmented<T extends string | number>({
   );
 }
 
-export function StartScreen({ initial, error, onStart, onPlaySample, profileSlot, onOnline, onGroups }: Props) {
+export function StartScreen({ initial, error, onStart, onPlaySample, profileSlot, onOnline, onGroups, offline, installSlot }: Props) {
   const [s, setS] = useState<GameSettings>(initial);
   const set = <K extends keyof GameSettings>(key: K, value: GameSettings[K]) => setS((prev) => ({ ...prev, [key]: value }));
 
@@ -98,6 +102,14 @@ export function StartScreen({ initial, error, onStart, onPlaySample, profileSlot
           <p className="home__tagline">ฝึกสมองวันละนิด แล้วไปแข่งกับเพื่อน!</p>
         </div>
       </header>
+
+      {offline && (
+        <div className="offline-banner" role="status">
+          📴 ออฟไลน์อยู่ — เล่นฝึกเดี่ยว/ดวลบอทด้วยโจทย์ตัวอย่างได้ (ไม่ได้ XP)
+        </div>
+      )}
+
+      {installSlot}
 
       {profileSlot}
 
