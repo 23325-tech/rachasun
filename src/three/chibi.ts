@@ -3,6 +3,7 @@
 import * as THREE from 'three';
 import { createPet, type Pet, type PetKind } from './pets';
 import { createAura, type Aura, type AuraKind } from './auras';
+import { buildSet as buildSetParts, SET_HIDES, type SetKind } from './sets';
 
 export type Outfit = 'uniform' | 'labcoat' | 'hoodie' | 'sport' | 'skirt' | 'tee';
 export type HairStyle = 'short' | 'bob' | 'spiky' | 'bun' | 'long' | 'ponytail' | 'twintails' | 'curly';
@@ -26,6 +27,8 @@ export interface ChibiLook {
   /** สัตว์เลี้ยงหิว (งอน) */
   petHungry?: boolean;
   aura?: AuraKind;
+  /** ชุดตัวละครพิเศษ (ทับชุด/หมวก/ผม) */
+  set?: SetKind;
 }
 
 export const DEFAULT_LOOK: ChibiLook = {
@@ -118,6 +121,25 @@ export function createChibi(initial: ChibiLook = DEFAULT_LOOK): Chibi {
   petSlot.scale.setScalar(1.15);
   root.add(petSlot);
   let pet: Pet | null = null;
+  const setBody = new THREE.Group();
+  const setHead = new THREE.Group();
+  setHead.userData.keep = true;
+  body.add(setBody);
+  head.add(setHead);
+  function buildSet() {
+    clear(setBody);
+    clear(setHead);
+    for (const arm of [armL, armR]) for (const ch of [...arm.children]) if (ch.userData.setPart) arm.remove(ch);
+    buildSetParts(look.set ?? 'none', { body: setBody, head: setHead, armL, armR }, look.skin);
+  }
+  /** ซ่อนของเดิมที่ชุดพิเศษทับ */
+  function applySetVisibility() {
+    const hide = look.set && look.set !== 'none' ? SET_HIDES[look.set] : null;
+    parts.outfit.visible = !hide?.outfit;
+    parts.hair.visible = !hide?.hair;
+    parts.hat.visible = !hide?.hat;
+    for (const arm of [armL, armR]) for (const ch of arm.children) if (ch.userData.sleeve) ch.visible = !hide?.outfit;
+  }
   const auraSlot = new THREE.Group();
   root.add(auraSlot);
   let aura: Aura | null = null;
@@ -150,7 +172,7 @@ export function createChibi(initial: ChibiLook = DEFAULT_LOOK): Chibi {
 
   function buildBase() {
     clear(parts.base);
-    for (const c of [...head.children]) if (c !== parts.hair && c !== parts.hat && c !== parts.face) head.remove(c);
+    for (const c of [...head.children]) if (c !== parts.hair && c !== parts.hat && c !== parts.face && !c.userData.keep) head.remove(c);
     for (const arm of [armL, armR]) for (const c of [...arm.children]) if (c !== parts.item) arm.remove(c);
     const skin = toon(look.skin);
 
@@ -618,6 +640,8 @@ export function createChibi(initial: ChibiLook = DEFAULT_LOOK): Chibi {
     if (all || prev.face !== next.face) buildFace();
     if (all || prev.pet !== next.pet || prev.petLevel !== next.petLevel || prev.petHungry !== next.petHungry) buildPet();
     if (all || prev.aura !== next.aura) buildAura();
+    if (all || baseChanged || prev.set !== next.set) buildSet();
+    applySetVisibility();
   }
 
   // เงาวงรีใต้เท้า
@@ -637,6 +661,8 @@ export function createChibi(initial: ChibiLook = DEFAULT_LOOK): Chibi {
   buildFace();
   buildPet();
   buildAura();
+  buildSet();
+  applySetVisibility();
 
   let nextBlink = 2;
   /** cheer = 0..1 (กระโดดดีใจชั่วครู่) ทับท่าหลัก pose */

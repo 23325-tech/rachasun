@@ -15,6 +15,7 @@ import {
   Sunglasses,
   PawPrint,
   Sparkle,
+  MaskHappy,
   type Icon,
 } from '@phosphor-icons/react';
 import { PetImage, PlayerAvatar } from '../components/PlayerAvatar';
@@ -38,6 +39,7 @@ const TABS: { slot: Slot; label: string; icon: Icon; thumb: 'swatch' | 'bust' | 
   { slot: 'hat', get label() { return t('หมวก', 'Hat'); }, icon: BaseballCap, thumb: 'bust' },
   { slot: 'pet', get label() { return t('สัตว์เลี้ยง', 'Pet'); }, icon: PawPrint, thumb: 'pet' },
   { slot: 'aura', get label() { return t('ออร่า', 'Aura'); }, icon: Sparkle, thumb: 'full' },
+  { slot: 'set', get label() { return t('ชุดพิเศษ', 'Costume'); }, icon: MaskHappy, thumb: 'full' },
   { slot: 'item', get label() { return t('ของในมือ', 'Held item'); }, icon: HandGrabbing, thumb: 'full' },
   { slot: 'face', get label() { return t('ใบหน้า', 'Face'); }, icon: Sunglasses, thumb: 'bust' },
   { slot: 'style', get label() { return t('ทรงผม', 'Hairstyle'); }, icon: Scissors, thumb: 'bust' },

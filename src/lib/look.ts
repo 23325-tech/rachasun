@@ -12,6 +12,7 @@ import { t } from './i18n';
 import type { ChibiLook, Face, HairStyle, HandItem, Hat, Outfit } from '../three/chibi';
 import type { PetKind } from '../three/pets';
 import type { AuraKind } from '../three/auras';
+import type { SetKind } from '../three/sets';
 
 export { DEFAULT_LOOK_CODE, encodeLook, parseLook, randomLook, WARDROBE, type Look };
 
@@ -42,6 +43,7 @@ const PET: Record<string, PetKind> = {
   l: 'axolotl', r: 'redpanda', u: 'unicorn', e: 'phoenix', w: 'whale', z: 'goldragon',
 };
 const AURA: Record<string, AuraKind> = { n: 'none', s: 'stars', k: 'sakura', b: 'books', f: 'flames', l: 'lightning' };
+const SET: Record<string, SetKind> = { n: 'none', d: 'dino', w: 'wizard', r: 'robot', j: 'ninja', a: 'astronaut' };
 const FACE: Record<string, Face> = { n: 'none', g: 'glasses', o: 'round', f: 'freckles', s: 'star' };
 const ITEM: Record<string, HandItem> = { n: 'none', p: 'pencil', k: 'book', f: 'flask' };
 
@@ -64,6 +66,7 @@ export function toChibi(look: Look): ChibiLook {
     face: FACE[look.face] ?? 'none',
     pet: PET[look.pet] ?? 'none',
     aura: AURA[look.aura] ?? 'none',
+    set: SET[look.set] ?? 'none',
   };
 }
 

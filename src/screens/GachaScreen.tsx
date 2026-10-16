@@ -23,7 +23,7 @@ const SWATCH = ['skin', 'hair', 'eyes'];
 function Art({ it, code }: { it: WardrobeItem; code: string }) {
   if (it.slot === 'pet') return <PetImage kind={petKind(it.value)} size={64} />;
   if (SWATCH.includes(it.slot)) return <span className="ward-item__swatch" style={{ '--sw': `#${it.value}` } as CSSProperties} />;
-  const full = ['outfit', 'item', 'aura'].includes(it.slot);
+  const full = ['outfit', 'item', 'aura', 'set'].includes(it.slot);
   return <PlayerAvatar code={encodeLook({ ...lookOf(code), [it.slot]: it.value })} size={64} framing={full ? 'full' : 'bust'} className="is-bare" />;
 }
 

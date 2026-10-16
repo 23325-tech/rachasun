@@ -135,6 +135,11 @@ export const WARDROBE: WardrobeItem[] = [
   { id: 'aura_flames', slot: 'aura', value: 'f', name: 'เปลวไฟลุกโชน', rarity: 'epic', gem: 45, en: 'Blazing flames' },
   { id: 'aura_lightning', slot: 'aura', value: 'l', name: 'สายฟ้าฟาด', rarity: 'legend', gem: 49, en: 'Lightning storm' },
   free('set_none', 'set', 'n', 'ตัวละครปกติ', 'Default character'),
+  { id: 'set_dino', slot: 'set', value: 'd', name: 'ชุดไดโนเสาร์', rarity: 'rare', coin: 4500, en: 'Dino costume' },
+  { id: 'set_wizard', slot: 'set', value: 'w', name: 'ชุดพ่อมดน้อย', rarity: 'epic', coin: 6500, en: 'Little wizard' },
+  { id: 'set_robot', slot: 'set', value: 'r', name: 'ชุดหุ่นยนต์', rarity: 'epic', gem: 69, en: 'Robot suit' },
+  { id: 'set_ninja', slot: 'set', value: 'j', name: 'ชุดนินจา', rarity: 'legend', gem: 89, en: 'Ninja' },
+  { id: 'set_astronaut', slot: 'set', value: 'a', name: 'ชุดนักบินอวกาศ', rarity: 'legend', gem: 99, en: 'Astronaut' },
   free('shot_none', 'shot', 'n', 'กระสุนปกติ', 'Default shot'),
 ];
 
