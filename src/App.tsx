@@ -19,7 +19,7 @@ import { ProfileCard } from './components/ProfileCard';
 import type { XpState } from './components/XpBadge';
 import { OnlineMenuScreen } from './screens/OnlineMenuScreen';
 import { RoomScreen } from './screens/RoomScreen';
-import { createRoom, joinRoom, leaveRoom, type RoomSettings } from './lib/rooms';
+import { createRoom, findMatch, joinRoom, leaveRoom, type MatchSettings, type RoomSettings } from './lib/rooms';
 
 type Screen =
   | { name: 'start'; error: string | null }
@@ -87,6 +87,12 @@ export default function App() {
     difficulty: 'medium',
     track: 'school',
     count: 10,
+  });
+  const [matchSettings, setMatchSettings] = useState<MatchSettings>({
+    subject: 'all',
+    difficulty: 'medium',
+    track: 'school',
+    mode: 'classic',
   });
   // กันผลโหลดที่ถูกยกเลิกไปแล้วมาเปลี่ยนหน้าจอทีหลัง
   const loadIdRef = useRef(0);
@@ -184,6 +190,11 @@ export default function App() {
 
   const openAccount = () => setScreen({ name: 'account' });
   const myId = me.status === 'ready' ? me.user.id : '';
+  const find = async (m: MatchSettings) => {
+    setMatchSettings(m);
+    const room = await findMatch(m);
+    setScreen({ name: 'lobby', roomId: room.id });
+  };
   const roomGone = useCallback((reason: string) => setScreen({ name: 'start', error: reason }), []);
 
   // ---------- หน้าจอที่ขึ้นกับสถานะผู้ใช้ ----------
@@ -236,6 +247,8 @@ export default function App() {
       return (
         <OnlineMenuScreen
           initialCode={screen.initialCode}
+          initialMatch={matchSettings}
+          onFind={find}
           onBack={goHome}
           onCreate={async () => {
             const room = await createRoom(toRoomSettings(settings));
@@ -255,6 +268,9 @@ export default function App() {
           guest={guest}
           onRegister={openAccount}
           onXpAwarded={refreshMe}
+          onFindAgain={() =>
+            find(matchSettings).catch((e) => setScreen({ name: 'start', error: e instanceof Error ? e.message : String(e) }))
+          }
           onGone={roomGone}
           onLeave={() => {
             leaveRoom(screen.roomId).catch(() => {});

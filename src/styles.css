@@ -1283,6 +1283,120 @@ button {
   font-size: 0.95rem;
 }
 
+/* ---------- สุ่มหาคู่แข่ง ---------- */
+.online-card--match {
+  background: linear-gradient(160deg, #fff, #f1ebff);
+}
+.match-settings {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+}
+.divider--light {
+  color: #fff;
+}
+.divider--light::before,
+.divider--light::after {
+  background: rgba(255, 255, 255, 0.4);
+}
+.matchmaking {
+  align-items: stretch;
+}
+.radar {
+  position: relative;
+  justify-self: center;
+  align-self: center;
+  width: 150px;
+  height: 150px;
+  margin: 8px auto 0;
+}
+.radar__ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 4px solid rgba(255, 255, 255, 0.7);
+  animation: radar 2s ease-out infinite;
+}
+.radar__ring--2 {
+  animation-delay: 1s;
+}
+.radar__center {
+  position: absolute;
+  inset: 35px;
+  display: grid;
+  place-items: center;
+  font-size: 2.6rem;
+  border-radius: 50%;
+  background: var(--primary);
+  border: var(--border);
+  box-shadow: var(--shadow);
+}
+.match-status {
+  margin: 0;
+  text-align: center;
+  color: #fff;
+  font-size: 1.2rem;
+  font-weight: 600;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.25);
+}
+.match-sub {
+  margin: 0;
+  text-align: center;
+  color: #fff;
+  opacity: 0.9;
+  font-size: 0.88rem;
+  line-height: 1.6;
+}
+.match-players {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+.match-slot {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  padding: 8px 4px;
+  border: 2.5px dashed rgba(255, 255, 255, 0.6);
+  border-radius: 14px;
+  color: rgba(255, 255, 255, 0.75);
+  min-width: 0;
+}
+.match-slot.is-filled {
+  border: 2.5px solid var(--ink);
+  background: var(--card);
+  color: var(--ink);
+  box-shadow: 0 3px 0 var(--ink);
+}
+.match-slot.is-me {
+  background: #fff6c7;
+}
+.match-slot__avatar {
+  font-size: 1.6rem;
+  line-height: 1.1;
+}
+.match-slot__name {
+  max-width: 100%;
+  font-size: 0.72rem;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+@keyframes radar {
+  from {
+    transform: scale(0.4);
+    opacity: 1;
+  }
+  to {
+    transform: scale(1.25);
+    opacity: 0;
+  }
+}
+
 /* ---------- เลือกโหมด (หน้าแรก) ---------- */
 .mode-switch {
   display: grid;

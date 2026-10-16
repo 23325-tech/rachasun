@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { fetchRoom, subscribeRoom, type Room, type RoomPlayer } from '../lib/rooms';
 import { callGame, heartbeat, syncClock, type OnlineGameState } from '../lib/roomGame';
 import { LobbyView } from './LobbyView';
+import { MatchmakingView } from './MatchmakingView';
 import { OnlineBattleView } from './OnlineBattleView';
 import { BattleResultScreen } from './BattleResultScreen';
 
@@ -15,6 +16,8 @@ interface Props {
   onRegister: () => void;
   /** เซิร์ฟเวอร์ให้ XP แล้ว -> โหลดโปรไฟล์ใหม่ */
   onXpAwarded: () => void;
+  /** ห้องสุ่ม: จบเกมแล้วหาเกมใหม่ด้วยค่าเดิม */
+  onFindAgain: () => void;
 }
 
 const HEARTBEAT_MS = 5000;
@@ -22,7 +25,7 @@ const HEARTBEAT_MS = 5000;
 const RESULT_DELAY_MS = 3500;
 
 /** ตัวกลางของห้องออนไลน์: เชื่อม Realtime, ส่งสัญญาณ "ยังอยู่", แล้วเลือกหน้าที่ต้องแสดง */
-export function RoomScreen({ roomId, myId, guest, onLeave, onGone, onRegister, onXpAwarded }: Props) {
+export function RoomScreen({ roomId, myId, guest, onLeave, onGone, onRegister, onXpAwarded, onFindAgain }: Props) {
   const [room, setRoom] = useState<Room | null>(null);
   const [players, setPlayers] = useState<RoomPlayer[]>([]);
   const [online, setOnline] = useState<string[]>([]);
@@ -93,6 +96,10 @@ export function RoomScreen({ roomId, myId, guest, onLeave, onGone, onRegister, o
 
   const isHost = room.host_id === myId;
 
+  if ((room.status === 'lobby' || !state) && room.kind === 'public') {
+    return <MatchmakingView room={room} players={players} myId={myId} onCancel={onLeave} />;
+  }
+
   if (room.status === 'lobby' || !state) {
     return (
       <LobbyView
@@ -130,8 +137,14 @@ export function RoomScreen({ roomId, myId, guest, onLeave, onGone, onRegister, o
         meId={myId}
         onHome={onLeave}
         homeLabel="🚪 ออกจากห้อง"
-        onReplay={isHost ? () => void callGame('rematch', { roomId }).catch(() => {}) : undefined}
-        replayLabel="เล่นอีกรอบ (กลับล็อบบี้) 🔁"
+        onReplay={
+          room.kind === 'public'
+            ? onFindAgain
+            : isHost
+              ? () => void callGame('rematch', { roomId }).catch(() => {})
+              : undefined
+        }
+        replayLabel={room.kind === 'public' ? 'หาเกมใหม่ 🎲' : 'เล่นอีกรอบ (กลับล็อบบี้) 🔁'}
         waitingLabel="⏳ รอเจ้าของห้องเริ่มรอบใหม่..."
         xp={myXp ? { status: 'saved', gained: myXp.gained, total: myXp.total } : { status: 'off' }}
         guest={guest}

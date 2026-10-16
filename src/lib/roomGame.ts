@@ -62,7 +62,7 @@ const GAME_ERRORS: Record<string, string> = {
   already_playing: 'เกมเริ่มไปแล้ว',
 };
 
-export async function callGame(action: 'start' | 'answer' | 'tick' | 'rematch' | 'ping', body: Record<string, unknown> = {}) {
+export async function callGame(action: 'start' | 'auto_start' | 'answer' | 'tick' | 'rematch' | 'ping', body: Record<string, unknown> = {}) {
   const sb = await ensureSession();
   const sentAt = Date.now();
   const { data, error } = await sb.functions.invoke<{ ok?: boolean; error?: string; serverNow: number }>('room-game', {

@@ -22,6 +22,9 @@ const ANSWER_GRACE_MS = 800;
 const DISCONNECT_MS = 15000;
 const SUDDEN_DEATH_SPARE = 5;
 const GENERATE_BATCH = 10;
+/** ห้องสาธารณะ: เริ่มเมื่อครบ 8 คน หรือมี 2 คนขึ้นไปและผ่านไปเท่านี้นับจากคนแรกเข้าห้อง */
+const MATCH_FULL = 8;
+const MATCH_WAIT_MS = 30_000;
 const ALL_SUBJECTS = ['math', 'physics', 'chemistry', 'biology', 'english'];
 
 const CORS = {
@@ -93,6 +96,8 @@ interface GameState {
 interface RoomRow {
   id: string;
   host_id: string;
+  kind: 'private' | 'public';
+  created_at: string;
   status: 'lobby' | 'playing' | 'finished';
   settings: { subject: string; difficulty: string; track: string; count: number };
   state: GameState | null;
@@ -103,7 +108,7 @@ interface RoomRow {
 const admin: SupabaseClient = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
 
 async function loadRoom(roomId: string): Promise<RoomRow> {
-  const { data, error } = await admin.from('rooms').select('id,host_id,status,settings,state').eq('id', roomId).maybeSingle();
+  const { data, error } = await admin.from('rooms').select('id,host_id,kind,created_at,status,settings,state').eq('id', roomId).maybeSingle();
   if (error) throw error;
   if (!data) throw new GameError('room_not_found');
   return data as RoomRow;
@@ -214,11 +219,17 @@ async function questionState(room: RoomRow, base: GameState, round: number, star
   };
 }
 
-async function start(room: RoomRow, uid: string) {
-  if (room.host_id !== uid) throw new GameError('not_host');
+async function start(room: RoomRow, uid: string, auto = false) {
+  if (!auto && (room.kind !== 'private' || room.host_id !== uid)) throw new GameError('not_host');
   if (room.status === 'playing') throw new GameError('already_playing');
   const members = await roomPlayers(room.id);
   if (members.length < 2) throw new GameError('need_two_players');
+  if (auto) {
+    // ห้องสาธารณะ: เซิร์ฟเวอร์ตรวจเงื่อนไขเริ่มเกมเอง
+    if (room.kind !== 'public' || room.status !== 'lobby') throw new GameError('not_public_lobby');
+    const waited = Date.now() - new Date(room.created_at).getTime();
+    if (members.length < MATCH_FULL && waited < MATCH_WAIT_MS) throw new GameError('not_ready');
+  }
 
   const preparing: GameState = {
     seq: (room.state?.seq ?? 0) + 1,
@@ -397,7 +408,7 @@ async function awardXp(roomId: string, players: BattlePlayer[], roundsPlayed: nu
 }
 
 async function rematch(room: RoomRow, uid: string) {
-  if (room.host_id !== uid) throw new GameError('not_host');
+  if (room.kind !== 'private' || room.host_id !== uid) throw new GameError('not_host');
   if (room.status !== 'finished') throw new GameError('not_finished');
   await admin.from('room_rounds').delete().eq('room_id', room.id);
   await admin.from('room_answers').delete().eq('room_id', room.id);
@@ -431,6 +442,10 @@ Deno.serve(async (req) => {
     switch (body.action) {
       case 'start':
         await start(room, uid);
+        break;
+      case 'auto_start':
+        // สมาชิกคนไหนก็เรียกได้ เมื่อเห็นว่าน่าจะถึงเวลาเริ่ม
+        await start(room, uid, true);
         break;
       case 'answer':
         await answer(room, uid, Number(body.round), body.given);

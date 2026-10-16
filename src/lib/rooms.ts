@@ -13,6 +13,10 @@ export interface Room {
   id: string;
   code: string;
   host_id: string;
+  /** private = สร้างเองด้วยรหัส, public = ห้องจากการสุ่มจับคู่ */
+  kind: 'private' | 'public';
+  mode: 'classic' | 'items';
+  created_at: string;
   status: 'lobby' | 'playing' | 'finished';
   settings: RoomSettings;
   state: unknown;
@@ -34,6 +38,7 @@ const ROOM_ERRORS: Record<string, string> = {
   profile_required: 'ตั้งชื่อเล่นก่อนเข้าห้อง',
   not_host: 'เฉพาะเจ้าของห้องเท่านั้น',
   invalid_settings: 'ค่าตั้งห้องไม่ถูกต้อง',
+  not_ready: 'ยังไม่ถึงเวลาเริ่ม',
 };
 
 function friendly(message: string): string {
@@ -47,6 +52,18 @@ async function rpc<T>(fn: string, args: Record<string, unknown>): Promise<T> {
   if (error) throw new Error(friendly(error.message));
   return data as T;
 }
+
+/** เงื่อนไขจับคู่ห้องสุ่ม (จำนวนข้อคงที่ 10 ข้อ) */
+export interface MatchSettings {
+  subject: Subject | 'all';
+  difficulty: Difficulty;
+  track: Track;
+  mode: 'classic' | 'items';
+}
+
+/** หาห้องสาธารณะที่ตั้งค่าตรงกัน ถ้าไม่มีจะสร้างใหม่ */
+export const findMatch = (m: MatchSettings) =>
+  rpc<Room>('find_match', { p_subject: m.subject, p_difficulty: m.difficulty, p_track: m.track, p_mode: m.mode });
 
 export const createRoom = (settings: RoomSettings) => rpc<Room>('create_room', { p_settings: settings });
 export const joinRoom = (code: string) => rpc<Room>('join_room', { p_code: code });
