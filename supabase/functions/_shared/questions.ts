@@ -28,6 +28,8 @@ export interface StoredQuestion {
   answer: FillAnswer | null;
   explanation: string;
   time_limit_sec: number | null;
+  /** โจทย์ที่ครูสร้างเอง (ไม่อยู่ในคลังกลาง: บันทึกคำตอบโดยไม่อ้าง question_id) */
+  custom?: boolean;
 }
 
 /** โจทย์ที่ส่งให้ผู้เล่น (ไม่มีเฉลย) */
@@ -112,7 +114,7 @@ export async function logAnswers(
   const { error } = await admin.from('answer_log').upsert(
     rows.map((r) => ({
       user_id: r.userId,
-      question_id: q.id,
+      question_id: q.custom ? null : q.id,
       level: q.level ?? 'upper',
       subject: q.subject,
       chapter: q.chapter ?? null,

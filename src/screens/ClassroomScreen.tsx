@@ -1,11 +1,14 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Chalkboard, ChalkboardTeacher, CheckCircle, Clock, Megaphone, NotePencil, ShareNetwork, ShieldCheck, Trash, UserMinus, Users } from '@phosphor-icons/react';
+import { Chalkboard, ChalkboardTeacher, CheckCircle, Clock, Megaphone, NotePencil, ShareNetwork, ShieldCheck, Trash, UserMinus, Users, Books } from '@phosphor-icons/react';
 import type { Difficulty, Level, Subject, Track } from '../types';
-import { DIFFICULTY_OPTIONS, LEVEL_KEYS, LEVELS, difficultyText, settingsLabel, subjectOptions } from '../data/subjects';
+import { DIFFICULTY_OPTIONS, LEVEL_KEYS, LEVELS, difficultyText, settingsLabel, subjectInfo, subjectOptions } from '../data/subjects';
 import { chapterName } from '../data/chapters';
 import { PlayerAvatar } from '../components/PlayerAvatar';
 import { AsyncPlayScreen } from './AsyncPlayScreen';
 import { createHomework, startHomework } from '../lib/asyncPlay';
+import { fetchMyQuestions, type TeacherQuestion } from '../lib/teacherBank';
+import { TeacherBankScreen } from './TeacherBankScreen';
+import { MathText } from '../components/MathText';
 import { t } from '../lib/i18n';
 import {
   createClass,
@@ -42,10 +45,12 @@ function dueText(iso: string) {
 /** ห้องเรียนครู: นักเรียนเข้าด้วยรหัส + ยินยอม, ครูสั่งการบ้านและดูสถิติ */
 export function ClassroomScreen({ onBack, onXpAwarded }: Props) {
   const [openId, setOpenId] = useState<string | null>(null);
+  const [bank, setBank] = useState(false);
+  if (bank) return <TeacherBankScreen onBack={() => setBank(false)} />;
   return openId ? (
-    <ClassView id={openId} onBack={() => setOpenId(null)} onXpAwarded={onXpAwarded} />
+    <ClassView id={openId} onBack={() => setOpenId(null)} onXpAwarded={onXpAwarded} onOpenBank={() => setBank(true)} />
   ) : (
-    <ClassList onBack={onBack} onOpen={setOpenId} />
+    <ClassList onBack={onBack} onOpen={setOpenId} onOpenBank={() => setBank(true)} />
   );
 }
 
@@ -62,7 +67,7 @@ function Header({ onBack, title }: { onBack: () => void; title: string }) {
   );
 }
 
-function ClassList({ onBack, onOpen }: { onBack: () => void; onOpen: (id: string) => void }) {
+function ClassList({ onBack, onOpen, onOpenBank }: { onBack: () => void; onOpen: (id: string) => void; onOpenBank: () => void }) {
   const [list, setList] = useState<ClassListing | null>(null);
   const [code, setCode] = useState('');
   const [consent, setConsent] = useState(false);
@@ -136,6 +141,9 @@ function ClassList({ onBack, onOpen }: { onBack: () => void; onOpen: (id: string
         <h2 className="section-title section-title--dark">
           <ChalkboardTeacher weight="fill" className="ico" /> {t('สำหรับครู', 'For teachers')}
         </h2>
+        <button type="button" className="btn btn--ghost btn--block class-bank-btn" onClick={onOpenBank}>
+          <Books weight="fill" className="ico" /> {t('คลังโจทย์ของฉัน (เขียนเอง / ให้ AI ช่วย)', 'My question bank (write / ask AI)')}
+        </button>
         {list && list.teaching.length > 0 && (
           <ul className="class-list">
             {list.teaching.map((c) => (
@@ -170,7 +178,7 @@ function ClassList({ onBack, onOpen }: { onBack: () => void; onOpen: (id: string
   );
 }
 
-function ClassView({ id, onBack, onXpAwarded }: { id: string; onBack: () => void; onXpAwarded: () => void }) {
+function ClassView({ id, onBack, onXpAwarded, onOpenBank }: { id: string; onBack: () => void; onXpAwarded: () => void; onOpenBank: () => void }) {
   const [view, setView] = useState<StudentClassView | TeacherClassView | null>(null);
   const [error, setError] = useState('');
   const reload = useCallback(() => fetchClass(id).then(setView).catch((e) => setError(e instanceof Error ? e.message : String(e))), [id]);
@@ -186,7 +194,7 @@ function ClassView({ id, onBack, onXpAwarded }: { id: string; onBack: () => void
       </div>
     );
   return view.role === 'teacher' ? (
-    <TeacherView view={view} onBack={onBack} reload={reload} />
+    <TeacherView view={view} onBack={onBack} reload={reload} onOpenBank={onOpenBank} />
   ) : (
     <StudentView view={view} onBack={onBack} reload={reload} onXpAwarded={onXpAwarded} />
   );
@@ -257,7 +265,7 @@ function StudentView({ view, onBack, reload, onXpAwarded }: { view: StudentClass
                 <span className="hw-list__text">
                   <strong>{h.title}</strong>
                   <small>
-                    {settingsLabel(h.settings)} · {difficultyText(h.settings.difficulty)} · {h.count} {t('ข้อ', 'Qs')}
+                    {h.settings.custom ? t('โจทย์ของครู', "Teacher's questions") : `${settingsLabel(h.settings)} · ${difficultyText(h.settings.difficulty)}`} · {h.count} {t('ข้อ', 'Qs')}
                   </small>
                   <small>
                     <Clock weight="bold" size={12} /> {fmt(h.dueAt)} · {dueText(h.dueAt)}
@@ -309,7 +317,7 @@ const inDays = (d: number) => {
   return local.toISOString().slice(0, 16);
 };
 
-function TeacherView({ view, onBack, reload }: { view: TeacherClassView; onBack: () => void; reload: () => void }) {
+function TeacherView({ view, onBack, reload, onOpenBank }: { view: TeacherClassView; onBack: () => void; reload: () => void; onOpenBank: () => void }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [ann, setAnn] = useState(view.announcement);
@@ -424,9 +432,10 @@ function TeacherView({ view, onBack, reload }: { view: TeacherClassView; onBack:
           <HomeworkForm
             busy={busy}
             onCancel={() => setHwOpen(false)}
-            onSubmit={(title, settings, dueAt) =>
+            onOpenBank={onOpenBank}
+            onSubmit={(title, settings, dueAt, questionIds) =>
               act(async () => {
-                await createHomework(view.id, title, settings, dueAt);
+                await createHomework(view.id, title, settings, dueAt, questionIds);
                 setHwOpen(false);
               })
             }
@@ -442,7 +451,7 @@ function TeacherView({ view, onBack, reload }: { view: TeacherClassView; onBack:
               <span className="hw-list__text">
                 <strong>{h.title}</strong>
                 <small>
-                  {settingsLabel(h.settings)} · {difficultyText(h.settings.difficulty)} · {h.count} {t('ข้อ', 'Qs')}
+                  {h.settings.custom ? t('โจทย์ของครู', "Teacher's questions") : `${settingsLabel(h.settings)} · ${difficultyText(h.settings.difficulty)}`} · {h.count} {t('ข้อ', 'Qs')}
                 </small>
                 <small>
                   <Clock weight="bold" size={12} /> {fmt(h.dueAt)} · {dueText(h.dueAt)}
@@ -542,11 +551,25 @@ function HomeworkForm({
   busy,
   onCancel,
   onSubmit,
+  onOpenBank,
 }: {
   busy: boolean;
   onCancel: () => void;
-  onSubmit: (title: string, settings: { subject: Subject | 'all'; difficulty: Difficulty; track: Track; level: Level; count: number }, dueAt: string) => void;
+  onSubmit: (
+    title: string,
+    settings: { subject: Subject | 'all'; difficulty: Difficulty; track: Track; level: Level; count: number },
+    dueAt: string,
+    questionIds: string[],
+  ) => void;
+  onOpenBank: () => void;
 }) {
+  const [source, setSource] = useState<'bank' | 'mine'>('bank');
+  const [mine, setMine] = useState<TeacherQuestion[] | null>(null);
+  const [picked, setPicked] = useState<string[]>([]);
+  const [mineFilter, setMineFilter] = useState<Subject | 'all'>('all');
+  useEffect(() => {
+    if (source === 'mine' && mine === null) fetchMyQuestions().then(setMine).catch(() => setMine([]));
+  }, [source, mine]);
   const [title, setTitle] = useState('');
   const [level, setLevel] = useState<Level>('upper');
   const [subject, setSubject] = useState<Subject | 'all'>('all');
@@ -560,10 +583,67 @@ function HomeworkForm({
       className="hw-form"
       onSubmit={(e) => {
         e.preventDefault();
-        onSubmit(title.trim(), { subject, difficulty, track, level, count }, new Date(due).toISOString());
+        onSubmit(title.trim(), { subject, difficulty, track, level, count }, new Date(due).toISOString(), source === 'mine' ? picked : []);
       }}
     >
       <input className="field__input" value={title} maxLength={60} onChange={(e) => setTitle(e.target.value)} placeholder={t('ชื่อการบ้าน เช่น ทบทวนตรรกศาสตร์', 'Title, e.g. Logic review')} />
+      <div className="segmented">
+        <button type="button" className={`segmented__opt ${source === 'bank' ? 'is-active' : ''}`} onClick={() => setSource('bank')}>
+          {t('สุ่มจากคลังกลาง', 'Random from app bank')}
+        </button>
+        <button type="button" className={`segmented__opt ${source === 'mine' ? 'is-active' : ''}`} onClick={() => setSource('mine')}>
+          {t('เลือกจากคลังของฉัน', 'Pick from my bank')}
+        </button>
+      </div>
+      {source === 'mine' ? (
+        <div className="hw-pick">
+          {mine === null && <p className="muted">{t('กำลังโหลด...', 'Loading...')}</p>}
+          {mine?.length === 0 && (
+            <p className="muted">
+              {t('คลังของคุณยังว่าง', 'Your bank is empty.')}{' '}
+              <button type="button" className="dream-goal__toggle" onClick={onOpenBank}>
+                {t('ไปสร้างโจทย์', 'Create questions')}
+              </button>
+            </p>
+          )}
+          {mine && mine.length > 0 && (
+            <>
+              <div className="hw-pick__bar">
+                <select value={mineFilter} onChange={(e) => setMineFilter(e.target.value as Subject | 'all')} aria-label={t('กรองวิชา', 'Filter subject')}>
+                  <option value="all">{t('ทุกวิชา', 'All subjects')}</option>
+                  {[...new Set(mine.map((q) => q.subject))].map((sub) => (
+                    <option key={sub} value={sub}>
+                      {subjectInfo(sub).name}
+                    </option>
+                  ))}
+                </select>
+                <b>{t(`เลือกแล้ว ${picked.length}/30`, `${picked.length}/30 picked`)}</b>
+              </div>
+              <ul className="hw-pick__list">
+                {mine
+                  .filter((q) => mineFilter === 'all' || q.subject === mineFilter)
+                  .map((q) => {
+                    const on = picked.includes(q.id!);
+                    return (
+                      <li key={q.id}>
+                        <label className={on ? 'is-on' : ''}>
+                          <input
+                            type="checkbox"
+                            checked={on}
+                            disabled={!on && picked.length >= 30}
+                            onChange={() => setPicked((p) => (on ? p.filter((x) => x !== q.id) : [...p, q.id!]))}
+                          />
+                          <MathText className="hw-pick__prompt" text={q.prompt} />
+                        </label>
+                      </li>
+                    );
+                  })}
+              </ul>
+            </>
+          )}
+        </div>
+      ) : (
+      <>
       <div className="hw-form__row">
         <select
           value={level}
@@ -611,6 +691,8 @@ function HomeworkForm({
           ))}
         </select>
       </div>
+      </>
+      )}
       <label className="hw-form__due">
         <span>{t('กำหนดส่ง', 'Due')}</span>
         <input type="datetime-local" value={due} onChange={(e) => setDue(e.target.value)} />
@@ -619,7 +701,7 @@ function HomeworkForm({
         <button type="button" className="btn btn--ghost" onClick={onCancel}>
           {t('ยกเลิก', 'Cancel')}
         </button>
-        <button type="submit" className="btn btn--primary" disabled={busy || !title.trim() || !due}>
+        <button type="submit" className="btn btn--primary" disabled={busy || !title.trim() || !due || (source === 'mine' && picked.length === 0)}>
           {busy ? t('กำลังเตรียมโจทย์...', 'Preparing...') : t('สั่งการบ้าน', 'Assign')}
         </button>
       </div>

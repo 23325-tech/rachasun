@@ -6622,3 +6622,207 @@ html[lang="en"] .checkin__label {
   font-weight: 700;
   text-decoration: none;
 }
+
+/* 28.1: คลังโจทย์ของครู */
+.class-bank-btn {
+  margin-bottom: 8px;
+}
+.teacher-bank__tabs {
+  width: 100%;
+}
+.teacher-bank__empty {
+  margin: 0;
+  text-align: center;
+}
+.teacher-bank__filter {
+  margin: 0;
+}
+.teacher-bank__list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.tq-card {
+  display: grid;
+  gap: 6px;
+  padding: 12px;
+  border: var(--border);
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 3px 0 var(--ink);
+}
+.tq-card--edit {
+  background: #fbfaff;
+}
+.tq-card__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 6px;
+}
+.tq-card__tags {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 3px;
+  color: var(--ink-soft, #6b6290);
+  font-size: 0.75rem;
+}
+.tq-card__ai {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: #efeaff;
+  color: #4b2fd6;
+}
+.tq-card__actions {
+  display: flex;
+  flex: none;
+}
+.tq-card__prompt {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.tq-card__choices {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.88rem;
+}
+.tq-card__choices li {
+  padding: 3px 8px;
+  border-radius: 8px;
+}
+.tq-card__choices li.is-answer {
+  background: #dff8ea;
+  font-weight: 700;
+}
+.tq-card__fill {
+  margin: 0;
+  font-size: 0.88rem;
+}
+.q-edit {
+  display: grid;
+  gap: 8px;
+}
+.q-edit__row {
+  display: flex;
+  gap: 6px;
+}
+.q-edit__row > * {
+  flex: 1;
+  min-width: 0;
+}
+.q-edit select,
+.q-edit input,
+.q-edit textarea,
+.ai-panel select,
+.ai-panel textarea,
+.hw-pick select {
+  min-width: 0;
+  padding: 8px;
+  border: 2.5px solid var(--ink);
+  border-radius: 10px;
+  background: #fff;
+  font: inherit;
+  font-size: 0.88rem;
+}
+.q-edit textarea,
+.ai-panel textarea {
+  resize: vertical;
+}
+.q-edit__field {
+  display: grid;
+  gap: 3px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+.q-edit__preview {
+  padding: 8px 10px;
+  border: 2px dashed #d9cff5;
+  border-radius: 10px;
+  background: #fafaff;
+}
+.q-edit__type {
+  width: 100%;
+}
+.q-edit__choices {
+  display: grid;
+  gap: 6px;
+}
+.q-edit__choice {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px;
+  border: 2px solid transparent;
+  border-radius: 12px;
+}
+.q-edit__choice.is-answer {
+  border-color: #22c58b;
+  background: #effcf5;
+}
+.q-edit__choice input[type='radio'] {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  accent-color: #22c58b;
+}
+.q-edit__choice input:not([type]) {
+  flex: 1;
+}
+.q-edit__fill {
+  display: grid;
+  gap: 8px;
+}
+.ai-panel {
+  display: grid;
+  gap: 8px;
+}
+.ai-panel__quota {
+  margin: 0;
+  font-size: 0.75rem;
+}
+.hw-pick {
+  display: grid;
+  gap: 6px;
+}
+.hw-pick__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.8rem;
+}
+.hw-pick__list {
+  max-height: 260px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+.hw-pick__list label {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 6px 4px;
+  border-top: 1.5px solid #eee8fb;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+.hw-pick__list label.is-on {
+  background: #f3efff;
+}
+.hw-pick__list input {
+  flex: none;
+  margin-top: 3px;
+}
+.hw-pick__prompt {
+  overflow-wrap: anywhere;
+}

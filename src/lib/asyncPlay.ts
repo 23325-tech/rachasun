@@ -100,8 +100,8 @@ async function call<T>(action: string, body: Record<string, unknown>): Promise<T
 export const createChallenge = (settings: ChallengeSettings) => call<{ code: string }>('create_challenge', { settings });
 /** โจทย์ประจำวันของกลุ่ม (เล่นได้วันละครั้ง) */
 export const startDaily = (groupId: string) => call<{ playId: string; total: number }>('start_daily', { groupId });
-export const createHomework = (classroomId: string, title: string, settings: ChallengeSettings, dueAt: string) =>
-  call<{ homeworkId: string }>('create_homework', { classroomId, title, settings, dueAt });
+export const createHomework = (classroomId: string, title: string, settings: ChallengeSettings, dueAt: string, questionIds: string[] = []) =>
+  call<{ homeworkId: string }>('create_homework', { classroomId, title, settings, dueAt, questionIds });
 export const startHomework = (homeworkId: string) => call<{ playId: string; total: number }>('start_homework', { homeworkId });
 export const startChallenge = (code: string) => call<{ playId: string; total: number }>('start', { code });
 export const nextQuestion = (playId: string) => call<AsyncQuestion | { done: true; score: number }>('next', { playId });

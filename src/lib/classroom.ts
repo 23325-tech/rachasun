@@ -13,6 +13,8 @@ export interface HomeworkSettings {
   track: Track;
   level: Level;
   count: number;
+  /** การบ้านจากคลังโจทย์ของครู */
+  custom?: boolean;
 }
 
 export interface StudentClassView {

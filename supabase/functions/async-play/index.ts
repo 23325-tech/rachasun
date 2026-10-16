@@ -162,7 +162,14 @@ async function startChallenge(uid: string, code: string) {
 
 const HOMEWORK_MAX_DAYS = 30;
 
-async function createHomework(uid: string, classroomId: string, title: string, settings: Record<string, unknown>, dueAt: string) {
+async function createHomework(
+  uid: string,
+  classroomId: string,
+  title: string,
+  settings: Record<string, unknown>,
+  dueAt: string,
+  questionIds: string[] = [],
+) {
   const { data: cls } = await admin.from('classrooms').select('teacher_id').eq('id', classroomId).maybeSingle();
   if (!cls || cls.teacher_id !== uid) throw new PlayError('not_allowed');
   const name = title.trim().slice(0, 60);
@@ -171,18 +178,50 @@ async function createHomework(uid: string, classroomId: string, title: string, s
   if (!Number.isFinite(due) || due < Date.now() + 30 * 60_000 || due > Date.now() + HOMEWORK_MAX_DAYS * 86_400_000) {
     throw new PlayError('bad_due');
   }
-  const s = {
-    subject: String(settings.subject ?? 'all'),
-    difficulty: String(settings.difficulty ?? 'medium'),
-    track: String(settings.track ?? 'school'),
-    level: String(settings.level ?? 'upper'),
-    count: Number(settings.count ?? 10),
-  };
-  if (!COUNTS.includes(s.count)) throw new PlayError('invalid_settings');
-  const { data: valid } = await admin.rpc('valid_room_settings', { s });
-  if (!valid) throw new PlayError('invalid_settings');
-  const questions = (await pickQuestions(admin, s, s.count)).slice(0, s.count);
-  if (questions.length < Math.min(5, s.count)) throw new PlayError('no_questions');
+  let s: Record<string, unknown>;
+  let questions: StoredQuestion[];
+  if (questionIds.length) {
+    // โจทย์จากคลังของครูเอง (ตามลำดับที่ครูเลือก)
+    const ids = [...new Set(questionIds.map(String))].slice(0, 30);
+    const { data: rows } = await admin.from('teacher_questions').select('*').in('id', ids).eq('teacher_id', uid);
+    const byId = new Map((rows ?? []).map((r) => [r.id, r]));
+    questions = ids
+      .map((id) => byId.get(id))
+      .filter(Boolean)
+      .map((r) => ({
+        id: r.id,
+        subject: r.subject,
+        difficulty: r.difficulty,
+        chapter: r.chapter,
+        track: 'school',
+        level: r.level,
+        type: r.type,
+        prompt: r.prompt,
+        choices: r.choices,
+        answer_index: r.answer_index,
+        answer: r.answer,
+        explanation: r.explanation,
+        time_limit_sec: null,
+        custom: true,
+      }));
+    if (!questions.length) throw new PlayError('no_questions');
+    const subjects = [...new Set(questions.map((x) => x.subject))];
+    s = { custom: true, subject: subjects.length === 1 ? subjects[0] : 'all', level: questions[0].level ?? 'upper', difficulty: questions[0].difficulty, track: 'school' };
+  } else {
+    const picked = {
+      subject: String(settings.subject ?? 'all'),
+      difficulty: String(settings.difficulty ?? 'medium'),
+      track: String(settings.track ?? 'school'),
+      level: String(settings.level ?? 'upper'),
+      count: Number(settings.count ?? 10),
+    };
+    if (!COUNTS.includes(picked.count)) throw new PlayError('invalid_settings');
+    const { data: valid } = await admin.rpc('valid_room_settings', { s: picked });
+    if (!valid) throw new PlayError('invalid_settings');
+    questions = (await pickQuestions(admin, picked, picked.count)).slice(0, picked.count);
+    if (questions.length < Math.min(5, picked.count)) throw new PlayError('no_questions');
+    s = picked;
+  }
 
   const { data: set, error } = await admin
     .from('quiz_sets')
@@ -358,7 +397,14 @@ Deno.serve(async (req) => {
         return json(await startDaily(uid, String(body.groupId ?? '')));
       case 'create_homework':
         return json(
-          await createHomework(uid, String(body.classroomId ?? ''), String(body.title ?? ''), body.settings ?? {}, String(body.dueAt ?? '')),
+          await createHomework(
+            uid,
+            String(body.classroomId ?? ''),
+            String(body.title ?? ''),
+            body.settings ?? {},
+            String(body.dueAt ?? ''),
+            Array.isArray(body.questionIds) ? body.questionIds : [],
+          ),
         );
       case 'start_homework':
         return json(await startHomework(uid, String(body.homeworkId ?? '')));
