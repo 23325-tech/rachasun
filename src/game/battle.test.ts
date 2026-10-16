@@ -142,6 +142,57 @@ describe('การ์ดพลัง', () => {
   });
 });
 
+describe('ยิงสวน', () => {
+  const withCards = (ps: BattlePlayer[], id: string, shield: number) =>
+    ps.map((p) => (p.id === id ? { ...p, cards: { shield } } : p));
+
+  it('คนใช้การ์ดตอบผิด -> ดาเมจไปตกที่เป้าแทน', () => {
+    const r = resolveRound(make(3), [ans('p1', false), ans('p2', true), ans('p3', true)], 0, 10, { p1: 'p2' });
+    expect(hearts(r.players)).toEqual({ p1: 3, p2: 2, p3: 3 });
+    expect(r.outcome.damages).toEqual([
+      { playerId: 'p1', reason: 'wrong', heartsLost: 0, redirectedTo: 'p2' },
+      { playerId: 'p2', reason: 'counter', heartsLost: 1, from: 'p1' },
+    ]);
+  });
+
+  it('ไม่โดนยิง -> การ์ดหายเปล่า ไม่มีผล', () => {
+    const r = resolveRound(make(2), [ans('p1', true, 1000), ans('p2', true, 3000)], 0, 10, { p1: 'p2' });
+    expect(hearts(r.players)).toEqual({ p1: 3, p2: 2 });
+    expect(r.outcome.damages.map((d) => d.reason)).toEqual(['slowest']);
+  });
+
+  it('โล่ของเป้ากันดาเมจที่เด้งมาได้', () => {
+    const ps = withCards(make(2), 'p2', 1);
+    const r = resolveRound(ps, [ans('p1', false), ans('p2', true)], 0, 10, { p1: 'p2' });
+    expect(hearts(r.players)).toEqual({ p1: 3, p2: 3 });
+    expect(r.outcome.damages[1]).toMatchObject({ playerId: 'p2', reason: 'counter', blocked: true, from: 'p1' });
+    expect(r.players.find((p) => p.id === 'p2')!.cards!.shield).toBe(0);
+  });
+
+  it('ไม่เด้งต่อเป็นทอดๆ', () => {
+    const r = resolveRound(make(2), [ans('p1', false), ans('p2', true)], 0, 10, { p1: 'p2', p2: 'p1' });
+    expect(hearts(r.players)).toEqual({ p1: 3, p2: 2 });
+  });
+
+  it('เป้าที่ผิดเองด้วยโดนสองต่อ', () => {
+    const r = resolveRound(make(3), [ans('p1', false), ans('p2', false), ans('p3', true)], 0, 10, { p1: 'p2' });
+    expect(hearts(r.players)).toEqual({ p1: 3, p2: 1, p3: 3 });
+  });
+
+  it('Sudden Death: เป้าตกรอบแทน', () => {
+    const r = resolveRound(make(3, 10), [ans('p1', false), ans('p2', true), ans('p3', true)], 10, 10, { p1: 'p3' });
+    expect(r.outcome.eliminated).toEqual(['p3']);
+    expect(hearts(r.players).p1).toBe(3);
+  });
+
+  it('ยิงสวนทำงานก่อนโล่ของตัวเอง (โล่ยังอยู่)', () => {
+    const ps = withCards(make(2), 'p1', 1);
+    const r = resolveRound(ps, [ans('p1', false), ans('p2', true)], 0, 10, { p1: 'p2' });
+    expect(r.players.find((p) => p.id === 'p1')!.cards!.shield).toBe(1);
+    expect(hearts(r.players).p2).toBe(2);
+  });
+});
+
 describe('Sudden Death', () => {
   it('ผิด = ตกรอบทันทีแม้ยังมีหัวใจหลายดวง', () => {
     const r = resolveRound(make(3, 10), [ans('p1', true), ans('p2', false), ans('p3', true)], 10, 10);

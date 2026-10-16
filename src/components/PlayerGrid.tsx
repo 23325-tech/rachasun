@@ -57,8 +57,8 @@ export function PlayerGrid({ players, maxHearts, meId, status, hits, hitStage }:
             </div>
             <div className="pcard__name">{p.id === meId ? 'คุณ' : p.name}</div>
             {(p.cards?.shield ?? 0) > 0 && (
-              <span className="pcard__shield" aria-label={`มีโล่ ${p.cards!.shield} อัน`}>
-                🛡️{p.cards!.shield > 1 ? p.cards!.shield : ''}
+              <span className="pcard__shield" aria-label={`มีโล่ ${p.cards?.shield} อัน`}>
+                🛡️{(p.cards?.shield ?? 0) > 1 ? p.cards?.shield : ''}
               </span>
             )}
             <div className="pcard__hearts" aria-label={`หัวใจ ${p.hearts} ดวง`}>

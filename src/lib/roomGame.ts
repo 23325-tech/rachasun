@@ -38,6 +38,10 @@ export interface OnlineGameState {
   items?: boolean;
   dealt?: { round: number; cards: Record<string, CardKind> };
   cardUsed?: Record<string, CardKind>;
+  /** เส้นตายรายคนจากการ์ดเวลา */
+  deadlines?: Record<string, number>;
+  /** ใครโดนลดเวลาโดยใคร */
+  slowed?: Record<string, string>;
 }
 
 export interface GameCallResult {
@@ -74,6 +78,9 @@ const GAME_ERRORS: Record<string, string> = {
   already_playing: 'เกมเริ่มไปแล้ว',
   no_card: 'ไม่มีการ์ดใบนี้แล้ว',
   already_answered: 'ตอบไปแล้ว ใช้การ์ดไม่ได้',
+  bad_target: 'เลือกเป้าหมายไม่ได้',
+  target_answered: 'เพื่อนคนนี้ตอบไปแล้ว',
+  target_low_time: 'เวลาเพื่อนเหลือน้อยเกินไปแล้ว',
 };
 
 export async function callGame(

@@ -1374,6 +1374,81 @@ button {
   color: #1f5fbf;
   font-weight: 600;
 }
+.shot-list__item--counter {
+  color: #b0400f;
+  font-weight: 600;
+}
+.power-card--slow {
+  background: linear-gradient(150deg, #ffd6de, #ff8fa3);
+}
+.power-card--extra {
+  background: linear-gradient(150deg, #d8fbe9, #7be0b5);
+}
+.power-card--counter {
+  background: linear-gradient(150deg, #ffe1c2, #ff9f5a);
+}
+.power-card.is-used {
+  outline: 3px solid var(--good);
+  outline-offset: 2px;
+}
+.card-bar__empty,
+.card-bar__note {
+  margin: 0;
+  text-align: center;
+  color: #fff;
+  font-size: 0.85rem;
+  opacity: 0.9;
+}
+.target-list {
+  display: grid;
+  gap: 8px;
+  max-height: 50vh;
+  overflow-y: auto;
+}
+.target-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 2.5px solid var(--ink);
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 3px 0 var(--ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.target-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.target-btn__avatar {
+  font-size: 1.5rem;
+}
+.target-btn__name {
+  flex: 1;
+  min-width: 0;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.timer-wrap.is-slowed .timer__fill {
+  background: var(--bad);
+}
+.timer-wrap.is-slowed .timer__num {
+  color: #ffd6de;
+}
+.slowed-note {
+  margin: 0;
+  text-align: center;
+  color: #fff;
+  font-weight: 600;
+  background: var(--bad);
+  border: 2.5px solid var(--ink);
+  border-radius: 12px;
+  padding: 4px 10px;
+}
 
 /* ---------- สุ่มหาคู่แข่ง ---------- */
 .online-card--match {

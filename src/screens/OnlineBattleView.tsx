@@ -8,6 +8,8 @@ import { TimerBar } from '../components/TimerBar';
 import { ChoiceList } from '../components/ChoiceList';
 import { FillAnswerInput } from '../components/FillAnswerInput';
 import { PlayerGrid, type HitStage, type PlayerStatus } from '../components/PlayerGrid';
+import { CardBar, type ActiveCard } from '../components/CardBar';
+import type { CardKind } from '../game/battle';
 
 interface Props {
   roomId: string;
@@ -18,8 +20,14 @@ interface Props {
 
 const AIM_AT = 500;
 const BANG_AT = 1100;
-const REASON_TEXT = { wrong: 'ตอบผิด', timeout: 'หมดเวลา', slowest: 'ตอบช้าสุด' } as const;
-const CARD_TEXT = { shield: '🛡️ โล่', fifty: '✂️ 50/50' } as const;
+const REASON_TEXT = { wrong: 'ตอบผิด', timeout: 'หมดเวลา', slowest: 'ตอบช้าสุด', counter: 'โดนยิงสวน' } as const;
+const CARD_TEXT: Record<CardKind, string> = {
+  shield: '🛡️ โล่',
+  fifty: '✂️ 50/50',
+  slow: '⏳ ลดเวลาเพื่อน',
+  extra: '⌛ เพิ่มเวลาตัวเอง',
+  counter: '🔫 ยิงสวน',
+};
 
 /** อัปเดตทุก 100ms ให้ตัวจับเวลาเดิน */
 function useServerClock() {
@@ -36,7 +44,12 @@ export function OnlineBattleView({ roomId, state: s, myId, onLeave }: Props) {
   const [myAnswer, setMyAnswer] = useState<{ round: number; given: number | string } | null>(null);
   const [answerError, setAnswerError] = useState('');
   /** ผลการ์ด 50/50 ของเราในข้อนี้ (เซิร์ฟเวอร์บอกเฉพาะเรา) */
-  const [cardResult, setCardResult] = useState<{ round: number; removed?: number[]; skipped?: boolean } | null>(null);
+  const [cardResult, setCardResult] = useState<{
+    round: number;
+    card: CardKind;
+    removed?: number[];
+    skipped?: boolean;
+  } | null>(null);
   const [usingCard, setUsingCard] = useState(false);
   const [hitStage, setHitStage] = useState<HitStage>('none');
   // หัวใจที่แสดง: ตอนเฉลยจะค้างค่าเดิมไว้จนถึงจังหวะยิง
@@ -78,21 +91,25 @@ export function OnlineBattleView({ roomId, state: s, myId, onLeave }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [s.phase, s.round, revealRound]);
 
+  const myDeadline = s.deadlines?.[myId] ?? s.deadline ?? 0;
+  const roundEnd = Math.max(s.deadline ?? 0, ...s.players.filter(isAlive).map((p) => s.deadlines?.[p.id] ?? s.deadline ?? 0));
+
   // ใครก็กระตุ้นเซิร์ฟเวอร์ได้เมื่อถึงเวลา (หมดเวลาตอบ / หมดช่วงเฉลย)
   const lastTickRef = useRef(0);
   useEffect(() => {
     const due =
-      (s.phase === 'question' && s.deadline && now > s.deadline + 900) ||
+      (s.phase === 'question' && s.deadline && now > roundEnd + 900) ||
       (s.phase === 'reveal' && s.nextAt && now > s.nextAt + 150);
     if (!due || Date.now() - lastTickRef.current < 1500) return;
     lastTickRef.current = Date.now() + Math.random() * 400;
     callGame('tick', { roomId }).catch(() => {});
-  }, [now, s.phase, s.deadline, s.nextAt, roomId]);
+  }, [now, s.phase, s.deadline, roundEnd, s.nextAt, roomId]);
 
   useEffect(() => {
     if (s.phase !== 'question' || !s.cardUsed?.[myId] || cardResult?.round === s.round) return;
-    callGame('use_card', { roomId, round: s.round, card: 'fifty' })
-      .then((r) => setCardResult({ round: s.round, removed: r.removed, skipped: r.skipped }))
+    const used = s.cardUsed[myId];
+    callGame('use_card', { roomId, round: s.round, card: used })
+      .then((r) => setCardResult({ round: s.round, card: used, removed: r.removed, skipped: r.skipped }))
       .catch(() => {});
   }, [s.phase, s.round, s.cardUsed, myId, roomId, cardResult]);
 
@@ -109,15 +126,17 @@ export function OnlineBattleView({ roomId, state: s, myId, onLeave }: Props) {
   const reveal = s.reveal?.round === s.round ? s.reveal : undefined;
   const showingReveal = (s.phase === 'reveal' || s.phase === 'finished') && !!reveal;
   const beforeStart = s.phase === 'question' && s.startsAt && now < s.startsAt;
-  const locked = !meAlive || !!answeredThisRound || showingReveal || !!beforeStart || s.phase !== 'question';
+  const pastMyDeadline = s.phase === 'question' && !!myDeadline && now > myDeadline;
+  const locked =
+    !meAlive || !!answeredThisRound || showingReveal || !!beforeStart || s.phase !== 'question' || pastMyDeadline;
 
-  const useFifty = async () => {
-    if (locked || usingCard) return;
+  const useCard = async (card: ActiveCard, target?: string) => {
+    if (usingCard) return;
     setUsingCard(true);
     setAnswerError('');
     try {
-      const r = await callGame('use_card', { roomId, round: s.round, card: 'fifty' });
-      setCardResult({ round: s.round, removed: r.removed, skipped: r.skipped });
+      const r = await callGame('use_card', { roomId, round: s.round, card, target });
+      setCardResult({ round: s.round, card, removed: r.removed, skipped: r.skipped });
     } catch (e) {
       setAnswerError(e instanceof Error ? e.message : String(e));
     } finally {
@@ -179,9 +198,14 @@ export function OnlineBattleView({ roomId, state: s, myId, onLeave }: Props) {
     else if (!isAlive(p)) status[p.id] = 'out';
     else status[p.id] = s.answered.includes(p.id) || answeredThisRound && p.id === myId ? 'locked' : 'thinking';
   }
-  const hits: Record<string, { lost: number; reason: 'wrong' | 'timeout' | 'slowest'; blocked?: boolean }> = {};
+  const hits: Record<string, { lost: number; reason: (typeof reveal & {})['outcome']['damages'][number]['reason']; blocked?: boolean }> = {};
   if (showingReveal && reveal) {
-    for (const d of reveal.outcome.damages) hits[d.playerId] = { lost: d.heartsLost, reason: d.reason, blocked: d.blocked };
+    for (const d of reveal.outcome.damages) {
+      if (d.redirectedTo) continue; // คนที่ยิงสวนสำเร็จไม่โดน
+      const prev = hits[d.playerId];
+      const lost = (prev?.lost ?? 0) + d.heartsLost;
+      hits[d.playerId] = { lost, reason: d.reason, blocked: lost === 0 && (d.blocked || prev?.blocked) };
+    }
     for (const id of reveal.disconnected) {
       const before = lastPlayersRef.current.find((p) => p.id === id)?.hearts ?? 1;
       hits[id] = { lost: Math.max(1, before), reason: 'timeout' };
@@ -191,10 +215,15 @@ export function OnlineBattleView({ roomId, state: s, myId, onLeave }: Props) {
   const myCards = me?.cards;
   const newCard = s.dealt?.round === s.round ? s.dealt.cards[myId] : undefined;
   const showDealt = !!newCard && s.phase === 'question' && !!s.startsAt && now < s.startsAt + 3500;
+  const slowedBy = s.phase === 'question' ? s.slowed?.[myId] : undefined;
+  const opponents = s.players
+    .filter((p) => p.id !== myId && isAlive(p))
+    .map((p) => ({ id: p.id, name: p.name, avatar: p.avatar, answered: s.answered.includes(p.id) }));
   const nameOf = (id: string) => (id === myId ? 'คุณ' : s.players.find((p) => p.id === id)?.name ?? '?');
   const sudden = s.round >= s.questionCount;
   const subject = q ? SUBJECTS[q.subject] : null;
-  const remaining = s.deadline ? Math.max(0, s.deadline - now) : 0;
+  const remaining = myDeadline ? Math.max(0, myDeadline - now) : 0;
+  const myLimit = myDeadline && s.startsAt ? myDeadline - s.startsAt : s.limitMs ?? 1;
   const nextIn = s.nextAt ? Math.max(0, Math.ceil((s.nextAt - now) / 1000)) : 0;
 
   return (
@@ -233,7 +262,14 @@ export function OnlineBattleView({ roomId, state: s, myId, onLeave }: Props) {
         </div>
       ) : (
         <>
-          {s.limitMs && !showingReveal && <TimerBar remainingMs={remaining} limitMs={s.limitMs} />}
+          {s.limitMs && !showingReveal && (
+            <div className={slowedBy ? 'timer-wrap is-slowed' : 'timer-wrap'}>
+              <TimerBar remainingMs={remaining} limitMs={myLimit} />
+            </div>
+          )}
+          {slowedBy && meAlive && !answeredThisRound && (
+            <p className="slowed-note shake">⏳ {nameOf(slowedBy)} ลดเวลาคุณ!</p>
+          )}
 
           {sudden && s.phase === 'question' && <div className="sudden-banner pop-in">⚡ ผิดหรือช้าสุด = ตกรอบทันที!</div>}
 
@@ -275,28 +311,18 @@ export function OnlineBattleView({ roomId, state: s, myId, onLeave }: Props) {
             <p className="waiting">{myCard?.skipped ? '⏭️ ข้ามข้อนี้แล้ว รอคนอื่นอยู่...' : '🔒 ล็อกคำตอบแล้ว รอคนอื่นอยู่...'}</p>
           )}
 
-          {s.items && myCards && meAlive && !showingReveal && (
-            <div className="card-bar">
-              <div className="power-card power-card--passive" title="ติดตัวไว้ กันการโดนยิงให้อัตโนมัติ">
-                <span className="power-card__icon">🛡️</span>
-                <span className="power-card__name">โล่</span>
-                <span className="power-card__count">x{myCards.shield}</span>
-                <span className="power-card__hint">กันอัตโนมัติ</span>
-              </div>
-              <button
-                type="button"
-                className="power-card"
-                disabled={locked || usingCard || myCards.fifty < 1 || !!myCard}
-                onClick={useFifty}
-              >
-                <span className="power-card__icon">{q?.type === 'fill' ? '⏭️' : '✂️'}</span>
-                <span className="power-card__name">{q?.type === 'fill' ? 'ข้ามข้อ' : '50/50'}</span>
-                <span className="power-card__count">x{myCards.fifty}</span>
-                <span className="power-card__hint">{myCard ? 'ใช้แล้ว' : 'กดใช้'}</span>
-              </button>
-            </div>
+          {s.items && myCards && meAlive && !showingReveal && q && (
+            <CardBar
+              cards={myCards}
+              questionType={q.type}
+              opponents={opponents}
+              answered={!!answeredThisRound}
+              open={s.phase === 'question' && !beforeStart && !pastMyDeadline}
+              usedCard={myCard?.card ?? s.cardUsed?.[myId] ?? null}
+              busy={usingCard}
+              onUse={useCard}
+            />
           )}
-          {answerError && <p className="form-error">😵 {answerError}</p>}
         </>
       )}
 
@@ -313,12 +339,16 @@ export function OnlineBattleView({ roomId, state: s, myId, onLeave }: Props) {
             ) : (
               <>
                 {reveal.outcome.damages.map((d) =>
-                  d.blocked ? (
-                    <p key={d.playerId} className="shot-list__item shot-list__item--blocked">
+                  d.redirectedTo ? (
+                    <p key={`${d.playerId}-r`} className="shot-list__item shot-list__item--counter">
+                      🔫 <strong>{nameOf(d.playerId)}</strong> ยิงสวน! ดาเมจเด้งไปหา <strong>{nameOf(d.redirectedTo)}</strong>
+                    </p>
+                  ) : d.blocked ? (
+                    <p key={`${d.playerId}-${d.reason}`} className="shot-list__item shot-list__item--blocked">
                       🛡️ <strong>{nameOf(d.playerId)}</strong> ใช้โล่กันกระสุนไว้ได้! ({REASON_TEXT[d.reason]})
                     </p>
                   ) : (
-                  <p key={d.playerId} className={`shot-list__item ${d.playerId === myId ? 'is-me' : ''}`}>
+                  <p key={`${d.playerId}-${d.reason}`} className={`shot-list__item ${d.playerId === myId ? 'is-me' : ''}`}>
                     💥 <strong>{nameOf(d.playerId)}</strong> โดนยิง ({REASON_TEXT[d.reason]})
                     {reveal.outcome.eliminated.includes(d.playerId) && <span className="shot-list__out"> ตกรอบ!</span>}
                   </p>

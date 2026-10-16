@@ -12,10 +12,13 @@
  * การ์ดพลัง (โหมด items)
  * - 🛡️ โล่ (ติดตัว): กันการโดนยิงครั้งแรกให้อัตโนมัติ รวมถึง Sudden Death แล้วโล่หายไป 1 อัน
  * - ✂️ 50/50 บนข้อเติมคำตอบ = ข้ามข้อ: ไม่เสียหัวใจ ไม่ได้คะแนน และไม่นับในการหาคนช้าสุด
+ * - ⏳ ลดเวลาเพื่อน / ⌛ เพิ่มเวลาตัวเอง: เซิร์ฟเวอร์ปรับเส้นตายรายคน (ไม่เกี่ยวกับเอนจินนี้)
+ * - 🔫 ยิงสวน (redirects): ถ้าคนที่ใช้การ์ดโดนยิงในข้อนั้น ดาเมจไปตกที่เป้าแทน แรงเท่าเดิม
+ *   (Sudden Death = เป้าตกรอบ) โล่ของเป้ากันได้ ไม่เด้งต่อ และทำงานก่อนโล่ของคนใช้
  */
 
-export type CardKind = 'shield' | 'fifty';
-export type CardCounts = Record<CardKind, number>;
+export type CardKind = 'shield' | 'fifty' | 'slow' | 'extra' | 'counter';
+export type CardCounts = Partial<Record<CardKind, number>>;
 
 export interface BattlePlayer {
   id: string;
@@ -42,7 +45,7 @@ export interface RoundAnswer {
   skipped?: boolean;
 }
 
-export type DamageReason = 'wrong' | 'timeout' | 'slowest';
+export type DamageReason = 'wrong' | 'timeout' | 'slowest' | 'counter';
 
 export interface Damage {
   playerId: string;
@@ -50,6 +53,10 @@ export interface Damage {
   heartsLost: number;
   /** โล่กันไว้ได้ (heartsLost = 0) */
   blocked?: boolean;
+  /** ยิงสวน: ดาเมจนี้ถูกส่งต่อไปที่ผู้เล่นคนนี้ (heartsLost = 0) */
+  redirectedTo?: string;
+  /** ยิงสวน: ดาเมจนี้มาจากผู้เล่นคนนี้ */
+  from?: string;
 }
 
 export interface RoundOutcome {
@@ -94,6 +101,8 @@ export function resolveRound(
   answers: RoundAnswer[],
   roundIndex: number,
   questionCount: number,
+  /** ยิงสวน: ผู้ใช้การ์ด -> เป้าหมาย */
+  redirects: Record<string, string> = {},
 ): { players: BattlePlayer[]; outcome: RoundOutcome } {
   const suddenDeath = isSuddenDeath(roundIndex, questionCount);
   const alive = alivePlayers(players);
@@ -102,13 +111,21 @@ export function resolveRound(
     byId.get(id) ?? { playerId: id, correct: false, timeMs: Infinity, timedOut: true, points: 0 };
 
   const damages: Damage[] = [];
-  const shieldsUsed = new Set<string>();
-  const hit = (p: BattlePlayer, reason: DamageReason) => {
-    if ((p.cards?.shield ?? 0) > 0) {
-      shieldsUsed.add(p.id);
-      damages.push({ playerId: p.id, reason, heartsLost: 0, blocked: true });
+  const aliveById = new Map(alive.map((p) => [p.id, p]));
+  const shieldsLeft = new Map(alive.map((p) => [p.id, p.cards?.shield ?? 0]));
+  const hit = (p: BattlePlayer, reason: DamageReason, from?: string) => {
+    // ยิงสวน (ไม่เด้งต่อถ้าดาเมจนี้มาจากการยิงสวนอยู่แล้ว)
+    const target = from ? undefined : aliveById.get(redirects[p.id]);
+    if (target && target.id !== p.id) {
+      damages.push({ playerId: p.id, reason, heartsLost: 0, redirectedTo: target.id });
+      hit(target, 'counter', p.id);
+      return;
+    }
+    if ((shieldsLeft.get(p.id) ?? 0) > 0) {
+      shieldsLeft.set(p.id, shieldsLeft.get(p.id)! - 1);
+      damages.push({ playerId: p.id, reason, heartsLost: 0, blocked: true, ...(from ? { from } : {}) });
     } else {
-      damages.push({ playerId: p.id, reason, heartsLost: suddenDeath ? p.hearts : 1 });
+      damages.push({ playerId: p.id, reason, heartsLost: suddenDeath ? p.hearts : 1, ...(from ? { from } : {}) });
     }
   };
 
@@ -123,15 +140,18 @@ export function resolveRound(
     for (const p of playing) if (answerOf(p.id).timeMs === slowest) hit(p, 'slowest');
   }
 
-  const lost = new Map(damages.map((d) => [d.playerId, d.heartsLost]));
+  // คนเดียวโดนได้หลายครั้งในข้อเดียว (ตัวเอง + โดนยิงสวน) -> รวมกัน
+  const lost = new Map<string, number>();
+  for (const d of damages) lost.set(d.playerId, (lost.get(d.playerId) ?? 0) + d.heartsLost);
   let next = players.map((p) => {
     if (!isAlive(p)) return p;
-    const usedShield = shieldsUsed.has(p.id) && p.cards;
+    const shieldNow = shieldsLeft.get(p.id) ?? 0;
+    const usedShield = p.cards && shieldNow !== (p.cards.shield ?? 0);
     return {
       ...p,
       hearts: Math.max(0, p.hearts - (lost.get(p.id) ?? 0)),
       score: p.score + answerOf(p.id).points,
-      ...(usedShield ? { cards: { ...p.cards!, shield: p.cards!.shield - 1 } } : {}),
+      ...(usedShield ? { cards: { ...p.cards!, shield: shieldNow } } : {}),
     };
   });
 

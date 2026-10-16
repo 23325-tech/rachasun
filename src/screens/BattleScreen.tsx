@@ -54,7 +54,7 @@ const BANG_AT = 1100;
 const AUTO_NEXT_MS = 6000;
 const SPECTATE_SPEED = 0.15;
 
-const REASON_TEXT = { wrong: 'ตอบผิด', timeout: 'หมดเวลา', slowest: 'ตอบช้าสุด' } as const;
+const REASON_TEXT = { wrong: 'ตอบผิด', timeout: 'หมดเวลา', slowest: 'ตอบช้าสุด', counter: 'โดนยิงสวน' } as const;
 
 export function BattleScreen({ questions, questionCount, initialPlayers, bots, onFinish, onQuit }: Props) {
   const [players, setPlayers] = useState(initialPlayers);

@@ -26,7 +26,14 @@ const SUDDEN_DEATH_SPARE = 5;
 /** การ์ดพลัง: แจกทุกกี่ข้อ (แจกตอนเริ่มข้อ 1, 4, 7, ...) และถือได้สูงสุดกี่ใบ */
 const DEAL_EVERY = 3;
 const HAND_LIMIT = 3;
-const CARD_KINDS: CardKind[] = ['shield', 'fifty'];
+const CARD_KINDS: CardKind[] = ['shield', 'fifty', 'slow', 'extra', 'counter'];
+/** การ์ดที่กดใช้ได้ (โล่ทำงานเอง) */
+const ACTIVE_CARDS = ['fifty', 'slow', 'extra', 'counter'] as const;
+type ActiveCard = (typeof ACTIVE_CARDS)[number];
+/** ลดเวลาเพื่อนแล้วต้องเหลืออย่างน้อยเท่านี้ */
+const SLOW_MIN_MS = 5000;
+/** เพิ่มเวลาตัวเอง = สัดส่วนของเวลาเต็ม */
+const EXTRA_RATIO = 0.5;
 const GENERATE_BATCH = 10;
 /** ห้องสาธารณะ: เริ่มเมื่อครบ 8 คน หรือมี 2 คนขึ้นไปและผ่านไปเท่านี้นับจากคนแรกเข้าห้อง */
 const MATCH_FULL = 8;
@@ -101,8 +108,12 @@ interface GameState {
   items?: boolean;
   /** การ์ดที่แจกตอนเริ่มข้อนี้ (ไว้แสดงแจ้งเตือน) */
   dealt?: { round: number; cards: Record<string, CardKind> };
-  /** ใครใช้การ์ดอะไรในข้อนี้ (ไม่บอกผลของ 50/50) */
+  /** ใครใช้การ์ดอะไรในข้อนี้ (ไม่บอกผลของ 50/50 และเป้าของยิงสวน) */
   cardUsed?: Record<string, CardKind>;
+  /** เส้นตายรายคนที่ถูกปรับด้วยการ์ดเวลา (ไม่มี = ใช้ deadline ปกติ) */
+  deadlines?: Record<string, number>;
+  /** ใครโดนลดเวลาโดยใคร (ไว้แจ้งเตือน) */
+  slowed?: Record<string, string>;
 }
 
 interface RoomRow {
@@ -225,11 +236,12 @@ async function questionState(room: RoomRow, base: GameState, round: number, star
   if (base.items && round % DEAL_EVERY === 0) {
     const cards: Record<string, CardKind> = {};
     players = players.map((p) => {
-      const hand = p.cards ?? { shield: 0, fifty: 0 };
-      if (!isAlive(p) || hand.shield + hand.fifty >= HAND_LIMIT) return p;
+      const hand = p.cards ?? {};
+      const held = Object.values(hand).reduce((a, b) => a + (b ?? 0), 0);
+      if (!isAlive(p) || held >= HAND_LIMIT) return p;
       const card = CARD_KINDS[Math.floor(Math.random() * CARD_KINDS.length)];
       cards[p.id] = card;
-      return { ...p, cards: { ...hand, [card]: hand[card] + 1 } };
+      return { ...p, cards: { ...hand, [card]: (hand[card] ?? 0) + 1 } };
     });
     dealt = { round, cards };
   }
@@ -239,6 +251,8 @@ async function questionState(room: RoomRow, base: GameState, round: number, star
     players,
     dealt,
     cardUsed: {},
+    deadlines: {},
+    slowed: {},
     seq: base.seq + 1,
     phase: 'question',
     round,
@@ -292,7 +306,7 @@ async function start(room: RoomRow, uid: string, auto = false) {
     const players = createPlayers(
       members.map((m) => ({ id: m.user_id, name: `${m.nickname}#${m.tag}`, avatar: m.avatar, isBot: false })),
       questionCount,
-    ).map((p) => (items ? { ...p, cards: { shield: 0, fifty: 0 } } : p));
+    ).map((p) => (items ? { ...p, cards: {} } : p));
     const next = await questionState(
       room,
       { ...preparing, questionCount, totalQuestions: questions.length, players, items, dealt: undefined },
@@ -307,6 +321,11 @@ async function start(room: RoomRow, uid: string, auto = false) {
   }
 }
 
+/** เส้นตายของผู้เล่นคนนี้ (รวมผลการ์ดเวลา) */
+const deadlineOf = (s: GameState, uid: string) => s.deadlines?.[uid] ?? s.deadline!;
+/** เส้นตายช้าสุดของคนที่ยังอยู่ = เวลาที่ข้อนี้ปิดจริง */
+const roundEnd = (s: GameState) => Math.max(s.deadline!, ...alivePlayers(s.players).map((p) => deadlineOf(s, p.id)));
+
 async function answer(room: RoomRow, uid: string, round: number, given: unknown) {
   const s = room.state;
   if (!s || s.phase !== 'question' || s.round !== round) throw new GameError('round_closed');
@@ -314,12 +333,12 @@ async function answer(room: RoomRow, uid: string, round: number, given: unknown)
   if (!me || me.hearts <= 0 || me.rank !== null) throw new GameError('not_alive');
   const now = Date.now();
   if (now < s.startsAt! - 300) throw new GameError('not_started');
-  if (now > s.deadline! + ANSWER_GRACE_MS) throw new GameError('too_late');
+  if (now > deadlineOf(s, uid) + ANSWER_GRACE_MS) throw new GameError('too_late');
 
   const q = await getRoundQuestion(room.id, round, s.totalQuestions);
   const correct =
     q.type === 'mcq' ? Number(given) === q.answer_index : q.answer ? checkFillAnswer(q.answer, String(given ?? '')) : false;
-  const timeMs = Math.max(0, Math.min(s.limitMs!, now - s.startsAt!));
+  const timeMs = Math.max(0, Math.min(deadlineOf(s, uid) - s.startsAt!, now - s.startsAt!));
 
   const { error } = await admin
     .from('room_answers')
@@ -346,7 +365,7 @@ async function progress(roomId: string) {
         const answered = (ans ?? []).map((a) => a.user_id as string);
         const alive = alivePlayers(s.players).map((p) => p.id);
         const everyone = alive.every((id) => answered.includes(id));
-        if (everyone || now > s.deadline! + ANSWER_GRACE_MS) {
+        if (everyone || now > roundEnd(s) + ANSWER_GRACE_MS) {
           await resolve(room);
         } else if (answered.length !== s.answered.length) {
           await saveState(room, { ...s, seq: s.seq + 1, answered });
@@ -386,18 +405,30 @@ async function resolve(room: RoomRow) {
 
   const answers: RoundAnswer[] = alivePlayers(before).map((p) => {
     const r = byUser.get(p.id);
-    if (!r) return { playerId: p.id, correct: false, timeMs: s.limitMs!, timedOut: true, points: 0 };
-    if (r.skipped) return { playerId: p.id, correct: false, timeMs: s.limitMs!, timedOut: false, points: 0, skipped: true };
+    const limit = deadlineOf(s, p.id) - s.startsAt!;
+    if (!r) return { playerId: p.id, correct: false, timeMs: limit, timedOut: true, points: 0 };
+    if (r.skipped) return { playerId: p.id, correct: false, timeMs: limit, timedOut: false, points: 0, skipped: true };
     return {
       playerId: p.id,
       correct: r.correct,
       timeMs: r.time_ms,
       timedOut: false,
-      points: calcPoints(r.correct, s.limitMs! - r.time_ms, s.limitMs!),
+      points: calcPoints(r.correct, limit - r.time_ms, limit),
     };
   });
 
-  const { players, outcome } = resolveRound(before, answers, s.round, s.questionCount);
+  // ยิงสวน: อ่านเป้าจากตารางลับ
+  const { data: counters } = await admin
+    .from('room_card_uses')
+    .select('user_id,payload')
+    .eq('room_id', room.id)
+    .eq('round', s.round)
+    .eq('card', 'counter');
+  const redirects = Object.fromEntries(
+    (counters ?? []).map((c) => [c.user_id as string, (c.payload as { target: string }).target]),
+  );
+
+  const { players, outcome } = resolveRound(before, answers, s.round, s.questionCount, redirects);
   const reveal: Reveal = {
     round: s.round,
     ...(q.type === 'mcq' ? { answerIndex: q.answer_index ?? undefined } : { answerText: q.answer ? formatFillAnswer(q.answer) : '' }),
@@ -417,47 +448,73 @@ async function resolve(room: RoomRow) {
   }
 }
 
-/** ใช้การ์ด 50/50: ข้อปรนัย = ตัด 2 ตัวเลือกผิด (บอกเฉพาะเจ้าตัว), ข้อเติม = ข้ามข้อ */
-async function useCard(room: RoomRow, uid: string, round: number, card: string) {
+/**
+ * ใช้การ์ด (ข้อละ 1 ใบต่อคน)
+ * - fifty: ข้อปรนัย = ตัด 2 ตัวเลือกผิด (บอกเฉพาะเจ้าตัว) / ข้อเติม = ข้ามข้อ
+ * - slow: เวลาที่เหลือของเป้าเหลือครึ่งหนึ่ง (อย่างน้อย 5 วิ) เป้าต้องยังไม่ตอบ
+ * - extra: เพิ่มเวลาตัวเอง 50% ของเวลาเต็ม
+ * - counter: ถ้าข้อนี้โดนยิง ดาเมจไปตกที่เป้า (เป้าเป็นความลับจนเฉลย)
+ */
+async function useCard(room: RoomRow, uid: string, round: number, card: string, target?: string): Promise<Record<string, unknown>> {
   const s = room.state;
-  if (card !== 'fifty') throw new GameError('unknown_card');
+  if (!(ACTIVE_CARDS as readonly string[]).includes(card)) throw new GameError('unknown_card');
+  const kind = card as ActiveCard;
   if (!s || !s.items) throw new GameError('no_items');
   if (s.phase !== 'question' || s.round !== round) throw new GameError('round_closed');
   const me = s.players.find((p) => p.id === uid);
   if (!me || !isAlive(me)) throw new GameError('not_alive');
   const now = Date.now();
-  if (now < s.startsAt! - 300 || now > s.deadline!) throw new GameError('round_closed');
+  if (now < s.startsAt! - 300 || now > deadlineOf(s, uid)) throw new GameError('round_closed');
 
   // ใช้ไปแล้วในข้อนี้ -> ส่งผลเดิมกลับไป (เช่น รีเฟรชหน้า)
   const { data: used } = await admin
     .from('room_card_uses')
-    .select('payload')
+    .select('card,payload')
     .eq('room_id', room.id)
     .eq('round', round)
     .eq('user_id', uid)
     .maybeSingle();
-  if (used) return used.payload as Record<string, unknown>;
+  if (used) return { card: used.card, ...(used.payload as Record<string, unknown>) };
 
-  if ((me.cards?.fifty ?? 0) < 1) throw new GameError('no_card');
-  if (s.answered.includes(uid)) throw new GameError('already_answered');
+  if ((me.cards?.[kind] ?? 0) < 1) throw new GameError('no_card');
+  if (s.answered.includes(uid) && kind !== 'counter') throw new GameError('already_answered');
 
-  const q = await getRoundQuestion(room.id, round, s.totalQuestions);
-  let payload: Record<string, unknown>;
-  if (q.type === 'mcq') {
-    const wrong = [0, 1, 2, 3].filter((i) => i !== q.answer_index);
-    for (let i = wrong.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [wrong[i], wrong[j]] = [wrong[j], wrong[i]];
-    }
-    payload = { removed: wrong.slice(0, 2).sort() };
-  } else {
-    payload = { skipped: true };
+  const targetPlayer = target ? s.players.find((p) => p.id === target) : undefined;
+  if (kind === 'slow' || kind === 'counter') {
+    if (!targetPlayer || targetPlayer.id === uid || !isAlive(targetPlayer)) throw new GameError('bad_target');
   }
 
-  const { error } = await admin
-    .from('room_card_uses')
-    .insert({ room_id: room.id, round, user_id: uid, card: 'fifty', payload });
-  if (error?.code === '23505') return useCard(await loadRoom(room.id), uid, round, card);
+  let payload: Record<string, unknown>;
+  let deadlinePatch: Record<string, number> = {};
+  if (kind === 'fifty') {
+    const q = await getRoundQuestion(room.id, round, s.totalQuestions);
+    if (q.type === 'mcq') {
+      const wrong = [0, 1, 2, 3].filter((i) => i !== q.answer_index);
+      for (let i = wrong.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [wrong[i], wrong[j]] = [wrong[j], wrong[i]];
+      }
+      payload = { removed: wrong.slice(0, 2).sort() };
+    } else {
+      payload = { skipped: true };
+    }
+  } else if (kind === 'slow') {
+    if (s.answered.includes(target!)) throw new GameError('target_answered');
+    const left = deadlineOf(s, target!) - now;
+    if (left <= SLOW_MIN_MS) throw new GameError('target_low_time');
+    const newDeadline = Math.round(now + Math.max(left / 2, SLOW_MIN_MS));
+    deadlinePatch = { [target!]: newDeadline };
+    payload = { target, deadline: newDeadline };
+  } else if (kind === 'extra') {
+    const newDeadline = Math.round(deadlineOf(s, uid) + s.limitMs! * EXTRA_RATIO);
+    deadlinePatch = { [uid]: newDeadline };
+    payload = { deadline: newDeadline };
+  } else {
+    payload = { target };
+  }
+
+  const { error } = await admin.from('room_card_uses').insert({ room_id: room.id, round, user_id: uid, card: kind, payload });
+  if (error?.code === '23505') return useCard(await loadRoom(room.id), uid, round, card, target);
   if (error) throw error;
 
   if (payload.skipped) {
@@ -472,22 +529,30 @@ async function useCard(room: RoomRow, uid: string, round: number, card: string) 
     });
   }
 
-  // หักการ์ดจากมือ (ลองใหม่ถ้ามีคนอัปเดต state พร้อมกัน)
+  // หักการ์ด + ปรับเส้นตาย (ลองใหม่ถ้ามีคนอัปเดต state พร้อมกัน)
   for (let attempt = 0; attempt < 5; attempt++) {
     const fresh = await loadRoom(room.id);
     const st = fresh.state!;
+    if (st.round !== round || st.phase !== 'question') break;
     const players = st.players.map((p) =>
-      p.id === uid && p.cards ? { ...p, cards: { ...p.cards, fifty: Math.max(0, p.cards.fifty - 1) } } : p,
+      p.id === uid && p.cards ? { ...p, cards: { ...p.cards, [kind]: Math.max(0, (p.cards[kind] ?? 0) - 1) } } : p,
     );
     try {
-      await saveState(fresh, { ...st, seq: st.seq + 1, players, cardUsed: { ...(st.cardUsed ?? {}), [uid]: 'fifty' } });
+      await saveState(fresh, {
+        ...st,
+        seq: st.seq + 1,
+        players,
+        cardUsed: { ...(st.cardUsed ?? {}), [uid]: kind },
+        deadlines: { ...(st.deadlines ?? {}), ...deadlinePatch },
+        ...(kind === 'slow' ? { slowed: { ...(st.slowed ?? {}), [target!]: uid } } : {}),
+      });
       break;
     } catch (e) {
       if (!(e instanceof Conflict)) throw e;
     }
   }
   if (payload.skipped) await progress(room.id);
-  return payload;
+  return { card: kind, ...payload };
 }
 
 async function awardXp(roomId: string, players: BattlePlayer[], roundsPlayed: number) {
@@ -566,7 +631,11 @@ Deno.serve(async (req) => {
         await rematch(room, uid);
         break;
       case 'use_card':
-        return json({ ok: true, serverNow: Date.now(), ...(await useCard(room, uid, Number(body.round), String(body.card))) });
+        return json({
+          ok: true,
+          serverNow: Date.now(),
+          ...(await useCard(room, uid, Number(body.round), String(body.card), body.target ? String(body.target) : undefined)),
+        });
       case 'ping':
         // ใช้วัดส่วนต่างนาฬิกา (คำตอบมี serverNow)
         break;
