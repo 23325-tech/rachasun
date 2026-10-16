@@ -49,6 +49,8 @@ import { markPlanDone } from './lib/studyPlan';
 import { DEFAULT_LOOK_CODE } from './lib/look';
 import { createRoom, findMatch, joinRoom, leaveRoom, type MatchSettings, type RoomSettings } from './lib/rooms';
 import { t, useLang } from './lib/i18n';
+import { fetchSeason, type SeasonState } from './lib/season';
+import { SeasonScreen } from './screens/SeasonScreen';
 import { VersusIntro } from './components/VersusIntro';
 
 type Screen =
@@ -68,6 +70,7 @@ type Screen =
   | { name: 'analysis' }
   | { name: 'dressing' }
   | { name: 'shop' }
+  | { name: 'season' }
   | { name: 'mock' }
   | { name: 'mockExam'; session: MockSession }
   | { name: 'mockResult'; review: MockReview };
@@ -151,6 +154,7 @@ export default function App() {
   const [dressNew, setDressNew] = useState(() => !isDressingSeen());
   const [shop, setShop] = useState<ShopState | null>(null);
   const loadShop = useCallback(() => fetchShopState().then((s) => (setShop(s), s)), []);
+  const [season, setSeason] = useState<SeasonState | null>(null);
   // รอบที่เริ่มจากแผนการฝึก (ทำจบแล้วติ๊กในแผน)
   const planRunRef = useRef<{ level: Level; index: number } | null>(null);
   // กันผลโหลดที่ถูกยกเลิกไปแล้วมาเปลี่ยนหน้าจอทีหลัง
@@ -199,6 +203,7 @@ export default function App() {
   const profileId = profile?.id;
   useEffect(() => {
     if (profileId && (screen.name === 'start' || screen.name === 'shop' || screen.name === 'dressing')) loadShop().catch(() => {});
+    if (profileId && (screen.name === 'start' || screen.name === 'season')) fetchSeason().then(setSeason).catch(() => {});
   }, [profileId, screen.name, loadShop]);
 
   const changeLevel = (level: Level) => {
@@ -357,6 +362,8 @@ export default function App() {
         <HomeScreen
           coins={shop?.coins}
           onShop={() => setScreen({ name: 'shop' })}
+          season={season ? { no: season.no, endsAt: season.endsAt, rank: season.me.rank } : undefined}
+          onSeason={() => setScreen({ name: 'season' })}
           checkinSlot={
             shop && profile && !shop.checkin.claimedToday ? (
               <CheckinCard state={shop} onClaimed={() => loadShop().catch(() => {})} />
@@ -487,6 +494,12 @@ export default function App() {
             setScreen({ name: 'analysis' });
           }}
         />
+      );
+    case 'season':
+      return season ? (
+        <SeasonScreen season={season} meId={profile?.id ?? null} onBack={goHome} />
+      ) : (
+        <LoadingScreen message={t('กำลังโหลดฤดูกาล...', 'Loading season...')} onCancel={goHome} />
       );
     case 'shop':
       return profile && shop ? (

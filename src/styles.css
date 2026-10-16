@@ -4118,3 +4118,100 @@ html[lang="en"] .checkin__label {
     padding-inline: 8px;
   }
 }
+
+/* 19.1: ฤดูกาล */
+.season-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 14px;
+  border: var(--border);
+  border-radius: 16px;
+  background: linear-gradient(135deg, #2b1a4a, #5a3df0);
+  box-shadow: 0 4px 0 var(--ink);
+  color: #fff;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.season-banner > svg:first-child {
+  color: var(--primary);
+}
+.season-banner__text {
+  flex: 1;
+  display: grid;
+  line-height: 1.2;
+}
+.season-banner__text small {
+  opacity: 0.8;
+  font-size: 0.78rem;
+}
+.season-left {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border: 2.5px solid var(--ink);
+  border-radius: 999px;
+  background: #fff;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+.season-me {
+  display: grid;
+  gap: 10px;
+}
+.season-me__tier {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.season-me__tier div {
+  display: grid;
+}
+.season-me__tier strong {
+  font-size: 1.3rem;
+}
+.season-me__stats {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.9rem;
+}
+.season-me__reward {
+  margin: 0;
+  padding: 8px 10px;
+  border: 2px dashed #cfc4f0;
+  border-radius: 12px;
+  font-size: 0.85rem;
+}
+.season-me__reward.is-ok {
+  border-style: solid;
+  border-color: var(--ink);
+  background: #fff6c7;
+}
+.season-rules summary {
+  font-weight: 700;
+  cursor: pointer;
+}
+.season-rules ul {
+  margin: 8px 0;
+  padding-left: 18px;
+  font-size: 0.85rem;
+}
+.season-rules__tiers {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 10px;
+  font-size: 0.82rem;
+}
+.season-rules__tiers span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.season-empty {
+  color: #fff;
+  text-align: center;
+}

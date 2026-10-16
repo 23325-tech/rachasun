@@ -1,10 +1,11 @@
 import { lazy, Suspense, useMemo, type CSSProperties, type ReactNode } from 'react';
-import { ChartLineUp, Coin, Crown, Exam, FloppyDisk, GlobeHemisphereEast, Heart, type Icon, Key, LinkSimple, Robot, Sparkle, Storefront, Target, TShirt, UsersThree, WifiSlash } from '@phosphor-icons/react';
+import { ChartLineUp, Coin, Crown, Exam, FloppyDisk, GlobeHemisphereEast, Heart, type Icon, Key, LinkSimple, Robot, Sparkle, Storefront, Target, Trophy, TShirt, UsersThree, WifiSlash, CaretRight } from '@phosphor-icons/react';
 import type { Level, Subject } from '../types';
 import { LEVEL_KEYS, LEVELS, subjectInfo } from '../data/subjects';
 import { displayName, type Profile } from '../lib/profile';
 import { levelFromXp } from '../lib/level';
 import { tierOf } from '../lib/rank';
+import { seasonLeft } from '../lib/season';
 import { chibiOf, DEFAULT_LOOK_CODE } from '../lib/look';
 import { IconTile, SUBJECT_ICON, TierIcon } from '../components/icons';
 import { PlayerAvatar } from '../components/PlayerAvatar';
@@ -37,6 +38,9 @@ interface Props {
   onShop: () => void;
   /** การ์ดเช็กอินรายวัน */
   checkinSlot?: ReactNode;
+  /** ฤดูกาลแรงค์ (ยังไม่โหลด = ไม่แสดงป้าย) */
+  season?: { no: number; endsAt: string; rank: number | null };
+  onSeason: () => void;
 }
 
 const modes = (): { key: HomeAction; title: string; desc: string; icon: Icon; grad: string }[] => [
@@ -145,6 +149,19 @@ export function HomeScreen(p: Props) {
           </button>
         )}
       </section>
+
+      {p.season && (
+        <button type="button" className="season-banner" onClick={p.onSeason}>
+          <Trophy weight="fill" size={20} />
+          <span className="season-banner__text">
+            <strong>{t(`ฤดูกาล ${p.season.no}`, `Season ${p.season.no}`)}</strong>
+            <small>
+              {t('เหลือ', 'Ends in')} {seasonLeft(p.season.endsAt)} · {p.season.rank ? t(`อันดับ ${p.season.rank}`, `Rank #${p.season.rank}`) : t('ดูอันดับ', 'Leaderboard')}
+            </small>
+          </span>
+          <CaretRight weight="bold" size={16} />
+        </button>
+      )}
 
       {p.checkinSlot}
 
