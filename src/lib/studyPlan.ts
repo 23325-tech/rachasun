@@ -2,6 +2,7 @@ import type { Level, Subject } from '../types';
 import { ensureSession } from './supabase';
 import { bangkokWeek, buildPlan, type PlanItem, type PlanPrefs } from './planBuilder';
 import type { ChapterStat } from './analysis';
+import { getLang, t } from './i18n';
 
 export interface StudyPlan {
   level: Level;
@@ -35,7 +36,7 @@ const fromRow = (r: Row): StudyPlan => ({
 export async function loadPlan(level: Level): Promise<StudyPlan | null> {
   const sb = await ensureSession();
   const { data, error } = await sb.from('study_plans').select('*').eq('level', level).maybeSingle();
-  if (error) throw new Error(`โหลดแผนไม่สำเร็จ: ${error.message}`);
+  if (error) throw new Error(t(`โหลดแผนไม่สำเร็จ: ${error.message}`, `Couldn't load plan: ${error.message}`));
   return data ? fromRow(data as Row) : null;
 }
 
@@ -53,10 +54,10 @@ export async function rebuildPlan(level: Level, prefs: PlanPrefs, stats: Chapter
   };
   // มีแผนอยู่แล้ว -> แก้ไข / ยังไม่มี -> สร้าง (คอลัมน์คำแนะนำ AI แก้จากหน้าเว็บไม่ได้)
   const upd = await sb.from('study_plans').update(fields).eq('level', level).select('*');
-  if (upd.error) throw new Error(`บันทึกแผนไม่สำเร็จ: ${upd.error.message}`);
+  if (upd.error) throw new Error(t(`บันทึกแผนไม่สำเร็จ: ${upd.error.message}`, `Couldn't save plan: ${upd.error.message}`));
   if (upd.data?.length) return fromRow(upd.data[0] as Row);
   const ins = await sb.from('study_plans').insert({ level, ...fields }).select('*').single();
-  if (ins.error) throw new Error(`บันทึกแผนไม่สำเร็จ: ${ins.error.message}`);
+  if (ins.error) throw new Error(t(`บันทึกแผนไม่สำเร็จ: ${ins.error.message}`, `Couldn't save plan: ${ins.error.message}`));
   return fromRow(ins.data as Row);
 }
 
@@ -72,7 +73,7 @@ export async function markPlanDone(level: Level, index: number): Promise<void> {
 /** ขอคำแนะนำจาก AI (วันละครั้ง ถ้าขอซ้ำจะได้อันเดิมของวันนี้) */
 export async function requestAdvice(level: Level): Promise<{ advice: string; adviceAt: string }> {
   const sb = await ensureSession();
-  const { data, error } = await sb.functions.invoke<{ advice: string; adviceAt: string }>('study-coach', { body: { level } });
-  if (error || !data) throw new Error('ขอคำแนะนำไม่สำเร็จ ลองใหม่อีกครั้งนะ');
+  const { data, error } = await sb.functions.invoke<{ advice: string; adviceAt: string }>('study-coach', { body: { level, lang: getLang() } });
+  if (error || !data) throw new Error(t('ขอคำแนะนำไม่สำเร็จ ลองใหม่อีกครั้งนะ', 'Couldn\'t get advice, please try again'));
   return data;
 }

@@ -32,6 +32,10 @@ const REASON_TH: Record<string, string> = { weak: 'เก็บจุดอ่�
 /** วันที่แบบไทย YYYY-MM-DD */
 const bangkokDate = (t: number) => new Date(t + 7 * 3600_000).toISOString().slice(0, 10);
 
+type Lang = 'th' | 'en';
+/** ภาษาของข้อความ (ดูจากตัวอักษรไทย) */
+const langOf = (text: string): Lang => (/[฀-๿]/.test(text) ? 'th' : 'en');
+
 interface Stat {
   chapter: string;
   subject: string;
@@ -40,7 +44,7 @@ interface Stat {
   avg_time_ms: number;
 }
 
-function buildPrompt(level: string, subjects: string[], stats: Stat[], items: { chapter: string; reason: string }[]) {
+function buildPrompt(level: string, subjects: string[], stats: Stat[], items: { chapter: string; reason: string }[], lang: Lang) {
   const lines = stats
     .filter((s) => chapterName(s.chapter))
     .sort((a, b) => a.recent_correct / a.recent - b.recent_correct / b.recent)
@@ -64,12 +68,12 @@ ${lines.length ? lines.join('\n') : '- ยังไม่มีข้อมู�
 แผนฝึกสัปดาห์นี้มีบทต่อไปนี้:
 ${plan.join('\n') || '- ยังไม่มีแผน'}
 
-เขียนคำแนะนำเป็นภาษาไทย 4-6 ข้อ ข้อละ 1-2 ประโยค แต่ละข้อขึ้นบรรทัดใหม่และขึ้นต้นด้วย "- " ห้ามใช้อีโมจิหรือสัญลักษณ์ตกแต่ง
+เขียนคำแนะนำเป็น${lang === 'en' ? 'ภาษาอังกฤษ (English) ทั้งหมด รวมถึงชื่อบทให้แปลเป็นภาษาอังกฤษ' : 'ภาษาไทย'} 4-6 ข้อ ข้อละ 1-2 ประโยค แต่ละข้อขึ้นบรรทัดใหม่และขึ้นต้นด้วย "- " ห้ามใช้อีโมจิหรือสัญลักษณ์ตกแต่ง
 - ข้อแรกสรุปภาพรวมสั้นๆ แบบให้กำลังใจ
 - ระบุบทที่ควรเน้น 1-2 บท พร้อมเทคนิคการทบทวนที่เจาะจงกับเนื้อหาของบทนั้นจริงๆ (เช่น แนวคิดหลักที่มักพลาด)
 - ถ้าบทไหนตอบถูกแต่ใช้เวลานาน แนะนำวิธีทำให้เร็วขึ้น
 - ห้ามแต่งตัวเลขหรือบทที่ไม่มีในข้อมูล ห้ามใช้หัวข้อหรือตัวหนา markdown
-- ใช้ภาษาที่เป็นกันเอง เหมาะกับวัยของนักเรียน`;
+- ใช้ภาษาที่เป็นกันเอง เหมาะกับวัยของนักเรียน${lang === 'en' ? '\n\nIMPORTANT: Reply in English only.' : ''}`;
 }
 
 async function callGemini(prompt: string, apiKey: string): Promise<string> {
@@ -80,7 +84,7 @@ async function callGemini(prompt: string, apiKey: string): Promise<string> {
       headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
       body: JSON.stringify({
         contents: [{ role: 'user', parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0.7, maxOutputTokens: 1200 },
+        generationConfig: { temperature: 0.7, maxOutputTokens: 4096 },
       }),
     });
     if (!res.ok) {
@@ -89,6 +93,11 @@ async function callGemini(prompt: string, apiKey: string): Promise<string> {
       throw new Error(lastError);
     }
     const body = await res.json();
+    // ตอบไม่จบ (โทเค็นหมด) = ใช้ไม่ได้ ลองโมเดลถัดไป
+    if (body?.candidates?.[0]?.finishReason === 'MAX_TOKENS') {
+      lastError = `${model}: cut off (MAX_TOKENS)`;
+      continue;
+    }
     const parts: { text?: string; thought?: boolean }[] = body?.candidates?.[0]?.content?.parts ?? [];
     const text = parts
       .filter((p) => !p.thought)
@@ -120,11 +129,17 @@ Deno.serve(async (req) => {
 
     const body = await req.json().catch(() => ({}));
     const level = String(body.level ?? '');
+    const lang: Lang = body.lang === 'en' ? 'en' : 'th';
     const { data: plan } = await admin.from('study_plans').select('*').eq('user_id', uid).eq('level', level).maybeSingle();
     if (!plan) return json({ error: 'no_plan' }, 400);
 
-    // วันละครั้ง: วันนี้ขอไปแล้วคืนคำแนะนำเดิม
-    if (plan.advice && plan.advice_at && bangkokDate(Date.parse(plan.advice_at)) === bangkokDate(Date.now())) {
+    // วันละครั้ง: วันนี้ขอไปแล้วคืนคำแนะนำเดิม (ถ้าเปลี่ยนภาษา ให้เขียนใหม่เป็นภาษาที่เลือก)
+    if (
+      plan.advice &&
+      plan.advice_at &&
+      bangkokDate(Date.parse(plan.advice_at)) === bangkokDate(Date.now()) &&
+      langOf(plan.advice) === lang
+    ) {
       return json({ advice: plan.advice, adviceAt: plan.advice_at, cached: true });
     }
 
@@ -134,7 +149,7 @@ Deno.serve(async (req) => {
     if (error) throw error;
     const mine = ((stats ?? []) as Stat[]).filter((s) => s.recent > 0 && plan.subjects.includes(s.subject));
 
-    const advice = (await callGemini(buildPrompt(level, plan.subjects, mine, plan.items ?? []), apiKey)).slice(0, 2000);
+    const advice = (await callGemini(buildPrompt(level, plan.subjects, mine, plan.items ?? [], lang), apiKey)).slice(0, 2000);
     const adviceAt = new Date().toISOString();
     await admin.from('study_plans').update({ advice, advice_at: adviceAt }).eq('user_id', uid).eq('level', level);
     return json({ advice, adviceAt, cached: false });

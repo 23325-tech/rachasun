@@ -1,5 +1,6 @@
 import { ChartBar, Dna, Flask, Lightning, MathOperations, Translate, type Icon } from '@phosphor-icons/react';
 import { ensureSession } from './supabase';
+import { t } from './i18n';
 
 export type MockExam = 'math1' | 'math2' | 'physics' | 'chemistry' | 'biology' | 'english';
 export type MockQType = 'mcq5' | 'fill' | 'multi';
@@ -71,11 +72,11 @@ export interface MockReview {
 }
 
 const ERRORS: Record<string, string> = {
-  paper_not_found: 'ไม่พบชุดข้อสอบนี้',
-  attempt_not_found: 'ไม่พบการสอบนี้',
-  time_up: 'หมดเวลาแล้ว',
-  invalid_answer: 'คำตอบไม่ถูกรูปแบบ',
-  not_submitted: 'ยังไม่ได้ส่งข้อสอบ',
+  get paper_not_found() { return t('ไม่พบชุดข้อสอบนี้', 'Paper not found'); },
+  get attempt_not_found() { return t('ไม่พบการสอบนี้', 'Attempt not found'); },
+  get time_up() { return t('หมดเวลาแล้ว', 'Time\'s up'); },
+  get invalid_answer() { return t('คำตอบไม่ถูกรูปแบบ', 'Invalid answer format'); },
+  get not_submitted() { return t('ยังไม่ได้ส่งข้อสอบ', 'Exam not submitted yet'); },
 };
 
 async function call<T>(body: Record<string, unknown>): Promise<T> {
@@ -89,7 +90,7 @@ async function call<T>(body: Record<string, unknown>): Promise<T> {
     } catch {
       /* ไม่ใช่ JSON */
     }
-    throw new Error(ERRORS[code] ?? 'เชื่อมต่อเซิร์ฟเวอร์ไม่สำเร็จ ลองใหม่อีกครั้ง');
+    throw new Error(ERRORS[code] ?? t('เชื่อมต่อเซิร์ฟเวอร์ไม่สำเร็จ ลองใหม่อีกครั้ง', 'Couldn\'t reach the server, try again'));
   }
   return data as T;
 }
@@ -119,3 +120,14 @@ export function isAnswered(given: MockGiven | undefined): boolean {
   if (Array.isArray(given)) return given.every((g) => g !== null);
   return true;
 }
+
+// ชื่อชุดข้อสอบมาจากเซิร์ฟเวอร์เป็นภาษาไทย: แปลงชื่อที่รู้จักเป็นภาษาอังกฤษ
+const TITLE_EN: Record<string, string> = {
+  'คณิตศาสตร์ประยุกต์ 1': 'Applied Math 1',
+  'คณิตศาสตร์ประยุกต์ 2': 'Applied Math 2',
+  ฟิสิกส์: 'Physics',
+  เคมี: 'Chemistry',
+  ชีววิทยา: 'Biology',
+  ภาษาอังกฤษ: 'English',
+};
+export const paperTitle = (title: string) => t(title, TITLE_EN[title] ?? title);

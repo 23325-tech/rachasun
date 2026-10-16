@@ -4,6 +4,7 @@ import { settingsLabel, DIFFICULTY_OPTIONS } from '../data/subjects';
 import { LevelSubjectFields } from '../components/LevelSubjectFields';
 import { createGroup, joinGroup, myGroups, type MyGroup } from '../lib/groups';
 import { CheckCircle,DoorOpen,HandPointing,Key,Plus,Target,Trophy,Users,WarningCircle } from '@phosphor-icons/react';
+import { t } from '../lib/i18n';
 
 interface Props {
   initialCode?: string;
@@ -52,18 +53,18 @@ export function GroupsScreen({ initialCode = '', onOpen, onBack }: Props) {
   return (
     <div className="screen groups">
       <header className="quiz__top">
-        <button type="button" className="icon-btn" onClick={onBack} aria-label="กลับ">
+        <button type="button" className="icon-btn" onClick={onBack} aria-label={t('กลับ', 'Back')}>
           ←
         </button>
-        <div className="quiz__progress"><Trophy weight="fill" className="ico" /> กลุ่มเพื่อน</div>
+        <div className="quiz__progress"><Trophy weight="fill" className="ico" /> {t('กลุ่มเพื่อน', 'Friend groups')}</div>
       </header>
 
       <section className="settings-card">
-        <h2 className="section-title section-title--dark">กลุ่มของฉัน {groups && `(${groups.length}/5)`}</h2>
+        <h2 className="section-title section-title--dark">{t('กลุ่มของฉัน', 'My groups')} {groups && `(${groups.length}/5)`}</h2>
         {groups === null ? (
-          <p className="muted">กำลังโหลด...</p>
+          <p className="muted">{t('กำลังโหลด...', 'Loading...')}</p>
         ) : groups.length === 0 ? (
-          <p className="muted">ยังไม่มีกลุ่ม สร้างกลุ่มหรือขอรหัสจากเพื่อนได้เลย <HandPointing weight="fill" className="ico" /></p>
+          <p className="muted">{t('ยังไม่มีกลุ่ม สร้างกลุ่มหรือขอรหัสจากเพื่อนได้เลย', 'No groups yet — create one or ask a friend for a code')} <HandPointing weight="fill" className="ico" /></p>
         ) : (
           <ul className="group-list">
             {groups.map((g) => (
@@ -78,11 +79,11 @@ export function GroupsScreen({ initialCode = '', onOpen, onBack }: Props) {
                   <span className={`group-item__today ${g.playedToday ? 'is-done' : ''}`}>
                     {g.playedToday ? (
                       <>
-                        <CheckCircle weight="fill" className="ico" /> {g.todayScore} คะแนน
+                        <CheckCircle weight="fill" className="ico" /> {g.todayScore} {t('คะแนน', 'pts')}
                       </>
                     ) : (
                       <>
-                        <Target weight="fill" className="ico" /> เล่นวันนี้
+                        <Target weight="fill" className="ico" /> {t('เล่นวันนี้', 'Play today')}
                       </>
                     )}
                   </span>
@@ -94,7 +95,7 @@ export function GroupsScreen({ initialCode = '', onOpen, onBack }: Props) {
       </section>
 
       <section className="settings-card">
-        <h2 className="section-title section-title--dark"><Key weight="fill" className="ico" /> เข้ากลุ่มด้วยรหัส</h2>
+        <h2 className="section-title section-title--dark"><Key weight="fill" className="ico" /> {t('เข้ากลุ่มด้วยรหัส', 'Join with a code')}</h2>
         <form
           className="join-form"
           onSubmit={(e) => {
@@ -110,10 +111,10 @@ export function GroupsScreen({ initialCode = '', onOpen, onBack }: Props) {
             autoCapitalize="characters"
             autoComplete="off"
             spellCheck={false}
-            aria-label="รหัสกลุ่ม 6 ตัว"
+            aria-label={t('รหัสกลุ่ม 6 ตัว', '6-character group code')}
           />
           <button type="submit" className="btn btn--primary btn--block" disabled={cleanCode.length !== 6 || busy}>
-            เข้ากลุ่ม <DoorOpen weight="fill" className="ico" />
+            {t('เข้ากลุ่ม', 'Join')} <DoorOpen weight="fill" className="ico" />
           </button>
         </form>
       </section>
@@ -121,7 +122,7 @@ export function GroupsScreen({ initialCode = '', onOpen, onBack }: Props) {
       <section className="settings-card">
         {!creating ? (
           <button type="button" className="btn btn--ghost btn--block" onClick={() => setCreating(true)}>
-            <Plus weight="fill" className="ico" /> สร้างกลุ่มใหม่
+            <Plus weight="fill" className="ico" /> {t('สร้างกลุ่มใหม่', 'Create a new group')}
           </button>
         ) : (
           <form
@@ -131,18 +132,18 @@ export function GroupsScreen({ initialCode = '', onOpen, onBack }: Props) {
               if (!busy) run(async () => onOpen((await createGroup(name, { ...pick, difficulty })).id));
             }}
           >
-            <h2 className="section-title section-title--dark"><Plus weight="fill" className="ico" /> สร้างกลุ่มใหม่</h2>
+            <h2 className="section-title section-title--dark"><Plus weight="fill" className="ico" /> {t('สร้างกลุ่มใหม่', 'Create a new group')}</h2>
             <label className="field">
-              <span className="field__label">ชื่อกลุ่ม</span>
+              <span className="field__label">{t('ชื่อกลุ่ม', 'Group name')}</span>
               <input
                 className="field__input"
                 value={name}
                 maxLength={30}
-                placeholder="เช่น ติวฟิสิกส์ ม.6/2"
+                placeholder={t('เช่น ติวฟิสิกส์ ม.6/2', 'e.g. Physics study group')}
                 onChange={(e) => setName(e.target.value)}
               />
             </label>
-            <LevelSubjectFields value={pick} onChange={setPick} subjectLabel="วิชาของโจทย์ประจำวัน" />
+            <LevelSubjectFields value={pick} onChange={setPick} subjectLabel={t('วิชาของโจทย์ประจำวัน', 'Daily question subject')} />
             <div className="segmented">
               {DIFFICULTIES.map((d) => (
                 <button
@@ -155,9 +156,9 @@ export function GroupsScreen({ initialCode = '', onOpen, onBack }: Props) {
                 </button>
               ))}
             </div>
-            <p className="muted">โจทย์ประจำวัน 10 ข้อ เล่นได้วันละครั้ง วันใหม่เริ่มเที่ยงคืน</p>
+            <p className="muted">{t('โจทย์ประจำวัน 10 ข้อ เล่นได้วันละครั้ง วันใหม่เริ่มเที่ยงคืน', '10 daily questions, once a day · new day starts at midnight')}</p>
             <button type="submit" className="btn btn--primary btn--block" disabled={busy || name.trim().length < 2}>
-              {busy ? 'กำลังสร้าง...' : 'สร้างกลุ่ม'}
+              {busy ? t('กำลังสร้าง...', 'Creating...') : t('สร้างกลุ่ม', 'Create group')}
             </button>
           </form>
         )}

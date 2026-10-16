@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { MathText } from '../components/MathText';
 import { chapterName } from '../data/chapters';
-import { CHOICE5, type MockGiven, type MockReview, type MockReviewQuestion } from '../lib/mock';
+import { CHOICE5, type MockGiven, type MockReview, type MockReviewQuestion, paperTitle } from '../lib/mock';
 import { BookOpenText, ChartBar, CheckCircle, Confetti, Exam, XCircle } from '@phosphor-icons/react';
+import { t } from '../lib/i18n';
 
 interface Props {
   review: MockReview;
@@ -13,16 +14,16 @@ interface Props {
 const pct = (x: number) => `${Math.round(x * 100)}%`;
 
 function givenText(q: MockReviewQuestion, g: MockGiven): string {
-  if (g === null || g === undefined || g === '') return 'ไม่ได้ตอบ';
+  if (g === null || g === undefined || g === '') return t('ไม่ได้ตอบ', 'No answer');
   if (q.type === 'mcq5') return `${CHOICE5[g as number]}`;
   if (q.type === 'fill') return `${g}${q.unit ? ` ${q.unit}` : ''}`;
-  return (g as (boolean | null)[]).map((x, k) => `${k + 1}) ${x === null ? '-' : x ? 'ถูก' : 'ผิด'}`).join('  ');
+  return (g as (boolean | null)[]).map((x, k) => `${k + 1}) ${x === null ? '-' : x ? t('ถูก', 'T') : t('ผิด', 'F')}`).join('  ');
 }
 
 function answerText(q: MockReviewQuestion): string {
   if (q.type === 'mcq5') return CHOICE5[q.answerIndex ?? 0];
   if (q.type === 'fill') return q.answerText ?? '';
-  return (q.truths ?? []).map((t, k) => `${k + 1}) ${t ? 'ถูก' : 'ผิด'}`).join('  ');
+  return (q.truths ?? []).map((v, k) => `${k + 1}) ${v ? t('ถูก', 'T') : t('ผิด', 'F')}`).join('  ');
 }
 
 /** ผลสอบจำลอง: คะแนน เทียบกับคนอื่น รายบท และเฉลยทุกข้อ */
@@ -37,36 +38,36 @@ export function MockResultScreen({ review, onBack, onAnalysis }: Props) {
   return (
     <div className="screen mock-result">
       <header className="quiz__top">
-        <button type="button" className="icon-btn" onClick={onBack} aria-label="กลับ">
+        <button type="button" className="icon-btn" onClick={onBack} aria-label={t('กลับ', 'Back')}>
           ←
         </button>
         <div className="quiz__progress">
-          {review.title} · ชุด {review.no}
-          {review.half ? ' (ครึ่งชุด)' : ''}
+          {paperTitle(review.title)} · {t('ชุด', 'Set')} {review.no}
+          {review.half ? t(' (ครึ่งชุด)', ' (half)') : ''}
         </div>
       </header>
 
       <section className="settings-card mock-score">
         <span className="mock-score__big">{review.score.toFixed(2)}</span>
-        <span className="muted">คะแนนเต็ม 100 · ถูก {review.correct}/{review.total} ข้อ</span>
+        <span className="muted">{t(`คะแนนเต็ม 100 · ถูก ${review.correct}/${review.total} ข้อ`, `Out of 100 · ${review.correct}/${review.total} correct`)}</span>
         <div className="analysis__summary">
           <div>
             <span className="analysis__big">{s.avg.toFixed(1)}</span>
-            <span className="muted">เฉลี่ยทุกคน</span>
+            <span className="muted">{t('เฉลี่ยทุกคน', 'Average')}</span>
           </div>
           <div>
             <span className="analysis__big">{s.top.toFixed(1)}</span>
-            <span className="muted">สูงสุด</span>
+            <span className="muted">{t('สูงสุด', 'Top')}</span>
           </div>
           <div>
             <span className="analysis__big">{s.percentile === null ? '–' : `${s.percentile}%`}</span>
-            <span className="muted">เก่งกว่า ({s.takers} คนทำ)</span>
+            <span className="muted">{t(`เก่งกว่า (${s.takers} คนทำ)`, `Percentile (${s.takers} takers)`)}</span>
           </div>
         </div>
       </section>
 
       <section className="settings-card">
-        <h2 className="section-title section-title--dark"><BookOpenText weight="fill" className="ico" /> ผลรายบท</h2>
+        <h2 className="section-title section-title--dark"><BookOpenText weight="fill" className="ico" /> {t('ผลรายบท', 'By chapter')}</h2>
         <ul className="analysis__chapters">
           {chapters.map((c) => (
             <li key={c.id} className={`analysis__row analysis__row--${c.acc >= 0.8 ? 'strong' : c.acc >= 0.6 ? 'ok' : 'weak'}`}>
@@ -83,30 +84,30 @@ export function MockResultScreen({ review, onBack, onAnalysis }: Props) {
           ))}
         </ul>
         <button type="button" className="btn btn--ghost btn--block" onClick={onAnalysis}>
-          <ChartBar weight="fill" className="ico" /> ดูแผนฝึกจากผลสอบนี้
+          <ChartBar weight="fill" className="ico" /> {t('ดูแผนฝึกจากผลสอบนี้', 'See a study plan from this exam')}
         </button>
       </section>
 
       <section className="settings-card">
         <div className="plan__head">
-          <h2 className="section-title section-title--dark"><Exam weight="fill" className="ico" /> เฉลย</h2>
+          <h2 className="section-title section-title--dark"><Exam weight="fill" className="ico" /> {t('เฉลย', 'Answers')}</h2>
           <div className="segmented">
             <button type="button" className={`segmented__opt ${filter === 'wrong' ? 'is-active' : ''}`} onClick={() => setFilter('wrong')}>
-              ข้อที่ผิด
+              {t('ข้อที่ผิด', 'Wrong only')}
             </button>
             <button type="button" className={`segmented__opt ${filter === 'all' ? 'is-active' : ''}`} onClick={() => setFilter('all')}>
-              ทุกข้อ
+              {t('ทุกข้อ', 'All')}
             </button>
           </div>
         </div>
-        {shown.length === 0 && <p className="muted">ไม่มีข้อที่ผิดเลย เก่งมาก! <Confetti weight="fill" className="ico" /></p>}
+        {shown.length === 0 && <p className="muted">{t('ไม่มีข้อที่ผิดเลย เก่งมาก!', 'No wrong answers — amazing!')} <Confetti weight="fill" className="ico" /></p>}
         <ol className="mock-review">
           {shown.map((q) => (
             <li key={q.i} className={`mock-review__item ${q.correct ? 'is-correct' : 'is-wrong'}`}>
               <details>
                 <summary>
                   <span>{q.correct ? <CheckCircle weight="fill" color="#149066" /> : <XCircle weight="fill" color="#d23a51" />}</span>
-                  <span>ข้อ {review.questions.indexOf(q) + 1}</span>
+                  <span>{t('ข้อ', 'Q')} {review.questions.indexOf(q) + 1}</span>
                   <span className="muted">{chapterName(q.chapter)}</span>
                 </summary>
                 <MathText className="mock-review__prompt" text={q.prompt} />
@@ -129,7 +130,7 @@ export function MockResultScreen({ review, onBack, onAnalysis }: Props) {
                   </ol>
                 )}
                 <p>
-                  คำตอบของคุณ: <strong>{givenText(q, q.given)}</strong> · เฉลย: <strong>{answerText(q)}</strong>
+                  {t('คำตอบของคุณ:', 'Your answer:')} <strong>{givenText(q, q.given)}</strong> · {t('เฉลย:', 'Answer:')} <strong>{answerText(q)}</strong>
                 </p>
                 <MathText className="mock-review__explain" text={q.explanation} />
               </details>

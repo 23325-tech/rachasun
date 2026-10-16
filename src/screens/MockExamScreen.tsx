@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { MathText } from '../components/MathText';
 import { chapterName } from '../data/chapters';
-import { CHOICE5, isAnswered, saveMockAnswer, type MockGiven, type MockSession } from '../lib/mock';
+import { CHOICE5, isAnswered, saveMockAnswer, type MockGiven, type MockSession, paperTitle } from '../lib/mock';
 import { BookOpenText,CaretLeft,CaretRight,Timer,Warning } from '@phosphor-icons/react';
+import { t } from '../lib/i18n';
 
 interface Props {
   session: MockSession;
@@ -96,21 +97,21 @@ export function MockExamScreen({ session, onSubmit, onExit }: Props) {
   return (
     <div className="screen mock-room">
       <header className="quiz__top">
-        <button type="button" className="icon-btn" onClick={onExit} aria-label="ออก">
+        <button type="button" className="icon-btn" onClick={onExit} aria-label={t('ออก', 'Exit')}>
           ✕
         </button>
         <div className="quiz__progress">
-          {session.title} · ชุด {session.no}
-          {session.half ? ' (ครึ่งชุด)' : ''}
+          {paperTitle(session.title)} · {t('ชุด', 'Set')} {session.no}
+          {session.half ? t(' (ครึ่งชุด)', ' (half)') : ''}
         </div>
-        <div className={`mock-timer ${remaining < 5 * 60_000 ? 'is-low' : ''}`} aria-label="เวลาที่เหลือ">
+        <div className={`mock-timer ${remaining < 5 * 60_000 ? 'is-low' : ''}`} aria-label={t('เวลาที่เหลือ', 'Time left')}>
           <Timer weight="fill" className="ico" /> {fmt(remaining)}
         </div>
       </header>
 
       <button type="button" className="mock-progress" onClick={() => setShowGrid(!showGrid)}>
-        ตอบแล้ว {answeredCount}/{qs.length} ข้อ {saveError && <span className="mock-progress__err">· <Warning weight="fill" className="ico" /> บันทึกไม่สำเร็จ ลองใหม่</span>}
-        <span>{showGrid ? '▲' : '▼ ดูทุกข้อ'}</span>
+        {t(`ตอบแล้ว ${answeredCount}/${qs.length} ข้อ`, `Answered ${answeredCount}/${qs.length}`)} {saveError && <span className="mock-progress__err">· <Warning weight="fill" className="ico" /> {t('บันทึกไม่สำเร็จ ลองใหม่', 'Save failed, retrying')}</span>}
+        <span>{showGrid ? '▲' : t('▼ ดูทุกข้อ', '▼ All questions')}</span>
       </button>
       {showGrid && (
         <div className="mock-grid">
@@ -132,10 +133,10 @@ export function MockExamScreen({ session, onSubmit, onExit }: Props) {
       <article key={q.i} className="card question-card">
         <div className="question-card__meta">
           <span className="tag tag--ghost">
-            ข้อ {pos + 1}/{qs.length}
+            {t('ข้อ', 'Q')} {pos + 1}/{qs.length}
           </span>
           <span className="tag tag--ghost">
-            {q.type === 'mcq5' ? 'ปรนัย 5 ตัวเลือก' : q.type === 'fill' ? 'ระบายคำตอบเป็นตัวเลข' : 'เลือกตอบเชิงซ้อน'}
+            {q.type === 'mcq5' ? t('ปรนัย 5 ตัวเลือก', 'Multiple choice (5)') : q.type === 'fill' ? t('ระบายคำตอบเป็นตัวเลข', 'Numeric answer') : t('เลือกตอบเชิงซ้อน', 'True/false set')}
           </span>
           {chapterName(q.chapter) && <span className="tag tag--ghost"><BookOpenText weight="fill" className="ico" /> {chapterName(q.chapter)}</span>}
         </div>
@@ -165,7 +166,7 @@ export function MockExamScreen({ session, onSubmit, onExit }: Props) {
             <input
               className="fill__input"
               inputMode="decimal"
-              placeholder="พิมพ์คำตอบเป็นตัวเลข"
+              placeholder={t('พิมพ์คำตอบเป็นตัวเลข', 'Type a numeric answer')}
               value={fillDraft}
               maxLength={20}
               onChange={(e) => setFillDraft(e.target.value)}
@@ -187,10 +188,10 @@ export function MockExamScreen({ session, onSubmit, onExit }: Props) {
                 <MathText className="mock-multi__text" text={`${k + 1}) ${st}`} />
                 <div className="segmented">
                   <button type="button" className={`segmented__opt ${arr[k] === true ? 'is-active' : ''}`} onClick={() => pick(true)}>
-                    ✓ ถูก
+                    {t('✓ ถูก', '✓ True')}
                   </button>
                   <button type="button" className={`segmented__opt ${arr[k] === false ? 'is-active' : ''}`} onClick={() => pick(false)}>
-                    ✗ ผิด
+                    {t('✗ ผิด', '✗ False')}
                   </button>
                 </div>
               </li>
@@ -201,14 +202,14 @@ export function MockExamScreen({ session, onSubmit, onExit }: Props) {
 
       <div className="mock-nav">
         <button type="button" className="btn btn--ghost" disabled={pos === 0} onClick={() => go(pos - 1)}>
-          <CaretLeft weight="bold" className="ico" /> ก่อนหน้า
+          <CaretLeft weight="bold" className="ico" /> {t('ก่อนหน้า', 'Previous')}
         </button>
         <button type="button" className={`btn btn--ghost ${flags.has(q.i) ? 'is-flagged' : ''}`} onClick={toggleFlag}>
-          {flags.has(q.i) ? '⚑ ติดธงแล้ว' : '⚐ ไว้กลับมาดู'}
+          {flags.has(q.i) ? t('⚑ ติดธงแล้ว', '⚑ Flagged') : t('⚐ ไว้กลับมาดู', '⚐ Flag for later')}
         </button>
         {pos < qs.length - 1 ? (
           <button type="button" className="btn btn--primary" onClick={() => go(pos + 1)}>
-            ถัดไป <CaretRight weight="bold" className="ico" />
+            {t('ถัดไป', 'Next')} <CaretRight weight="bold" className="ico" />
           </button>
         ) : (
           <button
@@ -219,7 +220,7 @@ export function MockExamScreen({ session, onSubmit, onExit }: Props) {
               setConfirming(true);
             }}
           >
-            ส่งข้อสอบ
+            {t('ส่งข้อสอบ', 'Submit exam')}
           </button>
         )}
       </div>
@@ -233,24 +234,24 @@ export function MockExamScreen({ session, onSubmit, onExit }: Props) {
           setConfirming(true);
         }}
       >
-        {submitting ? 'กำลังตรวจ...' : 'ส่งข้อสอบ'}
+        {submitting ? t('กำลังตรวจ...', 'Grading...') : t('ส่งข้อสอบ', 'Submit exam')}
       </button>
 
       {confirming && !submitting && (
         <div className="mock-confirm" role="dialog" aria-modal="true">
           <div className="settings-card">
-            <h2 className="section-title section-title--dark">ส่งข้อสอบเลยไหม?</h2>
+            <h2 className="section-title section-title--dark">{t('ส่งข้อสอบเลยไหม?', 'Submit the exam now?')}</h2>
             <p>
-              ตอบแล้ว {answeredCount}/{qs.length} ข้อ
-              {answeredCount < qs.length && <strong> · ยังไม่ได้ตอบ {qs.length - answeredCount} ข้อ</strong>}
+              {t(`ตอบแล้ว ${answeredCount}/${qs.length} ข้อ`, `Answered ${answeredCount}/${qs.length}`)}
+              {answeredCount < qs.length && <strong> · {t(`ยังไม่ได้ตอบ ${qs.length - answeredCount} ข้อ`, `${qs.length - answeredCount} unanswered`)}</strong>}
             </p>
-            <p className="muted">ส่งแล้วแก้ไม่ได้ และทำชุดนี้ซ้ำไม่ได้</p>
+            <p className="muted">{t('ส่งแล้วแก้ไม่ได้ และทำชุดนี้ซ้ำไม่ได้', 'Once submitted you can\'t change answers or retake this set')}</p>
             <div className="plan__actions">
               <button type="button" className="btn btn--ghost" onClick={() => setConfirming(false)}>
-                กลับไปตรวจ
+                {t('กลับไปตรวจ', 'Go back and check')}
               </button>
               <button type="button" className="btn btn--primary" onClick={submit}>
-                ส่งเลย
+                {t('ส่งเลย', 'Submit')}
               </button>
             </div>
           </div>

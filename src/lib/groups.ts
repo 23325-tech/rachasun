@@ -1,5 +1,6 @@
 import type { Difficulty, Level, Subject, Track } from '../types';
 import { ensureSession, PUBLIC_URL } from './supabase';
+import { t } from './i18n';
 
 export interface GroupSettings {
   subject: Subject | 'all';
@@ -29,13 +30,13 @@ export interface GroupBoard {
 }
 
 const ERRORS: Record<string, string> = {
-  group_not_found: 'ไม่พบกลุ่มนี้ ตรวจรหัสอีกครั้งนะ',
-  group_full: 'กลุ่มนี้เต็มแล้ว (สูงสุด 50 คน)',
-  too_many_groups: 'คุณอยู่ครบ 5 กลุ่มแล้ว ออกจากกลุ่มเดิมก่อนนะ',
-  bad_group_name: 'ชื่อกลุ่มใช้ไม่ได้ (2-30 ตัวอักษร และต้องเหมาะสม)',
-  not_member: 'คุณไม่ได้อยู่ในกลุ่มนี้',
-  profile_required: 'ตั้งชื่อเล่นก่อนนะ',
-  invalid_settings: 'ค่าที่เลือกไม่ถูกต้อง',
+  get group_not_found() { return t('ไม่พบกลุ่มนี้ ตรวจรหัสอีกครั้งนะ', 'Group not found, check the code'); },
+  get group_full() { return t('กลุ่มนี้เต็มแล้ว (สูงสุด 50 คน)', 'Group is full (max 50)'); },
+  get too_many_groups() { return t('คุณอยู่ครบ 5 กลุ่มแล้ว ออกจากกลุ่มเดิมก่อนนะ', 'You\'re in 5 groups already — leave one first'); },
+  get bad_group_name() { return t('ชื่อกลุ่มใช้ไม่ได้ (2-30 ตัวอักษร และต้องเหมาะสม)', 'Invalid group name (2-30 characters, appropriate)'); },
+  get not_member() { return t('คุณไม่ได้อยู่ในกลุ่มนี้', 'You\'re not in this group'); },
+  get profile_required() { return t('ตั้งชื่อเล่นก่อนนะ', 'Set a nickname first'); },
+  get invalid_settings() { return t('ค่าที่เลือกไม่ถูกต้อง', 'Invalid settings'); },
 };
 
 async function rpc<T>(fn: string, args: Record<string, unknown> = {}): Promise<T> {

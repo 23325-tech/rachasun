@@ -3,6 +3,7 @@ import { ArrowsClockwise, Plant, Target, TrendUp, type Icon } from '@phosphor-ic
 import type { Difficulty, Level, Subject } from '../types';
 import { chaptersOf } from '../data/chapters';
 import { accuracyOf, statusOf, type ChapterStat } from './analysis';
+import { t } from './i18n';
 
 export type PlanReason = 'weak' | 'new' | 'ok' | 'review';
 
@@ -119,13 +120,17 @@ export function bangkokWeek(now = Date.now()): { weekStart: string; today: numbe
   return { weekStart: monday.toISOString().slice(0, 10), today };
 }
 
-export const DAY_NAMES = ['จันทร์', 'อังคาร', 'พุธ', 'พฤหัส', 'ศุกร์', 'เสาร์', 'อาทิตย์'];
+const DAY_TH = ['จันทร์', 'อังคาร', 'พุธ', 'พฤหัส', 'ศุกร์', 'เสาร์', 'อาทิตย์'];
+const DAY_EN = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+/** ชื่อวัน (จันทร์ = 0) ตามภาษาที่เลือก */
+export const DAY_NAMES: string[] = DAY_TH.map(() => '');
+DAY_TH.forEach((th, i) => Object.defineProperty(DAY_NAMES, i, { get: () => t(th, DAY_EN[i]), enumerable: true }));
 
 export const REASON_TEXT: Record<PlanReason, string> = {
-  weak: 'เก็บจุดอ่อน',
-  new: 'บทใหม่',
-  ok: 'ดันให้ถนัด',
-  review: 'ทวนกันลืม',
+  get weak() { return t('เก็บจุดอ่อน', 'Fix weak spot'); },
+  get new() { return t('บทใหม่', 'New chapter'); },
+  get ok() { return t('ดันให้ถนัด', 'Level up'); },
+  get review() { return t('ทวนกันลืม', 'Review'); },
 };
 
 export const REASON_ICON: Record<PlanReason, Icon> = { weak: Target, new: Plant, ok: TrendUp, review: ArrowsClockwise };

@@ -17,6 +17,7 @@ import {
 import { PlayerAvatar } from '../components/PlayerAvatar';
 import { encodeLook, lookOf, toChibi, WARDROBE, type Look } from '../lib/look';
 import { isFree, type Rarity, type Slot, type WardrobeItem } from '../../supabase/functions/_shared/wardrobe';
+import { t } from '../lib/i18n';
 
 const Avatar3D = lazy(() => import('../components/Avatar3D').then((m) => ({ default: m.Avatar3D })));
 
@@ -30,16 +31,21 @@ interface Props {
 }
 
 const TABS: { slot: Slot; label: string; icon: Icon; thumb: 'swatch' | 'bust' | 'full' }[] = [
-  { slot: 'outfit', label: 'ชุด', icon: TShirt, thumb: 'full' },
-  { slot: 'hat', label: 'หมวก', icon: BaseballCap, thumb: 'bust' },
-  { slot: 'item', label: 'ของในมือ', icon: HandGrabbing, thumb: 'full' },
-  { slot: 'style', label: 'ทรงผม', icon: Scissors, thumb: 'bust' },
-  { slot: 'hair', label: 'สีผม', icon: PaintBrush, thumb: 'swatch' },
-  { slot: 'skin', label: 'สีผิว', icon: Smiley, thumb: 'swatch' },
-  { slot: 'eyes', label: 'สีตา', icon: Eye, thumb: 'swatch' },
+  { slot: 'outfit', get label() { return t('ชุด', 'Outfit'); }, icon: TShirt, thumb: 'full' },
+  { slot: 'hat', get label() { return t('หมวก', 'Hat'); }, icon: BaseballCap, thumb: 'bust' },
+  { slot: 'item', get label() { return t('ของในมือ', 'Held item'); }, icon: HandGrabbing, thumb: 'full' },
+  { slot: 'style', get label() { return t('ทรงผม', 'Hairstyle'); }, icon: Scissors, thumb: 'bust' },
+  { slot: 'hair', get label() { return t('สีผม', 'Hair color'); }, icon: PaintBrush, thumb: 'swatch' },
+  { slot: 'skin', get label() { return t('สีผิว', 'Skin'); }, icon: Smiley, thumb: 'swatch' },
+  { slot: 'eyes', get label() { return t('สีตา', 'Eyes'); }, icon: Eye, thumb: 'swatch' },
 ];
 
-const RARITY_TEXT: Record<Rarity, string> = { common: 'ธรรมดา', rare: 'หายาก', epic: 'เอพิก', legend: 'ตำนาน' };
+const RARITY_TEXT: Record<Rarity, string> = {
+  get common() { return t('ธรรมดา', 'Common'); },
+  get rare() { return t('หายาก', 'Rare'); },
+  get epic() { return t('เอพิก', 'Epic'); },
+  get legend() { return t('ตำนาน', 'Legend'); },
+};
 
 const itemOf = (slot: Slot, value: string) => WARDROBE.find((i) => i.slot === slot && i.value === value);
 
@@ -92,10 +98,10 @@ export function DressingRoomScreen({ code, owned, onShop, onBack, onSave }: Prop
   return (
     <div className="screen dressing">
       <header className="quiz__top">
-        <button type="button" className="icon-btn" onClick={onBack} aria-label="กลับ">
+        <button type="button" className="icon-btn" onClick={onBack} aria-label={t('กลับ', 'Back')}>
           ←
         </button>
-        <div className="quiz__progress">ห้องแต่งตัว</div>
+        <div className="quiz__progress">{t('ห้องแต่งตัว', 'Dressing room')}</div>
       </header>
 
       <section className="dressing__stage">
@@ -105,10 +111,10 @@ export function DressingRoomScreen({ code, owned, onShop, onBack, onSave }: Prop
         <div className="dressing__podium" />
         {changed && (
           <button type="button" className="dressing__reset" onClick={() => setDraft(saved)}>
-            <ArrowCounterClockwise weight="bold" size={16} /> ชุดเดิม
+            <ArrowCounterClockwise weight="bold" size={16} /> {t('ชุดเดิม', 'Reset')}
           </button>
         )}
-        <p className="dressing__hint">ลากเพื่อหมุนดูตัวละคร</p>
+        <p className="dressing__hint">{t('ลากเพื่อหมุนดูตัวละคร', 'Drag to rotate')}</p>
       </section>
 
       <div className="dressing__tabs" role="tablist">
@@ -151,9 +157,9 @@ export function DressingRoomScreen({ code, owned, onShop, onBack, onSave }: Prop
               <span className="ward-item__name">{it.name}</span>
               <span className={`ward-item__price ${free ? 'is-free' : ''}`}>
                 {wearing ? (
-                  'สวมอยู่'
+                  t('สวมอยู่', 'Wearing')
                 ) : free ? (
-                  'ใช้ได้'
+                  t('ใช้ได้', 'Owned')
                 ) : (
                   <>
                     <LockSimple weight="bold" size={12} />
@@ -171,18 +177,18 @@ export function DressingRoomScreen({ code, owned, onShop, onBack, onSave }: Prop
         {locked.length > 0 ? (
           <>
             <p className="cta-bar__summary dressing__locked">
-              <Storefront weight="fill" size={18} /> ลองสวมของที่ยังไม่มี {locked.length} ชิ้น
+              <Storefront weight="fill" size={18} /> {t(`ลองสวมของที่ยังไม่มี ${locked.length} ชิ้น`, `Trying on ${locked.length} item(s) you don't own`)}
             </p>
             <button type="button" className="btn btn--primary btn--block" onClick={onShop}>
-              <Storefront weight="fill" className="ico" /> ไปซื้อที่ร้านค้า
+              <Storefront weight="fill" className="ico" /> {t('ไปซื้อที่ร้านค้า', 'Buy in the shop')}
             </button>
             <button type="button" className="btn btn--ghost btn--block" onClick={removeLocked}>
-              ถอดของที่ยังไม่มีออก
+              {t('ถอดของที่ยังไม่มีออก', 'Remove items you don\'t own')}
             </button>
           </>
         ) : (
           <button type="button" className="btn btn--primary btn--block btn--big" disabled={!changed || busy} onClick={save}>
-            {busy ? 'กำลังบันทึก...' : changed ? 'บันทึกการแต่งตัว' : 'แต่งแบบนี้อยู่แล้ว'}
+            {busy ? t('กำลังบันทึก...', 'Saving...') : changed ? t('บันทึกการแต่งตัว', 'Save look') : t('แต่งแบบนี้อยู่แล้ว', 'Already wearing this')}
           </button>
         )}
         {error && <p className="form-error">{error}</p>}

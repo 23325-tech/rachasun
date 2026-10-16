@@ -4,6 +4,7 @@ import { PlayerAvatar } from '../components/PlayerAvatar';
 import { encodeLook, lookOf, toChibi, WARDROBE, type Look } from '../lib/look';
 import { buyItem, timeLeft, type ShopState } from '../lib/shop';
 import { isFree, type Rarity, type Slot, type WardrobeItem } from '../../supabase/functions/_shared/wardrobe';
+import { t } from '../lib/i18n';
 
 const Avatar3D = lazy(() => import('../components/Avatar3D').then((m) => ({ default: m.Avatar3D })));
 
@@ -17,7 +18,12 @@ interface Props {
   onWear: (code: string) => Promise<void>;
 }
 
-const RARITY_TEXT: Record<Rarity, string> = { common: 'ธรรมดา', rare: 'หายาก', epic: 'เอพิก', legend: 'ตำนาน' };
+const RARITY_TEXT: Record<Rarity, string> = {
+  get common() { return t('ธรรมดา', 'Common'); },
+  get rare() { return t('หายาก', 'Rare'); },
+  get epic() { return t('เอพิก', 'Epic'); },
+  get legend() { return t('ตำนาน', 'Legend'); },
+};
 const SWATCH_SLOTS: Slot[] = ['skin', 'hair', 'eyes'];
 const FULL_SLOTS: Slot[] = ['outfit', 'item'];
 
@@ -92,7 +98,7 @@ export function ShopScreen({ code, state, onBack, onBought, onWear }: Props) {
         <span className="ward-item__name">{it.name}</span>
         <span className={`ward-item__price ${has ? 'is-free' : ''}`}>
           {has ? (
-            'มีแล้ว'
+            t('มีแล้ว', 'Owned')
           ) : it.gem ? (
             <>
               <Diamond weight="fill" size={13} /> {it.gem}
@@ -113,11 +119,11 @@ export function ShopScreen({ code, state, onBack, onBought, onWear }: Props) {
   return (
     <div className="screen shop">
       <header className="quiz__top">
-        <button type="button" className="icon-btn" onClick={onBack} aria-label="กลับ">
+        <button type="button" className="icon-btn" onClick={onBack} aria-label={t('กลับ', 'Back')}>
           ←
         </button>
         <div className="quiz__progress">
-          <Storefront weight="fill" className="ico" /> ร้านค้า
+          <Storefront weight="fill" className="ico" /> {t('ร้านค้า', 'Shop')}
         </div>
         <span className="coin-pill">
           <Coin weight="fill" size={18} /> {state.coins.toLocaleString()}
@@ -129,28 +135,28 @@ export function ShopScreen({ code, state, onBack, onBought, onWear }: Props) {
           <Avatar3D look={chibi} interactive cheer={cheer} className="dressing__canvas" />
         </Suspense>
         <div className="dressing__podium" />
-        {picked && !has && <span className="shop__trying">กำลังลองสวม: {picked.name}</span>}
+        {picked && !has && <span className="shop__trying">{t('กำลังลองสวม:', 'Trying on:')} {picked.name}</span>}
       </section>
 
       <section>
         <div className="shop__head">
           <h2 className="section-title">
-            <Sparkle weight="fill" className="ico" /> ของหายากรอบนี้
+            <Sparkle weight="fill" className="ico" /> {t('ของหายากรอบนี้', 'Rare items this round')}
           </h2>
           <span className="shop__timer">
-            <Clock weight="bold" className="ico" /> เปลี่ยนใน {timeLeft(state.rotationEndsAt)}
+            <Clock weight="bold" className="ico" /> {t('เปลี่ยนใน', 'Changes in')} {timeLeft(state.rotationEndsAt)}
           </span>
         </div>
         <div className="dressing__items">{rotation.map(card)}</div>
       </section>
 
       <section>
-        <h2 className="section-title">ขายประจำ</h2>
+        <h2 className="section-title">{t('ขายประจำ', 'Always in stock')}</h2>
         <div className="dressing__items">{regular.map(card)}</div>
       </section>
 
       <p className="shop__earn">
-        <Coin weight="fill" className="ico" /> ได้เหรียญเท่ากับ XP ที่เล่นได้ (วันนี้ {state.playCoinsToday}/{state.playCap}) + เช็กอินรายวัน
+        <Coin weight="fill" className="ico" /> {t(`ได้เหรียญเท่ากับ XP ที่เล่นได้ (วันนี้ ${state.playCoinsToday}/${state.playCap}) + เช็กอินรายวัน`, `Earn coins equal to your XP (today ${state.playCoinsToday}/${state.playCap}) + daily check-in`)}
       </p>
 
       {picked && (
@@ -158,29 +164,29 @@ export function ShopScreen({ code, state, onBack, onBought, onWear }: Props) {
           {justBought === picked.id ? (
             <>
               <p className="cta-bar__summary dressing__locked">
-                <CheckCircle weight="fill" size={18} /> ได้ {picked.name} แล้ว!
+                <CheckCircle weight="fill" size={18} /> {t(`ได้ ${picked.name} แล้ว!`, `Got ${picked.name}!`)}
               </p>
               <button type="button" className="btn btn--primary btn--block btn--big" disabled={busy} onClick={wear}>
-                <TShirt weight="fill" className="ico" /> ใส่เลย
+                <TShirt weight="fill" className="ico" /> {t('ใส่เลย', 'Wear it')}
               </button>
             </>
           ) : has ? (
             <button type="button" className="btn btn--primary btn--block btn--big" disabled={busy} onClick={wear}>
-              <TShirt weight="fill" className="ico" /> ใส่ {picked.name}
+              <TShirt weight="fill" className="ico" /> {t(`ใส่ ${picked.name}`, `Wear ${picked.name}`)}
             </button>
           ) : picked.gem ? (
             <button type="button" className="btn btn--ghost btn--block" disabled>
-              <Diamond weight="fill" className="ico" /> {picked.gem} เพชร · เติมเพชรเร็วๆ นี้
+              <Diamond weight="fill" className="ico" /> {t(`${picked.gem} เพชร · เติมเพชรเร็วๆ นี้`, `${picked.gem} gems · gem top-up coming soon`)}
             </button>
           ) : (
             <button type="button" className="btn btn--primary btn--block btn--big" disabled={busy || short > 0} onClick={buy}>
               {short > 0 ? (
-                <>เหรียญไม่พอ (ขาดอีก {short})</>
+                <>{t(`เหรียญไม่พอ (ขาดอีก ${short})`, `Not enough coins (need ${short} more)`)}</>
               ) : busy ? (
-                'กำลังซื้อ...'
+                t('กำลังซื้อ...', 'Buying...')
               ) : (
                 <>
-                  ซื้อ <Coin weight="fill" className="ico" /> {picked.coin}
+                  {t('ซื้อ', 'Buy')} <Coin weight="fill" className="ico" /> {picked.coin}
                 </>
               )}
             </button>

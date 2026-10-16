@@ -8,9 +8,28 @@ import {
   WARDROBE,
   type Look,
 } from '../../supabase/functions/_shared/wardrobe';
+import { t } from './i18n';
 import type { ChibiLook, HairStyle, HandItem, Hat, Outfit } from '../three/chibi';
 
 export { DEFAULT_LOOK_CODE, encodeLook, parseLook, randomLook, WARDROBE, type Look };
+
+// ชื่อไอเทมภาษาอังกฤษ (ไฟล์กลางใช้ร่วมกับเซิร์ฟเวอร์ จึงแปลงชื่อฝั่งหน้าเว็บที่นี่)
+const ITEM_EN: Record<string, string> = {
+  skin_fair: 'Fair', skin_rosy: 'Rosy', skin_honey: 'Honey', skin_tan: 'Tan', skin_deep: 'Deep',
+  hair_dark: 'Dark brown hair', hair_black: 'Black hair', hair_brown: 'Brown hair', hair_blonde: 'Blonde hair',
+  hair_pink: 'Pastel pink hair', hair_lavender: 'Lavender hair', hair_galaxy: 'Galaxy blue hair',
+  style_short: 'Short', style_bob: 'Bob', style_spiky: 'Spiky', style_bun: 'Bun',
+  eyes_dark: 'Dark eyes', eyes_blue: 'Blue eyes', eyes_green: 'Green eyes',
+  outfit_school: 'School uniform', outfit_school_black: 'School uniform (black)', outfit_hoodie: 'Purple hoodie',
+  outfit_sport_red: 'Red sportswear', outfit_sport_blue: 'Blue sportswear', outfit_labcoat: 'Lab coat',
+  hat_none: 'No hat', hat_cap: 'Red cap', hat_beanie: 'Beanie', hat_headphones: 'Gamer headphones', hat_grad: 'Graduation cap',
+  item_none: 'Empty hands', item_pencil: 'Golden pencil', item_book: 'Favorite textbook', item_flask: 'Glowing flask',
+};
+for (const it of WARDROBE) {
+  const th = it.name;
+  const en = ITEM_EN[it.id] ?? th;
+  Object.defineProperty(it, 'name', { get: () => t(th, en), enumerable: true });
+}
 
 const STYLE: Record<string, HairStyle> = { s: 'short', b: 'bob', p: 'spiky', u: 'bun' };
 const OUTFIT: Record<string, Outfit> = { u: 'uniform', l: 'labcoat', h: 'hoodie', s: 'sport' };

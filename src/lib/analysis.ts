@@ -1,6 +1,7 @@
 import { Hourglass, Minus, Target, ThumbsUp, Trophy, type Icon } from '@phosphor-icons/react';
 import type { Level, Question } from '../types';
 import { ensureSession, supabase } from './supabase';
+import { t } from './i18n';
 
 export interface AnswerItem {
   questionId: string;
@@ -42,7 +43,7 @@ export interface ChapterStat {
 export async function fetchChapterStats(level: Level): Promise<ChapterStat[]> {
   const sb = await ensureSession();
   const { data, error } = await sb.rpc('my_chapter_stats', { p_level: level });
-  if (error) throw new Error(`โหลดสถิติไม่สำเร็จ: ${error.message}`);
+  if (error) throw new Error(t(`โหลดสถิติไม่สำเร็จ: ${error.message}`, `Couldn't load stats: ${error.message}`));
   return (data as Record<string, unknown>[]).map((r) => ({
     chapter: r.chapter as string,
     subject: r.subject as string,
@@ -70,11 +71,11 @@ export function statusOf(stat: ChapterStat | undefined): ChapterStatus {
 export const accuracyOf = (stat: ChapterStat) => (stat.recent ? stat.recentCorrect / stat.recent : 0);
 
 export const STATUS_TEXT: Record<ChapterStatus, string> = {
-  strong: 'ถนัด',
-  ok: 'พอใช้',
-  weak: 'ควรฝึก',
-  few: 'ข้อมูลยังไม่พอ',
-  none: 'ยังไม่เคยทำ',
+  get strong() { return t('ถนัด', 'Strong'); },
+  get ok() { return t('พอใช้', 'OK'); },
+  get weak() { return t('ควรฝึก', 'Needs work'); },
+  get few() { return t('ข้อมูลยังไม่พอ', 'Not enough data'); },
+  get none() { return t('ยังไม่เคยทำ', 'Not started'); },
 };
 
 export const STATUS_ICON: Record<ChapterStatus, Icon> = { strong: Trophy, ok: ThumbsUp, weak: Target, few: Hourglass, none: Minus };

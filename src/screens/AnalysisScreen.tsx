@@ -14,6 +14,7 @@ import {
   type ChapterStat,
 } from '../lib/analysis';
 import { CalendarBlank, ChartBar, Plant, Target, WarningCircle } from '@phosphor-icons/react';
+import { t } from '../lib/i18n';
 
 export interface PracticeRequest {
   level: Level;
@@ -76,10 +77,10 @@ export function AnalysisScreen({ initialLevel, onBack, onPractice, onPracticePla
   return (
     <div className="screen analysis">
       <header className="quiz__top">
-        <button type="button" className="icon-btn" onClick={onBack} aria-label="กลับ">
+        <button type="button" className="icon-btn" onClick={onBack} aria-label={t('กลับ', 'Back')}>
           ←
         </button>
-        <div className="quiz__progress"><ChartBar weight="fill" className="ico" /> วิเคราะห์ของฉัน</div>
+        <div className="quiz__progress"><ChartBar weight="fill" className="ico" /> {t('วิเคราะห์ของฉัน', 'My analysis')}</div>
       </header>
 
       <section className="settings-card">
@@ -92,7 +93,7 @@ export function AnalysisScreen({ initialLevel, onBack, onPractice, onPracticePla
             className={`segmented__opt ${tab === 'plan' ? 'is-active' : ''}`}
             onClick={() => setTab('plan')}
           >
-            <CalendarBlank weight="fill" className="ico" /> แผนฝึก
+            <CalendarBlank weight="fill" className="ico" /> {t('แผนฝึก', 'Study plan')}
           </button>
           <button
             type="button"
@@ -101,7 +102,7 @@ export function AnalysisScreen({ initialLevel, onBack, onPractice, onPracticePla
             className={`segmented__opt ${tab === 'chapters' ? 'is-active' : ''}`}
             onClick={() => setTab('chapters')}
           >
-            <ChartBar weight="fill" className="ico" /> รายบท
+            <ChartBar weight="fill" className="ico" /> {t('รายบท', 'By chapter')}
           </button>
         </div>
       </section>
@@ -111,15 +112,15 @@ export function AnalysisScreen({ initialLevel, onBack, onPractice, onPracticePla
       )}
 
       {error && <p className="form-error"><WarningCircle weight="fill" className="ico" /> {error}</p>}
-      {!stats && !error && <p className="muted analysis__loading">กำลังโหลดสถิติ...</p>}
+      {!stats && !error && <p className="muted analysis__loading">{t('กำลังโหลดสถิติ...', 'Loading stats...')}</p>}
 
       {tab === 'chapters' && stats && total === 0 && (
         <section className="settings-card analysis__empty">
           <p className="analysis__big"><Plant weight="fill" className="ico" /></p>
           <p>
-            ยังไม่มีข้อมูลระดับ {LEVELS[level].name} เลย
+            {t(`ยังไม่มีข้อมูลระดับ ${LEVELS[level].name} เลย`, `No ${LEVELS[level].name} data yet`)}
             <br />
-            ลองฝึกเดี่ยวสัก 2-3 รอบ แล้วกลับมาดูว่าถนัดบทไหน
+            {t('ลองฝึกเดี่ยวสัก 2-3 รอบ แล้วกลับมาดูว่าถนัดบทไหน', 'Play 2-3 solo rounds, then come back to see your strong chapters')}
           </p>
         </section>
       )}
@@ -129,23 +130,24 @@ export function AnalysisScreen({ initialLevel, onBack, onPractice, onPracticePla
           <section className="settings-card analysis__summary">
             <div>
               <span className="analysis__big">{pct(recent ? recentCorrect / recent : 0)}</span>
-              <span className="muted">ความแม่นล่าสุด</span>
+              <span className="muted">{t('ความแม่นล่าสุด', 'Recent accuracy')}</span>
             </div>
             <div>
               <span className="analysis__big">{total}</span>
-              <span className="muted">ข้อที่เคยทำ</span>
+              <span className="muted">{t('ข้อที่เคยทำ', 'Questions done')}</span>
             </div>
             <div>
               <span className="analysis__big">{strongCount}</span>
-              <span className="muted">บทที่ถนัด</span>
+              <span className="muted">{t('บทที่ถนัด', 'Strong chapters')}</span>
             </div>
           </section>
 
           <section className="settings-card">
-            <h2 className="section-title section-title--dark"><Target weight="fill" className="ico" /> ควรฝึกก่อน</h2>
+            <h2 className="section-title section-title--dark"><Target weight="fill" className="ico" /> {t('ควรฝึกก่อน', 'Practice first')}</h2>
             {weakest.length === 0 ? (
               <p className="muted">
-                ยังไม่มีบทที่ต่ำกว่า 60% {recent < 20 ? `(ทำให้ครบบทละ ${MIN_ANSWERS} ข้อขึ้นไปจะวิเคราะห์ได้แม่นขึ้น)` : ''}
+                {t('ยังไม่มีบทที่ต่ำกว่า 60%', 'No chapters below 60% yet')}{' '}
+            {recent < 20 ? t(`(ทำให้ครบบทละ ${MIN_ANSWERS} ข้อขึ้นไปจะวิเคราะห์ได้แม่นขึ้น)`, `(answer ${MIN_ANSWERS}+ per chapter for better analysis)`) : ''}
               </p>
             ) : (
               <ul className="analysis__weak">
@@ -156,11 +158,11 @@ export function AnalysisScreen({ initialLevel, onBack, onPractice, onPracticePla
                       <div>
                         <strong>{chapterName(s.chapter)}</strong>
                         <span className="muted">
-                          <sub.icon weight="fill" size={14} /> {sub.name} · ถูก {s.recentCorrect}/{s.recent} ({pct(accuracyOf(s))})
+                          <sub.icon weight="fill" size={14} /> {sub.name} · {t('ถูก', 'correct')} {s.recentCorrect}/{s.recent} ({pct(accuracyOf(s))})
                         </span>
                       </div>
                       <button type="button" className="btn btn--primary" onClick={() => practice(s.chapter)}>
-                        ฝึกบทนี้
+                        {t('ฝึกบทนี้', 'Practice this chapter')}
                       </button>
                     </li>
                   );
@@ -184,7 +186,7 @@ export function AnalysisScreen({ initialLevel, onBack, onPractice, onPracticePla
                   <sub.icon weight="fill" size={18} color={sub.color} /> {sub.name}
                 </span>
                 <span className="muted">
-                  ทำแล้ว {done}/{chapters.length} บท
+                  {t(`ทำแล้ว ${done}/${chapters.length} บท`, `${done}/${chapters.length} chapters started`)}
                 </span>
               </summary>
               <ul className="analysis__chapters">
@@ -193,7 +195,7 @@ export function AnalysisScreen({ initialLevel, onBack, onPractice, onPracticePla
                   const status = statusOf(st);
                   return (
                     <li key={c.id} className={`analysis__row analysis__row--${status}`}>
-                      <button type="button" className="analysis__row-btn" onClick={() => practice(c.id)} title="ฝึกบทนี้">
+                      <button type="button" className="analysis__row-btn" onClick={() => practice(c.id)} title={t('ฝึกบทนี้', 'Practice this chapter')}>
                         <span className="analysis__row-name">
                           {i + 1}. {c.name}
                         </span>
@@ -213,7 +215,7 @@ export function AnalysisScreen({ initialLevel, onBack, onPractice, onPracticePla
           );
         })}
 
-      {tab === 'chapters' && stats && <p className="muted analysis__note">ดูจาก 20 ข้อล่าสุดของแต่ละบท · กดชื่อบทเพื่อฝึกบทนั้นได้เลย</p>}
+      {tab === 'chapters' && stats && <p className="muted analysis__note">{t('ดูจาก 20 ข้อล่าสุดของแต่ละบท · กดชื่อบทเพื่อฝึกบทนั้นได้เลย', 'Based on the last 20 answers per chapter · tap a chapter to practice it')}</p>}
     </div>
   );
 }
