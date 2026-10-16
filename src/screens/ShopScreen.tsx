@@ -25,6 +25,7 @@ const RARITY_TEXT: Record<Rarity, string> = {
   get rare() { return t('หายาก', 'Rare'); },
   get epic() { return t('เอพิก', 'Epic'); },
   get legend() { return t('ตำนาน', 'Legend'); },
+  get mythic() { return t('มิธิก', 'Mythic'); },
 };
 const SWATCH_SLOTS: Slot[] = ['skin', 'hair', 'eyes'];
 const FULL_SLOTS: Slot[] = ['outfit', 'item', 'aura'];
@@ -43,7 +44,7 @@ export function ShopScreen({ code, state, onBack, onBought, onWear, onTopup }: P
   const owned = new Set(state.owned);
   const rotation = state.rotation.map((id) => WARDROBE.find((w) => w.id === id)).filter((w): w is WardrobeItem => !!w);
   const regular = WARDROBE.filter((w) => w.rarity === 'common' && !isFree(w) && !SPECIAL_SLOTS.includes(w.slot));
-  const specials = WARDROBE.filter((w) => SPECIAL_SLOTS.includes(w.slot) && !isFree(w));
+  const specials = WARDROBE.filter((w) => SPECIAL_SLOTS.includes(w.slot) && !isFree(w) && !w.gacha);
 
   const pick = (it: WardrobeItem) => {
     setPicked(it);

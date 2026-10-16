@@ -4566,3 +4566,29 @@ html[lang="en"] .checkin__label {
   0%, 100% { filter: drop-shadow(0 0 3px var(--aura)) drop-shadow(0 0 6px var(--aura)); }
   50% { filter: drop-shadow(0 0 6px var(--aura)) drop-shadow(0 0 12px var(--aura)); }
 }
+
+/* 22.2b: ระดับมิธิก */
+.ward-item--mythic {
+  --r: linear-gradient(90deg, #ff6bd6, #a45cff, #4fb6ff, #5ee08a, #ffcc00);
+  background: linear-gradient(160deg, #fff6fd, #f1ecff 60%, #e8fbff);
+  box-shadow: 0 4px 0 var(--ink), 0 0 14px rgba(164, 92, 255, 0.55);
+}
+.ward-item--mythic .ward-item__rarity {
+  background-size: 200% 100%;
+  animation: mythic-shift 3s linear infinite;
+  color: #fff;
+  text-shadow: 0 1px 0 rgba(43, 26, 74, 0.6);
+}
+@keyframes mythic-shift {
+  to {
+    background-position: 200% 0;
+  }
+}
+
+.dressing__gacha-note {
+  margin: 0;
+  text-align: center;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #8a3dd6;
+}

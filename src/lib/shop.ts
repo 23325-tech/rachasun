@@ -26,6 +26,7 @@ const ERRORS: Record<string, string> = {
   get already_owned() { return t('มีชิ้นนี้แล้ว', 'You already own this'); },
   get not_in_shop() { return t('ชิ้นนี้หมดรอบขายแล้ว รอวนกลับมานะ', 'No longer on sale this round — it will come back'); },
   get gem_item() { return t('ชิ้นนี้ใช้เพชร (เติมเพชรเร็วๆ นี้)', 'This costs gems (top-up coming soon)'); },
+  get gacha_only() { return t('ชิ้นนี้ได้จากตู้สุ่มเท่านั้น', 'Only available from the gacha'); },
   get play_first() { return t('เล่นจบ 1 เกมก่อน แล้วค่อยรับเหรียญเช็กอินนะ', 'Finish 1 game first, then claim your check-in coins'); },
   get already_claimed() { return t('วันนี้รับไปแล้ว พรุ่งนี้มาใหม่นะ', 'Already claimed today — come back tomorrow'); },
 };

@@ -1,8 +1,12 @@
 // สัตว์เลี้ยงลอยข้างตัวละคร (สร้างจากรูปทรงพื้นฐาน สไตล์เดียวกับตัว chibi)
 import * as THREE from 'three';
 import { capsule, part, sphere, toon, type Pose } from './chibi';
+import { BUILDERS2 } from './pets2';
 
-export type PetKind = 'none' | 'cat' | 'owl' | 'slime' | 'dragon';
+export type PetKind =
+  | 'none' | 'cat' | 'owl' | 'slime' | 'dragon'
+  | 'hamster' | 'chick' | 'frog' | 'bunny' | 'puppy' | 'penguin' | 'panda' | 'fox'
+  | 'axolotl' | 'redpanda' | 'unicorn' | 'phoenix' | 'whale' | 'goldragon';
 
 export interface Pet {
   root: THREE.Group;
@@ -190,7 +194,8 @@ export function createPet(kind: PetKind): Pet | null {
   if (kind === 'cat') buildCat(g, moving);
   else if (kind === 'owl') buildOwl(g, moving);
   else if (kind === 'slime') buildSlime(g, moving);
-  else buildDragon(g, moving);
+  else if (kind === 'dragon') buildDragon(g, moving);
+  else BUILDERS2[kind]?.(g, moving);
   g.rotation.y = -0.45;
 
   return {

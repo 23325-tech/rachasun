@@ -51,6 +51,7 @@ const RARITY_TEXT: Record<Rarity, string> = {
   get rare() { return t('หายาก', 'Rare'); },
   get epic() { return t('เอพิก', 'Epic'); },
   get legend() { return t('ตำนาน', 'Legend'); },
+  get mythic() { return t('มิธิก', 'Mythic'); },
 };
 
 const itemOf = (slot: Slot, value: string) => WARDROBE.find((i) => i.slot === slot && i.value === value);
@@ -171,8 +172,14 @@ export function DressingRoomScreen({ code, owned, onShop, onBack, onSave }: Prop
                 ) : (
                   <>
                     <LockSimple weight="bold" size={12} />
-                    {it.gem ? <Diamond weight="fill" size={13} /> : <Coin weight="fill" size={13} />}
-                    {it.gem ?? it.coin}
+                    {it.gacha ? (
+                      t('ตู้สุ่ม', 'Gacha')
+                    ) : (
+                      <>
+                        {it.gem ? <Diamond weight="fill" size={13} /> : <Coin weight="fill" size={13} />}
+                        {it.gem ?? it.coin}
+                      </>
+                    )}
                   </>
                 )}
               </span>
@@ -187,9 +194,14 @@ export function DressingRoomScreen({ code, owned, onShop, onBack, onSave }: Prop
             <p className="cta-bar__summary dressing__locked">
               <Storefront weight="fill" size={18} /> {t(`ลองสวมของที่ยังไม่มี ${locked.length} ชิ้น`, `Trying on ${locked.length} item(s) you don't own`)}
             </p>
-            <button type="button" className="btn btn--primary btn--block" onClick={onShop}>
-              <Storefront weight="fill" className="ico" /> {t('ไปซื้อที่ร้านค้า', 'Buy in the shop')}
-            </button>
+            {locked.some((i) => i.gacha) && (
+              <p className="dressing__gacha-note">{t('ของระดับตำนาน/มิธิก ได้จากตู้สุ่มเท่านั้น', 'Legend/Mythic items come only from the gacha')}</p>
+            )}
+            {locked.some((i) => !i.gacha) && (
+              <button type="button" className="btn btn--primary btn--block" onClick={onShop}>
+                <Storefront weight="fill" className="ico" /> {t('ไปซื้อที่ร้านค้า', 'Buy in the shop')}
+              </button>
+            )}
             <button type="button" className="btn btn--ghost btn--block" onClick={removeLocked}>
               {t('ถอดของที่ยังไม่มีออก', 'Remove items you don\'t own')}
             </button>

@@ -4,7 +4,7 @@
 //   รหัสเก่า v1 มีแค่ 7 ช่องแรก (ช่องที่เหลือ = n ไม่ใส่)
 
 export type Slot = 'skin' | 'hair' | 'style' | 'eyes' | 'outfit' | 'hat' | 'item' | 'face' | 'pet' | 'aura' | 'set' | 'shot';
-export type Rarity = 'common' | 'rare' | 'epic' | 'legend';
+export type Rarity = 'common' | 'rare' | 'epic' | 'legend' | 'mythic';
 
 export interface WardrobeItem {
   /** รหัสสินค้า (ไม่เปลี่ยน ใช้อ้างอิงการซื้อ) */
@@ -18,6 +18,8 @@ export interface WardrobeItem {
   gem?: number;
   /** ชื่อภาษาอังกฤษ */
   en?: string;
+  /** ได้จากตู้สุ่มเท่านั้น (ไม่ขายในร้าน) */
+  gacha?: boolean;
 }
 
 const free = (id: string, slot: Slot, value: string, name: string, en?: string): WardrobeItem => ({ id, slot, value, name, rarity: 'common', en });
@@ -104,10 +106,28 @@ export const WARDROBE: WardrobeItem[] = [
   free('face_star', 'face', 's', 'สติกเกอร์ดาว', 'Star sticker'),
   // ของพิเศษ (สเต็ป 22.2-22.5 จะเพิ่มชิ้นที่ซื้อได้)
   free('pet_none', 'pet', 'n', 'ไม่มีสัตว์เลี้ยง', 'No pet'),
+  // ธรรมดา
+  { id: 'pet_hamster', slot: 'pet', value: 'h', name: 'แฮมสเตอร์แก้มป่อง', rarity: 'common', coin: 600, en: 'Chubby hamster' },
+  { id: 'pet_chick', slot: 'pet', value: 'k', name: 'ลูกเจี๊ยบ', rarity: 'common', coin: 600, en: 'Little chick' },
+  { id: 'pet_frog', slot: 'pet', value: 'f', name: 'กบเขียวยิ้มแฉ่ง', rarity: 'common', coin: 700, en: 'Smiley frog' },
+  { id: 'pet_bunny', slot: 'pet', value: 'b', name: 'กระต่ายหูยาว', rarity: 'common', coin: 800, en: 'Long-eared bunny' },
+  { id: 'pet_puppy', slot: 'pet', value: 'p', name: 'ลูกหมาหูตก', rarity: 'common', coin: 900, en: 'Floppy puppy' },
+  // หายาก
   { id: 'pet_cat', slot: 'pet', value: 'c', name: 'แมวส้มจอมซน', rarity: 'rare', coin: 2000, en: 'Ginger kitty' },
+  { id: 'pet_penguin', slot: 'pet', value: 'g', name: 'เพนกวินเตาะแตะ', rarity: 'rare', coin: 2200, en: 'Waddling penguin' },
   { id: 'pet_owl', slot: 'pet', value: 'o', name: 'นกฮูกนักปราชญ์', rarity: 'rare', coin: 2500, en: 'Wise owl' },
+  { id: 'pet_panda', slot: 'pet', value: 'a', name: 'แพนด้าน้อย', rarity: 'rare', coin: 2500, en: 'Baby panda' },
+  { id: 'pet_fox', slot: 'pet', value: 'x', name: 'จิ้งจอกหางฟู', rarity: 'rare', coin: 2800, en: 'Fluffy fox' },
+  // เอพิก
   { id: 'pet_slime', slot: 'pet', value: 's', name: 'สไลม์เด้งดึ๋ง', rarity: 'epic', gem: 39, en: 'Bouncy slime' },
-  { id: 'pet_dragon', slot: 'pet', value: 'd', name: 'มังกรน้อย', rarity: 'legend', gem: 59, en: 'Baby dragon' },
+  { id: 'pet_axolotl', slot: 'pet', value: 'l', name: 'แอ็กโซลอเติลชมพู', rarity: 'epic', coin: 5000, en: 'Pink axolotl' },
+  { id: 'pet_redpanda', slot: 'pet', value: 'r', name: 'แพนด้าแดง', rarity: 'epic', coin: 5500, en: 'Red panda' },
+  { id: 'pet_unicorn', slot: 'pet', value: 'u', name: 'ยูนิคอร์นสายรุ้ง', rarity: 'epic', gem: 45, en: 'Rainbow unicorn' },
+  // ตำนาน / มิธิก: ได้จากตู้สุ่มเท่านั้น
+  { id: 'pet_dragon', slot: 'pet', value: 'd', name: 'มังกรน้อย', rarity: 'legend', gacha: true, en: 'Baby dragon' },
+  { id: 'pet_phoenix', slot: 'pet', value: 'e', name: 'ฟีนิกซ์เปลวเพลิง', rarity: 'legend', gacha: true, en: 'Flame phoenix' },
+  { id: 'pet_whale', slot: 'pet', value: 'w', name: 'วาฬจักรวาล', rarity: 'legend', gacha: true, en: 'Cosmic whale' },
+  { id: 'pet_goldragon', slot: 'pet', value: 'z', name: 'มังกรทองศักดิ์สิทธิ์', rarity: 'mythic', gacha: true, en: 'Sacred golden dragon' },
   free('aura_none', 'aura', 'n', 'ไม่มีออร่า', 'No aura'),
   { id: 'aura_stars', slot: 'aura', value: 's', name: 'ดาวระยิบรอบตัว', rarity: 'rare', coin: 2500, en: 'Twinkling stars' },
   { id: 'aura_sakura', slot: 'aura', value: 'k', name: 'กลีบซากุระโปรย', rarity: 'rare', coin: 3000, en: 'Sakura petals' },
@@ -138,7 +158,8 @@ export function parseLook(code: string | null | undefined): Look | null {
 
 export const encodeLook = (look: Look) => ['v2', ...SLOT_ORDER.map((s) => look[s] ?? 'n')].join('.');
 
-export const isFree = (it: WardrobeItem) => !it.coin && !it.gem;
+/** ใช้ได้ฟรี (ไม่ต้องซื้อ ไม่ใช่ของตู้สุ่ม) */
+export const isFree = (it: WardrobeItem) => !it.coin && !it.gem && !it.gacha;
 
 /** ช่องของพิเศษ: ขายตลอดในหมวด "พิเศษ" ไม่เข้ารอบหมุนเวียน */
 export const SPECIAL_SLOTS: Slot[] = ['pet', 'aura', 'set', 'shot'];

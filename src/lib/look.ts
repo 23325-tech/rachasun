@@ -36,7 +36,11 @@ for (const it of WARDROBE) {
 const STYLE: Record<string, HairStyle> = { s: 'short', b: 'bob', p: 'spiky', u: 'bun', l: 'long', t: 'ponytail', w: 'twintails', c: 'curly' };
 const OUTFIT: Record<string, Outfit> = { u: 'uniform', l: 'labcoat', h: 'hoodie', s: 'sport', k: 'skirt', t: 'tee' };
 const HAT: Record<string, Hat> = { n: 'none', c: 'cap', b: 'beanie', h: 'headphones', g: 'grad', d: 'headband', r: 'ribbon', f: 'flower' };
-const PET: Record<string, PetKind> = { n: 'none', c: 'cat', o: 'owl', s: 'slime', d: 'dragon' };
+const PET: Record<string, PetKind> = {
+  n: 'none', c: 'cat', o: 'owl', s: 'slime', d: 'dragon',
+  h: 'hamster', k: 'chick', f: 'frog', b: 'bunny', p: 'puppy', g: 'penguin', a: 'panda', x: 'fox',
+  l: 'axolotl', r: 'redpanda', u: 'unicorn', e: 'phoenix', w: 'whale', z: 'goldragon',
+};
 const AURA: Record<string, AuraKind> = { n: 'none', s: 'stars', k: 'sakura', b: 'books', f: 'flames', l: 'lightning' };
 const FACE: Record<string, Face> = { n: 'none', g: 'glasses', o: 'round', f: 'freckles', s: 'star' };
 const ITEM: Record<string, HandItem> = { n: 'none', p: 'pencil', k: 'book', f: 'flask' };
