@@ -28,6 +28,8 @@ export default defineConfig({
       workbox: {
         // เก็บไฟล์แอพทั้งหมดไว้ในเครื่อง เปิดได้แม้ไม่มีเน็ต (รวมฟอนต์ KaTeX)
         globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
+        // หน้าต้นแบบดีไซน์ (three.js) ไม่ต้องโหลดเก็บไว้ในเครื่องผู้เล่นทุกคน
+        globIgnores: ['**/LabScreen-*'],
         navigateFallback: '/index.html',
         runtimeCaching: [
           {
