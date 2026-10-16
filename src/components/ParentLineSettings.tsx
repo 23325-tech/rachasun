@@ -4,7 +4,7 @@ import { ensureSession } from '../lib/supabase';
 import { t } from '../lib/i18n';
 
 /** Basic ID ของ LINE OA (เช่น @123abcd) ใส่เมื่อได้จากผู้ดูแล ว่าง = ไม่แสดงปุ่มแอดเพื่อน */
-const LINE_OA_ID = '';
+const LINE_OA_ID = '@480skwbm';
 const OA_NAME = 'Brain Gym';
 const addFriendUrl = () => `https://line.me/R/ti/p/${encodeURIComponent(LINE_OA_ID)}`;
 

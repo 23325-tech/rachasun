@@ -69,6 +69,13 @@ async function handle(ev: LineEvent) {
 }
 
 Deno.serve(async (req) => {
+  // GET ?check=1: ตรวจว่า access token ใช้ได้ (คืนแค่ Basic ID ซึ่งเป็นข้อมูลสาธารณะ)
+  if (req.method === 'GET' && new URL(req.url).searchParams.get('check') === '1') {
+    const token = (Deno.env.get('LINE_CHANNEL_ACCESS_TOKEN') ?? '').trim();
+    const res = await fetch('https://api.line.me/v2/bot/info', { headers: { Authorization: `Bearer ${token}` } });
+    const info = res.ok ? await res.json().catch(() => ({})) : {};
+    return new Response(JSON.stringify({ tokenOk: res.ok, basicId: info.basicId ?? null }), { headers: { 'Content-Type': 'application/json' } });
+  }
   if (req.method !== 'POST') return new Response('ok');
   if (!lineConfigured()) return new Response(JSON.stringify({ error: 'not_configured' }), { status: 500 });
   const body = await req.text();
