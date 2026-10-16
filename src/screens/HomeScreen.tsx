@@ -1,21 +1,5 @@
 import { lazy, Suspense, useMemo, type CSSProperties, type ReactNode } from 'react';
-import {
-  ChartLineUp,
-  Crown,
-  Exam,
-  FloppyDisk,
-  GlobeHemisphereEast,
-  Heart,
-  Key,
-  LinkSimple,
-  Robot,
-  Sparkle,
-  Target,
-  TShirt,
-  UsersThree,
-  WifiSlash,
-  type Icon,
-} from '@phosphor-icons/react';
+import { ChartLineUp, Coin, Crown, Exam, FloppyDisk, GlobeHemisphereEast, Heart, type Icon, Key, LinkSimple, Robot, Sparkle, Storefront, Target, TShirt, UsersThree, WifiSlash } from '@phosphor-icons/react';
 import type { Level, Subject } from '../types';
 import { LEVEL_KEYS, LEVELS, subjectInfo } from '../data/subjects';
 import { displayName, type Profile } from '../lib/profile';
@@ -47,6 +31,11 @@ interface Props {
   error: string | null;
   onDismissError: () => void;
   installSlot?: ReactNode;
+  /** ยอดเหรียญ (ยังไม่โหลด = ไม่แสดง) */
+  coins?: number;
+  onShop: () => void;
+  /** การ์ดเช็กอินรายวัน */
+  checkinSlot?: ReactNode;
 }
 
 const MODES: { key: HomeAction; title: string; desc: string; icon: Icon; grad: string }[] = [
@@ -87,6 +76,11 @@ export function HomeScreen(p: Props) {
             </small>
           </span>
         </button>
+        {p.coins !== undefined && (
+          <button type="button" className="coin-pill" onClick={p.onShop} aria-label="เหรียญ เปิดร้านค้า">
+            <Coin weight="fill" size={18} /> {p.coins.toLocaleString()}
+          </button>
+        )}
         {profile && (p.guest || p.needsPassword) && (
           <button type="button" className="hm-chip hm-chip--save" onClick={p.onAccount}>
             {p.guest ? <FloppyDisk weight="fill" size={16} /> : <Key weight="fill" size={16} />}
@@ -130,7 +124,14 @@ export function HomeScreen(p: Props) {
             {p.dressNew ? 'แต่งตัวละครของคุณ!' : 'แต่งตัว'}
           </button>
         )}
+        {profile && (
+          <button type="button" className="hm-shop" onClick={p.onShop}>
+            <Storefront weight="fill" size={18} /> ร้านค้า
+          </button>
+        )}
       </section>
+
+      {p.checkinSlot}
 
       <div className="hm-levels" role="radiogroup" aria-label="ระดับชั้น">
         {LEVEL_KEYS.map((k) => (

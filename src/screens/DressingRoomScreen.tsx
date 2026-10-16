@@ -22,6 +22,9 @@ const Avatar3D = lazy(() => import('../components/Avatar3D').then((m) => ({ defa
 
 interface Props {
   code: string;
+  /** รหัสสินค้าที่ซื้อแล้ว */
+  owned: string[];
+  onShop: () => void;
   onBack: () => void;
   onSave: (code: string) => Promise<void>;
 }
@@ -41,7 +44,7 @@ const RARITY_TEXT: Record<Rarity, string> = { common: 'ธรรมดา', rare
 const itemOf = (slot: Slot, value: string) => WARDROBE.find((i) => i.slot === slot && i.value === value);
 
 /** ห้องแต่งตัว: ลองสวมได้ทุกชิ้น บันทึกได้เฉพาะของที่มี (ตอนนี้ = ของฟรี จนกว่าร้านค้าจะเปิด) */
-export function DressingRoomScreen({ code, onBack, onSave }: Props) {
+export function DressingRoomScreen({ code, owned, onShop, onBack, onSave }: Props) {
   const saved = lookOf(code);
   const [draft, setDraft] = useState<Look>(saved);
   const [tab, setTab] = useState<Slot>('outfit');
@@ -53,8 +56,11 @@ export function DressingRoomScreen({ code, onBack, onSave }: Props) {
   const changed = draftCode !== encodeLook(saved);
   // ของที่ยังไม่มี (มีราคา) ที่ลองสวมอยู่
   const locked = useMemo(
-    () => (Object.keys(draft) as Slot[]).map((s) => itemOf(s, draft[s])).filter((i): i is WardrobeItem => !!i && !isFree(i)),
-    [draft],
+    () =>
+      (Object.keys(draft) as Slot[])
+        .map((s) => itemOf(s, draft[s]))
+        .filter((i): i is WardrobeItem => !!i && !isFree(i) && !owned.includes(i.id)),
+    [draft, owned],
   );
   const chibi = useMemo(() => toChibi(draft), [draft]);
   const current = TABS.find((t) => t.slot === tab)!;
@@ -124,7 +130,7 @@ export function DressingRoomScreen({ code, onBack, onSave }: Props) {
       <div className="dressing__items">
         {WARDROBE.filter((i) => i.slot === tab).map((it) => {
           const wearing = draft[it.slot] === it.value;
-          const free = isFree(it);
+          const free = isFree(it) || owned.includes(it.id);
           const thumbCode = encodeLook({ ...draft, [it.slot]: it.value });
           return (
             <button
@@ -165,8 +171,11 @@ export function DressingRoomScreen({ code, onBack, onSave }: Props) {
         {locked.length > 0 ? (
           <>
             <p className="cta-bar__summary dressing__locked">
-              <Storefront weight="fill" size={18} /> ลองสวมของที่ยังไม่มี {locked.length} ชิ้น · ร้านค้าเปิดเร็วๆ นี้
+              <Storefront weight="fill" size={18} /> ลองสวมของที่ยังไม่มี {locked.length} ชิ้น
             </p>
+            <button type="button" className="btn btn--primary btn--block" onClick={onShop}>
+              <Storefront weight="fill" className="ico" /> ไปซื้อที่ร้านค้า
+            </button>
             <button type="button" className="btn btn--ghost btn--block" onClick={removeLocked}>
               ถอดของที่ยังไม่มีออก
             </button>

@@ -3636,3 +3636,162 @@ button {
 .subject-card--all .subject-card__emoji {
   color: #ff7a59;
 }
+
+/* ---------- เหรียญ / ร้านค้า / เช็กอิน (17.1) ---------- */
+.coin-pill {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 12px 5px 8px;
+  border: var(--border);
+  border-radius: 999px;
+  background: var(--card);
+  box-shadow: 0 3px 0 var(--ink);
+  font-weight: 600;
+  font-size: 0.92rem;
+}
+.coin-pill svg {
+  color: #f5a400;
+}
+button.coin-pill {
+  cursor: pointer;
+}
+.shop__stage {
+  height: 240px;
+}
+.shop__trying {
+  position: absolute;
+  z-index: 2;
+  left: 10px;
+  top: 10px;
+  padding: 4px 10px;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: var(--primary);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+.shop__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+.shop__timer {
+  color: #fff;
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+.shop__earn {
+  margin: 0;
+  text-align: center;
+  color: #fff;
+  font-size: 0.82rem;
+}
+.checkin {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: var(--border);
+  border-radius: 20px;
+  background: var(--card);
+  box-shadow: var(--shadow);
+}
+.checkin__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+.checkin__head strong {
+  font-weight: 600;
+}
+.checkin__head small {
+  color: var(--ink-soft);
+  font-size: 0.75rem;
+}
+.checkin__days {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.checkin__day {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  padding: 6px 2px;
+  border: 2px solid #d9cff5;
+  border-radius: 12px;
+  background: #f6f2ff;
+  font-size: 0.68rem;
+}
+.checkin__day.is-today {
+  border-color: var(--ink);
+  background: var(--primary);
+  box-shadow: 0 3px 0 var(--ink);
+}
+.checkin__day.is-done {
+  border-color: var(--good-dark);
+  background: #e6fbf1;
+  color: var(--good-dark);
+}
+.checkin__day.is-big .checkin__reward svg {
+  color: var(--bad);
+}
+.checkin__reward {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-weight: 600;
+  font-size: 0.78rem;
+}
+.checkin__reward svg {
+  color: #f5a400;
+}
+.checkin__day.is-done .checkin__reward svg {
+  color: var(--good-dark);
+}
+.checkin__note {
+  margin: 0;
+  text-align: center;
+  font-size: 0.82rem;
+  color: var(--ink-soft);
+}
+
+.xp-badge__coins {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: 10px;
+  color: #f5a400;
+}
+.hm-shop {
+  position: absolute;
+  z-index: 2;
+  left: 12px;
+  bottom: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 14px;
+  border: var(--border);
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 3px 0 var(--ink);
+  font-weight: 600;
+  font-size: 0.88rem;
+  cursor: pointer;
+}
+.hm-shop svg {
+  color: var(--bad);
+}
+.hm-top .coin-pill {
+  margin-left: auto;
+}
+.hm-me__text small {
+  white-space: nowrap;
+}

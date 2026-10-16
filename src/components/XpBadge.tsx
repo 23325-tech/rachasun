@@ -1,11 +1,11 @@
 import { levelFromXp } from '../lib/level';
 import { tierOf } from '../lib/rank';
 import { TierIcon } from './icons';
-import { Confetti, FloppyDisk, Hourglass } from '@phosphor-icons/react';
+import { Coin, Confetti, FloppyDisk, Hourglass } from '@phosphor-icons/react';
 
 export type XpState =
   | { status: 'saving' }
-  | { status: 'saved'; gained: number; total: number; rpDelta?: number; rp?: number }
+  | { status: 'saved'; gained: number; total: number; rpDelta?: number; rp?: number; coins?: number }
   | { status: 'error'; message: string }
   | { status: 'off' };
 
@@ -42,7 +42,14 @@ export function XpBadge({ xp, guest, onRegister }: { xp: XpState; guest: boolean
   const after = levelFromXp(xp.total);
   return (
     <div className="xp-badge pop-in">
-      <div className="xp-badge__gain">+{xp.gained} XP</div>
+      <div className="xp-badge__gain">
+        +{xp.gained} XP
+        {xp.coins !== undefined && xp.coins > 0 && (
+          <span className="xp-badge__coins">
+            <Coin weight="fill" className="ico" /> +{xp.coins}
+          </span>
+        )}
+      </div>
       {after.level > before && <div className="xp-badge__levelup bounce"><Confetti weight="fill" className="ico" /> เลเวลอัป! Lv {after.level}</div>}
       {xp.rpDelta !== undefined && xp.rp !== undefined && <RankChange delta={xp.rpDelta} rp={xp.rp} />}
       <span className="xp-bar">

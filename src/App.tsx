@@ -21,6 +21,9 @@ import { AnalysisScreen } from './screens/AnalysisScreen';
 import { DressingRoomScreen } from './screens/DressingRoomScreen';
 import { isDressingSeen, markDressingSeen } from './components/DressEntry';
 import { HomeScreen } from './screens/HomeScreen';
+import { ShopScreen } from './screens/ShopScreen';
+import { CheckinCard } from './components/CheckinCard';
+import { fetchShopState, type ShopState } from './lib/shop';
 import { MockMenuScreen } from './screens/MockMenuScreen';
 import { MockExamScreen } from './screens/MockExamScreen';
 import { MockResultScreen } from './screens/MockResultScreen';
@@ -62,6 +65,7 @@ type Screen =
   | { name: 'group'; groupId: string }
   | { name: 'analysis' }
   | { name: 'dressing' }
+  | { name: 'shop' }
   | { name: 'mock' }
   | { name: 'mockExam'; session: MockSession }
   | { name: 'mockResult'; review: MockReview };
@@ -141,6 +145,8 @@ export default function App() {
   });
   const online = useOnline();
   const [dressNew, setDressNew] = useState(() => !isDressingSeen());
+  const [shop, setShop] = useState<ShopState | null>(null);
+  const loadShop = useCallback(() => fetchShopState().then((s) => (setShop(s), s)), []);
   // รอบที่เริ่มจากแผนการฝึก (ทำจบแล้วติ๊กในแผน)
   const planRunRef = useRef<{ level: Level; index: number } | null>(null);
   // กันผลโหลดที่ถูกยกเลิกไปแล้วมาเปลี่ยนหน้าจอทีหลัง
@@ -186,6 +192,11 @@ export default function App() {
     setMatchSettings((prev) => (prev.level === profileLevel ? prev : adjustForLevel(prev, profileLevel)));
   }, [profileLevel]);
 
+  const profileId = profile?.id;
+  useEffect(() => {
+    if (profileId && (screen.name === 'start' || screen.name === 'shop' || screen.name === 'dressing')) loadShop().catch(() => {});
+  }, [profileId, screen.name, loadShop]);
+
   const changeLevel = (level: Level) => {
     setSettings((prev) => withLevel(prev, level));
     setMatchSettings((prev) => adjustForLevel(prev, level));
@@ -203,8 +214,13 @@ export default function App() {
     }
     setXp({ status: 'saving' });
     try {
+      const before = shop?.coins;
       const r = await recordGame(record);
       setXp({ status: 'saved', gained: r.xpGained, total: r.xpTotal });
+      // เหรียญที่ได้จากเกมนี้ (เซิร์ฟเวอร์ให้ตาม XP มีเพดานรายวัน)
+      loadShop()
+        .then((s) => before !== undefined && setXp((x) => (x.status === 'saved' ? { ...x, coins: s.coins - before } : x)))
+        .catch(() => {});
       setMe((m) => (m.status === 'ready' && m.profile ? { ...m, profile: { ...m.profile, xp: r.xpTotal } } : m));
     } catch (e) {
       setXp({ status: 'error', message: e instanceof Error ? e.message : String(e) });
@@ -335,6 +351,13 @@ export default function App() {
     case 'account':
       return (
         <HomeScreen
+          coins={shop?.coins}
+          onShop={() => setScreen({ name: 'shop' })}
+          checkinSlot={
+            shop && profile && !shop.checkin.claimedToday ? (
+              <CheckinCard state={shop} onClaimed={() => loadShop().catch(() => {})} />
+            ) : null
+          }
           profile={profile}
           guest={guest}
           needsPassword={needsPassword}
@@ -461,10 +484,28 @@ export default function App() {
           }}
         />
       );
+    case 'shop':
+      return profile && shop ? (
+        <ShopScreen
+          code={profile.avatar}
+          state={shop}
+          onBack={goHome}
+          onBought={(coins, itemId) => setShop((s) => (s ? { ...s, coins, owned: [...s.owned, itemId] } : s))}
+          onWear={async (avatar) => {
+            const updated = await updateProfile(profile.id, { avatar });
+            setMe((m) => (m.status === 'ready' ? { ...m, profile: updated } : m));
+            goHome();
+          }}
+        />
+      ) : (
+        <LoadingScreen message="กำลังเปิดร้านค้า..." onCancel={goHome} />
+      );
     case 'dressing':
       return profile ? (
         <DressingRoomScreen
           code={profile.avatar}
+          owned={shop?.owned ?? []}
+          onShop={() => setScreen({ name: 'shop' })}
           onBack={goHome}
           onSave={async (avatar) => {
             const updated = await updateProfile(profile.id, { avatar });
