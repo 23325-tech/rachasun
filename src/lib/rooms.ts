@@ -1,11 +1,13 @@
 import type { RealtimeChannel } from '@supabase/supabase-js';
-import type { Difficulty, Subject, Track } from '../types';
+import type { Difficulty, Level, Subject, Track } from '../types';
 import { ensureSession, PUBLIC_URL } from './supabase';
 
 export interface RoomSettings {
   subject: Subject | 'all';
   difficulty: Difficulty;
   track: Track;
+  /** ไม่มี = ม.ปลาย (ห้องที่สร้างก่อนมีระดับชั้น) */
+  level?: Level;
   count: 5 | 10 | 20;
 }
 
@@ -58,12 +60,13 @@ export interface MatchSettings {
   subject: Subject | 'all';
   difficulty: Difficulty;
   track: Track;
+  level: Level;
   mode: 'classic' | 'items';
 }
 
 /** หาห้องสาธารณะที่ตั้งค่าตรงกัน ถ้าไม่มีจะสร้างใหม่ */
 export const findMatch = (m: MatchSettings) =>
-  rpc<Room>('find_match', { p_subject: m.subject, p_difficulty: m.difficulty, p_track: m.track, p_mode: m.mode });
+  rpc<Room>('find_match', { p_subject: m.subject, p_difficulty: m.difficulty, p_track: m.track, p_mode: m.mode, p_level: m.level });
 
 export const createRoom = (settings: RoomSettings) => rpc<Room>('create_room', { p_settings: settings });
 export const joinRoom = (code: string) => rpc<Room>('join_room', { p_code: code });

@@ -76,3 +76,34 @@ export const DIFFICULTY_LABEL: Record<Difficulty, string> = {
 export const DIFFICULTY_STARS: Record<Difficulty, number> = { easy: 1, medium: 2, hard: 3 };
 
 export const CHOICE_LABELS = ['ก', 'ข', 'ค', 'ง'] as const;
+
+/** ตัวเลือกวิชาของระดับชั้น (รวม "ทุกวิชา") สำหรับ <select> */
+export const subjectOptions = (level: Level): { value: Subject | 'all'; label: string }[] => [
+  { value: 'all', label: '🌈 ทุกวิชา' },
+  ...LEVELS[level].subjects.map((s) => {
+    const info = subjectInfo(s, level);
+    return { value: s, label: `${info.emoji} ${info.name}` };
+  }),
+];
+
+/** ป้ายสรุปค่าตั้ง เช่น "🎒 ประถม · 🔬 วิทยาศาสตร์" (ไม่มี level = ม.ปลาย) */
+export function settingsLabel(s: { level?: Level; subject: Subject | 'all' }): string {
+  const level = s.level ?? 'upper';
+  const sub = s.subject === 'all' ? '🌈 ทุกวิชา' : `${subjectInfo(s.subject, level).emoji} ${subjectInfo(s.subject, level).name}`;
+  return `${LEVELS[level].emoji} ${LEVELS[level].name} · ${sub}`;
+}
+
+/** ชื่อแนวข้อสอบตามระดับ เช่น "สอบเข้า ม.4" */
+export const trackLabel = (level: Level | undefined, track: Track) =>
+  LEVELS[level ?? 'upper'].tracks.find((t) => t.value === track)?.label ?? track;
+
+/** เปลี่ยนระดับ: วิชา/แนวข้อสอบที่ไม่มีในระดับใหม่กลับเป็นค่าเริ่มต้น */
+export function adjustForLevel<T extends { subject: Subject | 'all'; track: Track; level?: Level }>(s: T, level: Level): T {
+  const info = LEVELS[level];
+  return {
+    ...s,
+    level,
+    subject: s.subject === 'all' || info.subjects.includes(s.subject) ? s.subject : 'all',
+    track: info.tracks.some((t) => t.value === s.track) ? s.track : info.tracks[0].value,
+  };
+}

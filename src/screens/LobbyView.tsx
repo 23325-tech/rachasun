@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import type { Difficulty, Subject, Track } from '../types';
-import { LEVELS, SUBJECTS } from '../data/subjects';
+import type { Difficulty } from '../types';
+import { LevelSubjectFields } from '../components/LevelSubjectFields';
 import { heartsFor } from '../game/battle';
 import { inviteLink, updateRoomMode, updateRoomSettings, type Room, type RoomPlayer, type RoomSettings } from '../lib/rooms';
 
@@ -15,18 +15,10 @@ interface Props {
   onStart: () => Promise<void>;
 }
 
-const SUBJECT_OPTIONS: { value: Subject | 'all'; label: string }[] = [
-  { value: 'all', label: '🌈 ทุกวิชา' },
-  ...LEVELS.upper.subjects.map((s) => ({ value: s, label: `${SUBJECTS[s].emoji} ${SUBJECTS[s].name}` })),
-];
 const DIFFICULTIES: { value: Difficulty; label: string }[] = [
   { value: 'easy', label: '🌱 ง่าย' },
   { value: 'medium', label: '🔥 กลาง' },
   { value: 'hard', label: '💀 ยาก' },
-];
-const TRACKS: { value: Track; label: string }[] = [
-  { value: 'school', label: '🏫 สอบปกติ' },
-  { value: 'entrance', label: '🎓 สอบเข้า' },
 ];
 const COUNTS: RoomSettings['count'][] = [5, 10, 20];
 
@@ -117,20 +109,7 @@ export function LobbyView({ room, players, online, myId, onLeave, onRoomChange, 
           ตั้งค่าห้อง {!isHost && <span className="muted">(เจ้าของห้องเป็นคนเลือก)</span>}
         </h2>
         <fieldset className="lobby-settings" disabled={!isHost}>
-          <label className="field">
-            <span className="field__label">วิชา</span>
-            <select
-              className="field__input"
-              value={s.subject}
-              onChange={(e) => change({ subject: e.target.value as RoomSettings['subject'] })}
-            >
-              {SUBJECT_OPTIONS.map((o) => (
-                <option key={o.value} value={o.value}>
-                  {o.label}
-                </option>
-              ))}
-            </select>
-          </label>
+          <LevelSubjectFields value={s} onChange={(next) => change(next)} />
           <div className="segmented">
             {DIFFICULTIES.map((d) => (
               <button
@@ -140,18 +119,6 @@ export function LobbyView({ room, players, online, myId, onLeave, onRoomChange, 
                 onClick={() => change({ difficulty: d.value })}
               >
                 {d.label}
-              </button>
-            ))}
-          </div>
-          <div className="segmented">
-            {TRACKS.map((t) => (
-              <button
-                key={t.value}
-                type="button"
-                className={`segmented__opt ${s.track === t.value ? 'is-active' : ''}`}
-                onClick={() => change({ track: t.value })}
-              >
-                {t.label}
               </button>
             ))}
           </div>

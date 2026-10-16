@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import type { Difficulty, Subject, Track } from '../types';
-import { LEVELS, SUBJECTS } from '../data/subjects';
+import type { Difficulty, Level, Subject, Track } from '../types';
+import { settingsLabel } from '../data/subjects';
+import { LevelSubjectFields } from '../components/LevelSubjectFields';
 import { createGroup, joinGroup, myGroups, type MyGroup } from '../lib/groups';
 
 interface Props {
@@ -9,23 +10,12 @@ interface Props {
   onBack: () => void;
 }
 
-const SUBJECT_OPTIONS: { value: Subject | 'all'; label: string }[] = [
-  { value: 'all', label: '🌈 ทุกวิชา' },
-  ...LEVELS.upper.subjects.map((s) => ({ value: s, label: `${SUBJECTS[s].emoji} ${SUBJECTS[s].name}` })),
-];
 const DIFFICULTIES: { value: Difficulty; label: string }[] = [
   { value: 'easy', label: '🌱 ง่าย' },
   { value: 'medium', label: '🔥 กลาง' },
   { value: 'hard', label: '💀 ยาก' },
 ];
-const TRACKS: { value: Track; label: string }[] = [
-  { value: 'school', label: '🏫 สอบปกติ' },
-  { value: 'entrance', label: '🎓 สอบเข้า' },
-];
 
-export function subjectLabel(subject: Subject | 'all') {
-  return subject === 'all' ? '🌈 ทุกวิชา' : `${SUBJECTS[subject].emoji} ${SUBJECTS[subject].name}`;
-}
 
 /** กลุ่มของฉัน + สร้างกลุ่ม + เข้ากลุ่มด้วยรหัส */
 export function GroupsScreen({ initialCode = '', onOpen, onBack }: Props) {
@@ -33,9 +23,12 @@ export function GroupsScreen({ initialCode = '', onOpen, onBack }: Props) {
   const [code, setCode] = useState(initialCode);
   const [creating, setCreating] = useState(false);
   const [name, setName] = useState('');
-  const [subject, setSubject] = useState<Subject | 'all'>('all');
+  const [pick, setPick] = useState<{ level: Level; subject: Subject | 'all'; track: Track }>({
+    level: 'upper',
+    subject: 'all',
+    track: 'school',
+  });
   const [difficulty, setDifficulty] = useState<Difficulty>('medium');
-  const [track, setTrack] = useState<Track>('school');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
@@ -82,7 +75,7 @@ export function GroupsScreen({ initialCode = '', onOpen, onBack }: Props) {
                   <span className="group-item__body">
                     <span className="group-item__name">{g.name}</span>
                     <span className="group-item__meta">
-                      {subjectLabel(g.settings.subject)} · 👥 {g.members}
+                      {settingsLabel(g.settings)} · 👥 {g.members}
                     </span>
                   </span>
                   <span className={`group-item__today ${g.playedToday ? 'is-done' : ''}`}>
@@ -130,7 +123,7 @@ export function GroupsScreen({ initialCode = '', onOpen, onBack }: Props) {
             className="account__form"
             onSubmit={(e) => {
               e.preventDefault();
-              if (!busy) run(async () => onOpen((await createGroup(name, { subject, difficulty, track })).id));
+              if (!busy) run(async () => onOpen((await createGroup(name, { ...pick, difficulty })).id));
             }}
           >
             <h2 className="section-title section-title--dark">➕ สร้างกลุ่มใหม่</h2>
@@ -144,16 +137,7 @@ export function GroupsScreen({ initialCode = '', onOpen, onBack }: Props) {
                 onChange={(e) => setName(e.target.value)}
               />
             </label>
-            <label className="field">
-              <span className="field__label">วิชาของโจทย์ประจำวัน</span>
-              <select className="field__input" value={subject} onChange={(e) => setSubject(e.target.value as Subject | 'all')}>
-                {SUBJECT_OPTIONS.map((o) => (
-                  <option key={o.value} value={o.value}>
-                    {o.label}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <LevelSubjectFields value={pick} onChange={setPick} subjectLabel="วิชาของโจทย์ประจำวัน" />
             <div className="segmented">
               {DIFFICULTIES.map((d) => (
                 <button
@@ -163,18 +147,6 @@ export function GroupsScreen({ initialCode = '', onOpen, onBack }: Props) {
                   onClick={() => setDifficulty(d.value)}
                 >
                   {d.label}
-                </button>
-              ))}
-            </div>
-            <div className="segmented">
-              {TRACKS.map((t) => (
-                <button
-                  key={t.value}
-                  type="button"
-                  className={`segmented__opt ${track === t.value ? 'is-active' : ''}`}
-                  onClick={() => setTrack(t.value)}
-                >
-                  {t.label}
                 </button>
               ))}
             </div>

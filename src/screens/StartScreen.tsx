@@ -1,6 +1,6 @@
 import { useEffect, useState, type CSSProperties, type ReactNode } from 'react';
 import type { Difficulty, Level, Subject, Track } from '../types';
-import { LEVELS, subjectInfo } from '../data/subjects';
+import { adjustForLevel, LEVELS, subjectInfo } from '../data/subjects';
 import { LevelPicker } from '../components/LevelPicker';
 import { BOT_LEVELS, type BotLevel } from '../game/bots';
 import { heartsFor } from '../game/battle';
@@ -22,15 +22,7 @@ export interface GameSettings {
 }
 
 /** เปลี่ยนระดับชั้น: วิชา/แนวข้อสอบที่ไม่มีในระดับใหม่จะกลับเป็นค่าเริ่มต้น */
-export function withLevel(s: GameSettings, level: Level): GameSettings {
-  const info = LEVELS[level];
-  return {
-    ...s,
-    level,
-    subject: s.subject === 'all' || info.subjects.includes(s.subject) ? s.subject : 'all',
-    track: info.tracks.some((t) => t.value === s.track) ? s.track : info.tracks[0].value,
-  };
-}
+export const withLevel = (s: GameSettings, level: Level): GameSettings => adjustForLevel(s, level);
 
 const DIFFICULTIES: { value: Difficulty; label: string; icon: string }[] = [
   { value: 'easy', label: 'ง่าย', icon: '🌱' },

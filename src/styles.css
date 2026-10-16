@@ -427,6 +427,12 @@ button {
     grid-row: span 2;
   }
 }
+/* ระดับชั้น + วิชา วางคู่กัน */
+.field-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 8px;
+}
 .home-level {
   margin-bottom: 4px;
 }

@@ -1,20 +1,12 @@
 import { useState } from 'react';
-import type { Difficulty, Subject, Track } from '../types';
-import { LEVELS, SUBJECTS } from '../data/subjects';
+import type { Difficulty } from '../types';
+import { LevelSubjectFields } from '../components/LevelSubjectFields';
 import type { MatchSettings } from '../lib/rooms';
 
-const SUBJECT_OPTIONS: { value: Subject | 'all'; label: string }[] = [
-  { value: 'all', label: '🌈 ทุกวิชา' },
-  ...LEVELS.upper.subjects.map((s) => ({ value: s, label: `${SUBJECTS[s].emoji} ${SUBJECTS[s].name}` })),
-];
 const DIFFICULTIES: { value: Difficulty; label: string }[] = [
   { value: 'easy', label: '🌱 ง่าย' },
   { value: 'medium', label: '🔥 กลาง' },
   { value: 'hard', label: '💀 ยาก' },
-];
-const TRACKS: { value: Track; label: string }[] = [
-  { value: 'school', label: '🏫 สอบปกติ' },
-  { value: 'entrance', label: '🎓 สอบเข้า' },
 ];
 
 interface Props {
@@ -59,18 +51,7 @@ export function OnlineMenuScreen({ initialMatch, onFind, onCreate, onJoin, onBac
         <h2 className="online-card__title">สุ่มหาคู่แข่ง</h2>
         <p className="online-card__desc">จับคู่กับผู้เล่นจริงที่เลือกเหมือนกัน · 10 ข้อ · 2-8 คน · 🏅 นับแต้มแรงค์</p>
         <div className="match-settings">
-          <select
-            className="field__input"
-            value={match.subject}
-            onChange={(e) => setMatch({ ...match, subject: e.target.value as MatchSettings['subject'] })}
-            aria-label="วิชา"
-          >
-            {SUBJECT_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </select>
+          <LevelSubjectFields value={match} onChange={setMatch} />
           <div className="segmented">
             {DIFFICULTIES.map((d) => (
               <button
@@ -80,18 +61,6 @@ export function OnlineMenuScreen({ initialMatch, onFind, onCreate, onJoin, onBac
                 onClick={() => setMatch({ ...match, difficulty: d.value })}
               >
                 {d.label}
-              </button>
-            ))}
-          </div>
-          <div className="segmented">
-            {TRACKS.map((t) => (
-              <button
-                key={t.value}
-                type="button"
-                className={`segmented__opt ${match.track === t.value ? 'is-active' : ''}`}
-                onClick={() => setMatch({ ...match, track: t.value })}
-              >
-                {t.label}
               </button>
             ))}
           </div>

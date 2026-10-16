@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { User } from '@supabase/supabase-js';
 import type { AnswerResult, Difficulty, Level, Question, Subject } from './types';
-import { LEVELS } from './data/subjects';
+import { adjustForLevel, LEVELS } from './data/subjects';
 import { loadQuiz, sampleQuiz } from './lib/questionBank';
 import { supabase } from './lib/supabase';
 import {
@@ -78,6 +78,7 @@ const toRoomSettings = (s: GameSettings): RoomSettings => ({
   subject: s.subject,
   difficulty: s.difficulty,
   track: s.track,
+  level: s.level,
   count: ([5, 10, 20] as const).includes(s.count as 5 | 10 | 20) ? (s.count as RoomSettings['count']) : 10,
 });
 
@@ -118,6 +119,7 @@ export default function App() {
     subject: 'all',
     difficulty: 'medium',
     track: 'school',
+    level: 'upper',
     mode: 'classic',
   });
   const online = useOnline();
@@ -159,11 +161,14 @@ export default function App() {
   // ระดับชั้นในโปรไฟล์ = ค่าเริ่มต้นของหน้าแรก
   const profileLevel = profile?.level;
   useEffect(() => {
-    if (profileLevel) setSettings((prev) => (prev.level === profileLevel ? prev : withLevel(prev, profileLevel)));
+    if (!profileLevel) return;
+    setSettings((prev) => (prev.level === profileLevel ? prev : withLevel(prev, profileLevel)));
+    setMatchSettings((prev) => (prev.level === profileLevel ? prev : adjustForLevel(prev, profileLevel)));
   }, [profileLevel]);
 
   const changeLevel = (level: Level) => {
     setSettings((prev) => withLevel(prev, level));
+    setMatchSettings((prev) => adjustForLevel(prev, level));
     if (!profile || profile.level === level) return;
     setMe((m) => (m.status === 'ready' && m.profile ? { ...m, profile: { ...m.profile, level } } : m));
     // บันทึกเงียบๆ ถ้าไม่สำเร็จก็ยังเล่นระดับนี้ได้ในรอบนี้

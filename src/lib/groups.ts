@@ -1,10 +1,12 @@
-import type { Difficulty, Subject, Track } from '../types';
+import type { Difficulty, Level, Subject, Track } from '../types';
 import { ensureSession, PUBLIC_URL } from './supabase';
 
 export interface GroupSettings {
   subject: Subject | 'all';
   difficulty: Difficulty;
   track: Track;
+  /** ไม่มี = ม.ปลาย */
+  level?: Level;
   count: number;
 }
 
@@ -53,6 +55,7 @@ export const createGroup = (name: string, s: Omit<GroupSettings, 'count'>) =>
     p_subject: s.subject,
     p_difficulty: s.difficulty,
     p_track: s.track,
+    p_level: s.level ?? 'upper',
   });
 export const joinGroup = (code: string) => rpc<{ id: string; code: string }>('join_group', { p_code: code });
 export const leaveGroup = (groupId: string) => rpc<void>('leave_group', { p_group: groupId });
