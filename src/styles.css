@@ -5390,3 +5390,54 @@ html[lang="en"] .checkin__label {
   font: inherit;
   font-size: 0.9rem;
 }
+
+/* 24.3: ถ่ายรูปโจทย์ */
+.photo-tutor__pick {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  text-align: center;
+}
+.photo-tutor__drop {
+  display: grid;
+  place-items: center;
+  gap: 6px;
+  width: 100%;
+  min-height: 190px;
+  padding: 12px;
+  border: 3px dashed #7b5cff;
+  border-radius: 18px;
+  background: #f3efff;
+  color: #4b2fd6;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.photo-tutor__drop img {
+  max-width: 100%;
+  max-height: 320px;
+  border-radius: 12px;
+  border: 2px solid var(--ink);
+}
+.photo-tutor__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 8px;
+  width: 100%;
+}
+.photo-tutor__note {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin: 0;
+  font-size: 0.78rem;
+}
+.photo-tutor__read {
+  display: grid;
+  gap: 6px;
+}
+.photo-tutor__choices {
+  list-style: none;
+  margin: 0;
+  padding-left: 1.4em;
+}

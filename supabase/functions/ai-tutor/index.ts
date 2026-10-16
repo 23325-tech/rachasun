@@ -1,5 +1,6 @@
 // Edge Function: AI ติวเตอร์ อธิบายโจทย์ทีละขั้น (คำใบ้ก่อน ครบ 2 คำใบ้จึงขอวิธีทำเต็มได้)
 // โควตาต่อวันนับฝั่งเซิร์ฟเวอร์ผ่าน tutor_consume ใช้ secret GEMINI_API_KEY
+// action "photo": อ่านโจทย์จากรูป แล้วเริ่มด้วยคำใบ้ขั้นแรก (รูปส่งต่อให้ Gemini เท่านั้น ไม่บันทึกและไม่ log)
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { chapterName } from '../_shared/chapters.ts';
 import { formatFillAnswer, type FillAnswer } from '../_shared/rules.ts';
@@ -134,15 +135,18 @@ ${task}
 - ห้ามใช้อีโมจิ ห้ามใช้ markdown ตัวหนา หัวข้อ หรือตาราง${lang === 'en' ? '\n\nIMPORTANT: Reply in English only.' : ''}`;
 }
 
-async function callGemini(prompt: string, apiKey: string): Promise<string> {
+type Part = { text: string } | { inline_data: { mime_type: string; data: string } };
+
+async function callGemini(prompt: string | Part[], apiKey: string, asJson = false): Promise<string> {
   let lastError = '';
+  const parts = typeof prompt === 'string' ? [{ text: prompt }] : prompt;
   for (const model of MODELS) {
     const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
       body: JSON.stringify({
-        contents: [{ role: 'user', parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0.4, maxOutputTokens: 4096 },
+        contents: [{ role: 'user', parts }],
+        generationConfig: { temperature: 0.4, maxOutputTokens: 4096, ...(asJson ? { responseMimeType: 'application/json' } : {}) },
       }),
     });
     if (!res.ok) {
@@ -155,18 +159,82 @@ async function callGemini(prompt: string, apiKey: string): Promise<string> {
       lastError = `${model}: cut off (MAX_TOKENS)`;
       continue;
     }
-    const parts: { text?: string; thought?: boolean }[] = body?.candidates?.[0]?.content?.parts ?? [];
-    const text = parts
+    const out: { text?: string; thought?: boolean }[] = body?.candidates?.[0]?.content?.parts ?? [];
+    const text = out
       .filter((p) => !p.thought)
       .map((p) => p.text ?? '')
       .join('')
-      .replace(/\*\*/g, '')
+      .replace(asJson ? /$^/ : /\*\*/g, '')
       .replace(/\p{Extended_Pictographic}️?/gu, '')
       .trim();
     if (text) return text;
     lastError = `${model}: empty response`;
   }
   throw new Error(`Gemini failed: ${lastError}`);
+}
+
+const SUBJECTS = ['math', 'science', 'physics', 'chemistry', 'biology', 'english'];
+
+function photoPrompt(lang: Lang) {
+  return `รูปนี้คือโจทย์ที่นักเรียนไทยถ่ายมาขอให้ช่วยอธิบาย
+ตอบเป็น JSON อย่างเดียว รูปแบบ:
+{"ok": true, "subject": "math|science|physics|chemistry|biology|english", "prompt": "...", "choices": ["..."], "answer": "...", "explanation": "...", "hint": "..."}
+- prompt: ถอดข้อความโจทย์ให้ครบถ้วนตามรูป (ถ้ามีหลายข้อ เลือกข้อที่เด่นหรืออยู่บนสุด 1 ข้อ) สูตรเขียนเป็น LaTeX ใน $...$ สูตรเคมีใช้ \\ce{...} ได้
+- choices: ตัวเลือกถ้ามี (ไม่มีให้เป็น [])
+- answer: คำตอบที่ถูกต้องที่คุณคำนวณเอง (ตรวจให้ดี)
+- explanation: วิธีทำย่อ 1-3 ประโยค
+- hint: คำใบ้ขั้นที่ 1 ยาว 1-3 ประโยค ชี้แนวคิดหรือขั้นแรกที่ควรทำ ห้ามบอกคำตอบ ปิดท้ายด้วยคำถามชวนคิดสั้นๆ ไม่ต้องทักทาย
+- ถ้ารูปไม่ใช่โจทย์การเรียน อ่านไม่ออก หรือไม่เหมาะสม ให้ตอบ {"ok": false, "reason": "..."}
+- ภาษาของ hint, explanation และ reason: ${lang === 'en' ? 'English' : 'ภาษาไทยที่เป็นกันเอง'} (prompt และ choices คงภาษาตามรูป)
+- ห้ามใช้อีโมจิ ห้ามใช้ markdown`;
+}
+
+async function handlePhoto(
+  admin: ReturnType<typeof createClient>,
+  user: { id: string },
+  guest: boolean,
+  body: Record<string, unknown>,
+  lang: Lang,
+  apiKey: string,
+) {
+  const mime = String(body.mime ?? '');
+  const data = String(body.image ?? '');
+  if (!/^image\/(jpeg|png|webp)$/.test(mime) || !data || data.length > 2_800_000 || !/^[A-Za-z0-9+/=]+$/.test(data)) {
+    return json({ error: 'bad_image' }, 400);
+  }
+  const { data: quota, error: qErr } = await admin.rpc('tutor_consume', { p_user: user.id, p_kind: 'photo', p_guest: guest });
+  if (qErr) throw qErr;
+  if (!quota.ok) return json({ error: 'photo_quota', used: quota.used, limit: quota.limit }, 429);
+  const refund = () => admin.rpc('tutor_consume', { p_user: user.id, p_kind: 'photo', p_guest: guest, p_delta: -1 });
+
+  let parsed: Record<string, unknown>;
+  try {
+    const raw = await callGemini([{ inline_data: { mime_type: mime, data } }, { text: photoPrompt(lang) }], apiKey, true);
+    parsed = JSON.parse(raw.replace(/^```(json)?|```$/g, '').trim());
+  } catch (e) {
+    await refund();
+    throw e;
+  }
+  if (!parsed.ok || !parsed.prompt || !parsed.hint) {
+    // อ่านโจทย์ไม่ได้ ไม่นับโควตา
+    await refund();
+    return json({ error: 'not_a_problem', reason: clip(parsed.reason, 300) }, 422);
+  }
+  const subject = SUBJECTS.includes(String(parsed.subject)) ? String(parsed.subject) : 'math';
+  return json({
+    question: {
+      ctx: {
+        subject,
+        prompt: clip(parsed.prompt, 3000),
+        choices: Array.isArray(parsed.choices) && parsed.choices.length ? parsed.choices.slice(0, 6).map((c) => clip(c, 600)) : undefined,
+        answer: clip(parsed.answer, 600),
+        explanation: clip(parsed.explanation, 3000),
+      },
+    },
+    reply: clip(parsed.hint, 3000).replace(/\p{Extended_Pictographic}️?/gu, ''),
+    used: quota.used,
+    limit: quota.limit,
+  });
 }
 
 Deno.serve(async (req) => {
@@ -184,6 +252,7 @@ Deno.serve(async (req) => {
     const guest = user.is_anonymous === true;
 
     const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
+    if (body.action === 'photo') return await handlePhoto(admin, user, guest, body, body.lang === 'en' ? 'en' : 'th', apiKey);
     const action: Action = body.action === 'solution' ? 'solution' : body.action === 'ask' ? 'ask' : 'hint';
     const lang: Lang = body.lang === 'en' ? 'en' : 'th';
     const message = clip(body.message, 500).trim();
@@ -212,7 +281,8 @@ Deno.serve(async (req) => {
       throw e;
     }
   } catch (e) {
-    console.error(e);
+    // log แค่ข้อความ error (ไม่มีรูปหรือข้อมูลผู้ใช้)
+    console.error(e instanceof Error ? e.message : 'error');
     return json({ error: 'ai_failed' }, 500);
   }
 });

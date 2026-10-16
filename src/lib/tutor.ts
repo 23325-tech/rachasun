@@ -53,11 +53,47 @@ export function tutorFromQuestion(q: Question, given: number | string | null, le
   };
 }
 
-export async function fetchTutorQuota(): Promise<TutorQuota> {
+export async function fetchTutorQuota(kind: 'chat' | 'photo' = 'chat'): Promise<TutorQuota> {
   const sb = await ensureSession();
   const { data, error } = await sb.rpc('tutor_quota');
   if (error) throw new Error(error.message);
-  return { used: data.chatUsed, limit: data.chatLimit };
+  return kind === 'photo' ? { used: data.photoUsed, limit: data.photoLimit } : { used: data.chatUsed, limit: data.chatLimit };
+}
+
+/** ย่อรูปในเครื่องก่อนส่ง (ด้านยาวสุด 1280px, JPEG) ประหยัดเน็ต */
+export async function shrinkImage(file: File, max = 1280): Promise<{ base64: string; url: string }> {
+  const bmp = await createImageBitmap(file);
+  const k = Math.min(1, max / Math.max(bmp.width, bmp.height));
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.round(bmp.width * k);
+  canvas.height = Math.round(bmp.height * k);
+  canvas.getContext('2d')!.drawImage(bmp, 0, 0, canvas.width, canvas.height);
+  bmp.close();
+  const url = canvas.toDataURL('image/jpeg', 0.82);
+  return { base64: url.slice(url.indexOf(',') + 1), url };
+}
+
+/** ส่งรูปโจทย์ให้ AI อ่าน ได้โจทย์ที่ถอดแล้ว + คำใบ้แรก (รูปไม่ถูกเก็บ) */
+export async function photoTutor(base64: string): Promise<{ question: TutorQuestion; reply: string; quota: TutorQuota }> {
+  const sb = await ensureSession();
+  const { data, error } = await sb.functions.invoke('ai-tutor', {
+    body: { action: 'photo', image: base64, mime: 'image/jpeg', lang: getLang() },
+  });
+  let body = data as { question?: TutorQuestion; reply?: string; error?: string; reason?: string; used?: number; limit?: number } | null;
+  const ctx = (error as { context?: Response } | null)?.context;
+  if (error && ctx) body = await ctx.json().catch(() => null);
+  if (!body?.question || !body.reply) {
+    const code = body?.error ?? 'ai_failed';
+    if (code === 'photo_quota') {
+      const quota = { used: body?.used ?? 0, limit: body?.limit ?? 0 };
+      throw new TutorError(code, t(`วันนี้ส่งรูปครบ ${quota.limit} รูปแล้ว พรุ่งนี้มาใหม่นะ`, `You've sent all ${quota.limit} photos today. Come back tomorrow!`), quota);
+    }
+    if (code === 'not_a_problem')
+      throw new TutorError(code, t('อ่านโจทย์จากรูปไม่ได้ ลองถ่ายให้ชัด ตรง และเห็นโจทย์ทั้งข้อ (ไม่นับโควตา)', "Couldn't read a problem in this photo. Try a clearer, straight shot of the whole question (not counted)."));
+    if (code === 'bad_image') throw new TutorError(code, t('ไฟล์รูปนี้ใช้ไม่ได้ ลองรูปอื่น', "This image file can't be used, try another"));
+    throw new TutorError(code, t('AI อ่านรูปไม่สำเร็จ ลองใหม่อีกครั้ง (ไม่นับโควตา)', "The AI couldn't process the photo, please try again (not counted)"));
+  }
+  return { question: body.question, reply: body.reply, quota: { used: body.used ?? 0, limit: body.limit ?? 0 } };
 }
 
 export class TutorError extends Error {

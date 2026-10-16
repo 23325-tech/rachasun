@@ -15,12 +15,14 @@ import {
 
 interface Props {
   question: TutorQuestion;
+  /** บทสนทนาที่มีแล้ว (เช่น คำใบ้แรกจากการอ่านรูป) ถ้ามีจะไม่ขอคำใบ้แรกซ้ำ */
+  initial?: TutorTurn[];
   onClose: () => void;
 }
 
 /** AI ติวเตอร์: คำใบ้ทีละขั้นก่อน ครบ 2 คำใบ้จึงดูวิธีทำเต็มได้ ถามเพิ่มเองได้ */
-export function TutorSheet({ question, onClose }: Props) {
-  const [turns, setTurns] = useState<TutorTurn[]>([]);
+export function TutorSheet({ question, initial, onClose }: Props) {
+  const [turns, setTurns] = useState<TutorTurn[]>(initial ?? []);
   const [quota, setQuota] = useState<TutorQuota | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -68,11 +70,11 @@ export function TutorSheet({ question, onClose }: Props) {
       .then((q) => {
         setQuota(q);
         if (!inFlight.current) setBusy(false);
-        if (q.used < q.limit) void send('hint');
+        if (q.used < q.limit && !initial?.length) void send('hint');
       })
       .catch(() => {
         if (!inFlight.current) setBusy(false);
-        void send('hint');
+        if (!initial?.length) void send('hint');
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

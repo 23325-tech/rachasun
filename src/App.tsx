@@ -57,6 +57,7 @@ import { fetchPetCare, isHungry, type PetCareState } from './lib/petCare';
 import { PetScreen } from './screens/PetScreen';
 import { GachaScreen } from './screens/GachaScreen';
 import { MistakeScreen } from './screens/MistakeScreen';
+import { PhotoTutorScreen } from './screens/PhotoTutorScreen';
 import { fetchMistakes, fetchReviewQuestions } from './lib/mistakes';
 import { SeasonScreen } from './screens/SeasonScreen';
 import { GemTopupScreen } from './screens/GemTopupScreen';
@@ -69,6 +70,7 @@ type Screen =
   | { name: 'account' }
   | { name: 'quiz'; questions: Question[]; runId: number; review?: boolean }
   | { name: 'mistakes' }
+  | { name: 'photo' }
   | { name: 'result'; questions: Question[]; results: AnswerResult[]; review?: boolean }
   | { name: 'battle'; questions: Question[]; questionCount: number; players: BattlePlayer[]; bots: Bot[]; runId: number; intro?: boolean }
   | { name: 'battleResult'; players: BattlePlayer[] }
@@ -456,6 +458,7 @@ export default function App() {
             else if (a === 'groups') setScreen({ name: 'groups' });
             else if (a === 'analysis') setScreen({ name: 'analysis' });
             else if (a === 'mistakes') setScreen({ name: 'mistakes' });
+            else if (a === 'photo') setScreen({ name: 'photo' });
             else setScreen({ name: 'mock' });
           }}
         />
@@ -559,6 +562,8 @@ export default function App() {
       ) : (
         <LoadingScreen message={t('กำลังโหลดฤดูกาล...', 'Loading season...')} onCancel={goHome} />
       );
+    case 'photo':
+      return <PhotoTutorScreen onBack={goHome} />;
     case 'mistakes':
       return (
         <MistakeScreen
