@@ -109,6 +109,11 @@ export const WARDROBE: WardrobeItem[] = [
   { id: 'pet_slime', slot: 'pet', value: 's', name: 'สไลม์เด้งดึ๋ง', rarity: 'epic', gem: 39, en: 'Bouncy slime' },
   { id: 'pet_dragon', slot: 'pet', value: 'd', name: 'มังกรน้อย', rarity: 'legend', gem: 59, en: 'Baby dragon' },
   free('aura_none', 'aura', 'n', 'ไม่มีออร่า', 'No aura'),
+  { id: 'aura_stars', slot: 'aura', value: 's', name: 'ดาวระยิบรอบตัว', rarity: 'rare', coin: 2500, en: 'Twinkling stars' },
+  { id: 'aura_sakura', slot: 'aura', value: 'k', name: 'กลีบซากุระโปรย', rarity: 'rare', coin: 3000, en: 'Sakura petals' },
+  { id: 'aura_books', slot: 'aura', value: 'b', name: 'หนังสือลอยวน', rarity: 'epic', gem: 39, en: 'Orbiting books' },
+  { id: 'aura_flames', slot: 'aura', value: 'f', name: 'เปลวไฟลุกโชน', rarity: 'epic', gem: 45, en: 'Blazing flames' },
+  { id: 'aura_lightning', slot: 'aura', value: 'l', name: 'สายฟ้าฟาด', rarity: 'legend', gem: 49, en: 'Lightning storm' },
   free('set_none', 'set', 'n', 'ตัวละครปกติ', 'Default character'),
   free('shot_none', 'shot', 'n', 'กระสุนปกติ', 'Default shot'),
 ];

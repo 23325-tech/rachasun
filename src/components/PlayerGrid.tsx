@@ -3,7 +3,7 @@ import { PetImage, PlayerAvatar } from './PlayerAvatar';
 import { Alarm, ChatCircleDots, CheckCircle, Crosshair, Heart, Lightning, LockSimple, ShieldCheck, SkipForward, Skull, XCircle, type Icon } from '@phosphor-icons/react';
 import { createElement, lazy, Suspense, useMemo } from 'react';
 import type { Pose } from '../three/chibi';
-import { chibiOf, petOf } from '../lib/look';
+import { auraOf, chibiOf, petOf } from '../lib/look';
 import { t } from '../lib/i18n';
 
 const Avatar3D = lazy(() => import('./Avatar3D').then((m) => ({ default: m.Avatar3D })));
@@ -62,7 +62,7 @@ export function PlayerGrid({ players, maxHearts, meId, status, hits, hitStage }:
               .filter(Boolean)
               .join(' ')}
           >
-            <div className={`pcard__avatar ${happy ? 'react-happy' : ''} ${sad ? 'react-sad' : ''}`} aria-hidden>
+            <div className={`pcard__avatar ${happy ? 'react-happy' : ''} ${sad ? 'react-sad' : ''} aura--${auraOf(p.avatar)}`} aria-hidden>
               {p.id === meId ? (
                 <MeLive code={p.avatar} pose={pose} />
               ) : (

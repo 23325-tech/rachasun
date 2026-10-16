@@ -4549,3 +4549,18 @@ html[lang="en"] .checkin__label {
   font-size: 1.6rem;
   color: #b9add9;
 }
+
+/* 22.3: ออร่าในการ์ดผู้เล่น (เรืองแสงรอบรูป ไม่หนักเครื่อง) */
+.pcard__avatar[class*='aura--']:not(.aura--none) {
+  border-radius: 50%;
+  animation: aura-pulse 1.6s ease-in-out infinite;
+}
+.pcard__avatar.aura--stars { --aura: rgba(255, 216, 77, 0.95); }
+.pcard__avatar.aura--sakura { --aura: rgba(255, 150, 190, 0.95); }
+.pcard__avatar.aura--books { --aura: rgba(110, 170, 255, 0.95); }
+.pcard__avatar.aura--flames { --aura: rgba(255, 120, 30, 0.95); }
+.pcard__avatar.aura--lightning { --aura: rgba(94, 200, 255, 1); }
+@keyframes aura-pulse {
+  0%, 100% { filter: drop-shadow(0 0 3px var(--aura)) drop-shadow(0 0 6px var(--aura)); }
+  50% { filter: drop-shadow(0 0 6px var(--aura)) drop-shadow(0 0 12px var(--aura)); }
+}

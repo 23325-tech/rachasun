@@ -27,7 +27,7 @@ const RARITY_TEXT: Record<Rarity, string> = {
   get legend() { return t('ตำนาน', 'Legend'); },
 };
 const SWATCH_SLOTS: Slot[] = ['skin', 'hair', 'eyes'];
-const FULL_SLOTS: Slot[] = ['outfit', 'item'];
+const FULL_SLOTS: Slot[] = ['outfit', 'item', 'aura'];
 
 /** ร้านค้า: ของประจำ (ธรรมดา) + ของหมุนเวียน 8 ชิ้น (หายากขึ้นไป) ลองสวมก่อนซื้อได้ */
 export function ShopScreen({ code, state, onBack, onBought, onWear, onTopup }: Props) {

@@ -2,6 +2,7 @@
 // ภายหลังเปลี่ยนเป็นโมเดล .glb จากนักปั้นได้ โดยคงรูปแบบ ChibiLook เดิม
 import * as THREE from 'three';
 import { createPet, type Pet, type PetKind } from './pets';
+import { createAura, type Aura, type AuraKind } from './auras';
 
 export type Outfit = 'uniform' | 'labcoat' | 'hoodie' | 'sport' | 'skirt' | 'tee';
 export type HairStyle = 'short' | 'bob' | 'spiky' | 'bun' | 'long' | 'ponytail' | 'twintails' | 'curly';
@@ -20,6 +21,7 @@ export interface ChibiLook {
   item: HandItem;
   face?: Face;
   pet?: PetKind;
+  aura?: AuraKind;
 }
 
 export const DEFAULT_LOOK: ChibiLook = {
@@ -112,6 +114,17 @@ export function createChibi(initial: ChibiLook = DEFAULT_LOOK): Chibi {
   petSlot.scale.setScalar(1.15);
   root.add(petSlot);
   let pet: Pet | null = null;
+  const auraSlot = new THREE.Group();
+  root.add(auraSlot);
+  let aura: Aura | null = null;
+  function buildAura() {
+    if (aura) {
+      auraSlot.remove(aura.root);
+      aura.dispose();
+    }
+    aura = createAura(look.aura ?? 'none');
+    if (aura) auraSlot.add(aura.root);
+  }
   function buildPet() {
     clear(petSlot);
     pet = createPet(look.pet ?? 'none');
@@ -600,6 +613,7 @@ export function createChibi(initial: ChibiLook = DEFAULT_LOOK): Chibi {
     if (all || prev.item !== next.item) buildItem();
     if (all || prev.face !== next.face) buildFace();
     if (all || prev.pet !== next.pet) buildPet();
+    if (all || prev.aura !== next.aura) buildAura();
   }
 
   // เงาวงรีใต้เท้า
@@ -618,6 +632,7 @@ export function createChibi(initial: ChibiLook = DEFAULT_LOOK): Chibi {
   buildItem();
   buildFace();
   buildPet();
+  buildAura();
 
   let nextBlink = 2;
   /** cheer = 0..1 (กระโดดดีใจชั่วครู่) ทับท่าหลัก pose */
@@ -658,6 +673,7 @@ export function createChibi(initial: ChibiLook = DEFAULT_LOOK): Chibi {
     if (t > nextBlink + 0.12) nextBlink = t + 2 + Math.random() * 3;
     for (const e of eyes) e.scale.y = blinking ? 0.12 : sad ? 0.75 : 1;
     pet?.update(t, cheer > 0.5 ? 'cheer' : pose);
+    aura?.update(t, cheer > 0.5 ? 'cheer' : pose);
   }
 
   return {
