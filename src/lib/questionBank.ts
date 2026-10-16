@@ -60,9 +60,9 @@ function fromRow(r: QuestionRow): Question {
  * onStatus ใช้แสดงข้อความระหว่างโหลด
  */
 export async function loadQuiz(req: QuizRequest, onStatus?: (msg: string) => void): Promise<QuizLoadResult> {
-  // อ่านคลังและสร้างโจทย์ได้โดยไม่ต้องล็อกอิน (ใช้ publishable key) ส่วนรายงานข้อผิดต้องมี session
-  const sb = supabase;
-  if (!sb) throw new Error('ยังไม่ได้ตั้งค่า Supabase (.env.local)');
+  if (!supabase) throw new Error('ยังไม่ได้ตั้งค่า Supabase (.env.local)');
+  // ต้องมี session (แขกก็ได้) เพราะการให้ AI สร้างโจทย์จำกัดจำนวนต่อผู้เล่น
+  const sb = await ensureSession();
 
   onStatus?.('กำลังหยิบโจทย์จากคลัง...');
   const { data, error } = await sb.rpc('get_random_questions', {
@@ -108,6 +108,8 @@ async function describeFunctionError(err: unknown): Promise<string> {
   if (ctx && typeof ctx.json === 'function') {
     try {
       const body = await ctx.json();
+      if (body?.error === 'rate_limited')
+        return `ให้ AI สร้างโจทย์ใหม่ครบโควตาชั่วโมงนี้แล้ว (${body.limit} ข้อ/ชม.) ลองลดจำนวนข้อ เปลี่ยนวิชา หรือรอสักพักนะ`;
       if (body?.error) return `สร้างโจทย์ไม่สำเร็จ: ${body.error}`;
     } catch {
       /* ignore */

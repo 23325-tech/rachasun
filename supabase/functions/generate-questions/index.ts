@@ -7,6 +7,8 @@ const SUBJECTS = ['math', 'physics', 'chemistry', 'biology', 'english'] as const
 const DIFFICULTIES = ['easy', 'medium', 'hard'] as const;
 const TRACKS = ['entrance', 'school'] as const;
 const MAX_COUNT = 10;
+/** ผู้เล่นหนึ่งคนให้ AI สร้างได้ไม่เกินกี่ข้อต่อชั่วโมง (เรียกจาก Edge Function อื่นไม่จำกัด) */
+const HOURLY_LIMIT = 40;
 
 type Subject = (typeof SUBJECTS)[number];
 type Difficulty = (typeof DIFFICULTIES)[number];
@@ -213,6 +215,17 @@ Deno.serve(async (req) => {
     const apiKey = Deno.env.get('GEMINI_API_KEY');
     if (!apiKey) return json({ error: 'GEMINI_API_KEY is not set' }, 500);
 
+    // ใครเรียก: Edge Function ของเราเอง (service role) ไม่จำกัด / ผู้เล่นต้องล็อกอิน (แขกก็ได้) และโดนจำกัดต่อชั่วโมง
+    const admin = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+    const token = (req.headers.get('Authorization') ?? '').replace(/^Bearer\s+/i, '');
+    const internal = token !== '' && token === Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    let userId: string | null = null;
+    if (!internal) {
+      const { data: auth } = await admin.auth.getUser(token);
+      userId = auth.user?.id ?? null;
+      if (!userId) return json({ error: 'not_signed_in' }, 401);
+    }
+
     const body = await req.json().catch(() => ({}));
     const subjects: Subject[] = Array.isArray(body.subjects)
       ? body.subjects.filter((s: string) => (SUBJECTS as readonly string[]).includes(s))
@@ -226,6 +239,17 @@ Deno.serve(async (req) => {
     if (!TRACKS.includes(track)) return json({ error: 'invalid track' }, 400);
     if (!(count >= 1 && count <= MAX_COUNT)) return json({ error: `count must be 1-${MAX_COUNT}` }, 400);
 
+    if (userId) {
+      const since = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+      const { data: recent } = await admin
+        .from('ai_generation_log')
+        .select('questions')
+        .eq('user_id', userId)
+        .gte('created_at', since);
+      const used = (recent ?? []).reduce((sum, r) => sum + (r.questions as number), 0);
+      if (used + count > HOURLY_LIMIT) return json({ error: 'rate_limited', used, limit: HOURLY_LIMIT }, 429);
+    }
+
     const { data, model, fallbacks } = await callGemini(buildPrompt(subjects, difficulty, track, count), apiKey);
     const rows = (data.questions ?? [])
       .map((q) => toRow(q, subjects, difficulty, track, model))
@@ -234,9 +258,9 @@ Deno.serve(async (req) => {
 
     if (!rows.length) return json({ error: 'AI returned no valid questions' }, 502);
 
-    const admin = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
     const { data: inserted, error } = await admin.from('questions').insert(rows).select();
     if (error) throw error;
+    if (userId) await admin.from('ai_generation_log').insert({ user_id: userId, questions: rows.length });
 
     return json({ questions: inserted, model, fallbacks, dropped: (data.questions?.length ?? 0) - rows.length });
   } catch (e) {
