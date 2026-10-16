@@ -60,7 +60,7 @@ function fromRow(r: QuestionRow): Question {
  * onStatus ใช้แสดงข้อความระหว่างโหลด
  */
 export async function loadQuiz(req: QuizRequest, onStatus?: (msg: string) => void): Promise<QuizLoadResult> {
-  if (!supabase) throw new Error('ยังไม่ได้ตั้งค่า Supabase (.env.local)');
+  if (!supabase) throw new Error('เชื่อมต่อเซิร์ฟเวอร์ไม่ได้');
   // ต้องมี session (แขกก็ได้) เพราะการให้ AI สร้างโจทย์จำกัดจำนวนต่อผู้เล่น
   const sb = await ensureSession();
 

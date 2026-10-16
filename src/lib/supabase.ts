@@ -8,7 +8,7 @@ export const supabase: SupabaseClient | null = url && key ? createClient(url, ke
 
 /** ให้ผู้เล่นมี session เสมอ: ถ้ายังไม่ล็อกอินจะเข้าแบบแขก (anonymous sign-in) */
 export async function ensureSession(): Promise<SupabaseClient> {
-  if (!supabase) throw new Error('ยังไม่ได้ตั้งค่า Supabase (.env.local)');
+  if (!supabase) throw new Error('เชื่อมต่อเซิร์ฟเวอร์ไม่ได้');
   const { data } = await supabase.auth.getSession();
   if (!data.session) {
     const { error } = await supabase.auth.signInAnonymously();

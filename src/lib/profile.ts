@@ -22,7 +22,7 @@ export const displayName = (p: Pick<Profile, 'nickname' | 'tag'>) => `${p.nickna
 export const isGuest = (user: User | null) => !user || user.is_anonymous === true;
 
 function client() {
-  if (!supabase) throw new Error('ยังไม่ได้ตั้งค่า Supabase (.env.local)');
+  if (!supabase) throw new Error('เชื่อมต่อเซิร์ฟเวอร์ไม่ได้');
   return supabase;
 }
 

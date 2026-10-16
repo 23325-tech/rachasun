@@ -198,7 +198,7 @@ export default function App() {
       return;
     }
     if (!supabase) {
-      setScreen({ name: 'start', error: 'ยังไม่ได้ตั้งค่า Supabase ในไฟล์ .env.local' });
+      setScreen({ name: 'start', error: 'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ ลองเล่นโจทย์ตัวอย่างไปก่อนนะ' });
       return;
     }
     const loadId = ++loadIdRef.current;
