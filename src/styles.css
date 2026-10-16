@@ -1283,6 +1283,73 @@ button {
   font-size: 0.95rem;
 }
 
+/* ---------- กลุ่มเพื่อน ---------- */
+.mode-tab--wide {
+  grid-column: 1 / -1;
+}
+.group-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+}
+.group-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  text-align: left;
+  font: inherit;
+  background: #fff;
+  border: 2.5px solid var(--ink);
+  border-radius: 14px;
+  box-shadow: 0 3px 0 var(--ink);
+  cursor: pointer;
+}
+.group-item:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 var(--ink);
+}
+.group-item__body {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+}
+.group-item__name {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.group-item__meta {
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+}
+.group-item__today {
+  flex: none;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 10px;
+  border: 2px solid var(--ink);
+  background: var(--primary);
+}
+.group-item__today.is-done {
+  background: #d8fbe9;
+}
+.code-card__code--small {
+  font-size: clamp(1.8rem, 9vw, 2.4rem);
+}
+.group-leave {
+  justify-self: center;
+  color: #fff;
+  opacity: 0.85;
+  font-size: 0.88rem;
+}
+
 /* ---------- คำท้า ---------- */
 .challenge-hero {
   display: grid;

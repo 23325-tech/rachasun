@@ -63,11 +63,12 @@ export interface ChallengeBoard {
 const ERRORS: Record<string, string> = {
   challenge_not_found: 'ไม่พบคำท้านี้ ตรวจลิงก์อีกครั้งนะ',
   challenge_expired: 'คำท้านี้หมดเวลาแล้ว (24 ชั่วโมง)',
-  already_played: 'คุณเล่นคำท้านี้ไปแล้ว',
+  already_played: 'คุณเล่นชุดนี้ไปแล้ว',
   question_closed: 'ข้อนี้ปิดไปแล้ว',
   no_questions: 'เตรียมโจทย์ไม่สำเร็จ ลองใหม่อีกครั้ง',
   invalid_settings: 'ค่าที่เลือกไม่ถูกต้อง',
   profile_required: 'ตั้งชื่อเล่นก่อนนะ',
+  not_member: 'คุณไม่ได้อยู่ในกลุ่มนี้',
 };
 
 async function call<T>(action: string, body: Record<string, unknown>): Promise<T> {
@@ -89,6 +90,8 @@ async function call<T>(action: string, body: Record<string, unknown>): Promise<T
 }
 
 export const createChallenge = (settings: ChallengeSettings) => call<{ code: string }>('create_challenge', { settings });
+/** โจทย์ประจำวันของกลุ่ม (เล่นได้วันละครั้ง) */
+export const startDaily = (groupId: string) => call<{ playId: string; total: number }>('start_daily', { groupId });
 export const startChallenge = (code: string) => call<{ playId: string; total: number }>('start', { code });
 export const nextQuestion = (playId: string) => call<AsyncQuestion | { done: true; score: number }>('next', { playId });
 export const answerQuestion = (playId: string, index: number, given: number | string | null) =>

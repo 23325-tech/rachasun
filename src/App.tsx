@@ -20,6 +20,8 @@ import type { XpState } from './components/XpBadge';
 import { OnlineMenuScreen } from './screens/OnlineMenuScreen';
 import { RoomScreen } from './screens/RoomScreen';
 import { ChallengeScreen } from './screens/ChallengeScreen';
+import { GroupsScreen } from './screens/GroupsScreen';
+import { GroupScreen } from './screens/GroupScreen';
 import { createChallenge } from './lib/asyncPlay';
 import { createRoom, findMatch, joinRoom, leaveRoom, type MatchSettings, type RoomSettings } from './lib/rooms';
 
@@ -33,7 +35,9 @@ type Screen =
   | { name: 'battleResult'; players: BattlePlayer[] }
   | { name: 'online'; initialCode?: string }
   | { name: 'lobby'; roomId: string }
-  | { name: 'challenge'; code: string; autoPlay?: boolean };
+  | { name: 'challenge'; code: string; autoPlay?: boolean }
+  | { name: 'groups'; initialCode?: string }
+  | { name: 'group'; groupId: string };
 
 /** loading = กำลังโหลดผู้ใช้, offline = ไม่มี Supabase (เล่นได้แต่ไม่เก็บ XP) */
 type MeState =
@@ -46,7 +50,7 @@ const ALL_SUBJECTS = Object.keys(SUBJECTS) as Subject[];
 const SUDDEN_DEATH_SPARE = 5;
 
 /** อ่านรหัสจากลิงก์ เช่น ?room=CODE หรือ ?challenge=CODE (ครั้งเดียวตอนเปิดแอพ แล้วลบออกจาก URL) */
-function takeLinkCode(param: 'room' | 'challenge', length: number): string | undefined {
+function takeLinkCode(param: 'room' | 'challenge' | 'group', length: number): string | undefined {
   const url = new URL(window.location.href);
   const code = url.searchParams.get(param)?.toUpperCase().replace(/[^A-Z0-9]/g, '');
   if (!code) return undefined;
@@ -58,6 +62,7 @@ function takeLinkCode(param: 'room' | 'challenge', length: number): string | und
 /** อ่านครั้งเดียวตอนโหลดแอพ (ถ้าอ่านใน useState initializer, StrictMode จะเรียกซ้ำแล้วรหัสหาย) */
 const INVITE_CODE = takeLinkCode('room', 5);
 const CHALLENGE_CODE = takeLinkCode('challenge', 6);
+const GROUP_CODE = takeLinkCode('group', 6);
 
 const toRoomSettings = (s: GameSettings): RoomSettings => ({
   subject: s.subject,
@@ -81,9 +86,11 @@ export default function App() {
   const [screen, setScreen] = useState<Screen>(() =>
     CHALLENGE_CODE
       ? { name: 'challenge', code: CHALLENGE_CODE }
-      : INVITE_CODE
-        ? { name: 'online', initialCode: INVITE_CODE }
-        : { name: 'start', error: null },
+      : GROUP_CODE
+        ? { name: 'groups', initialCode: GROUP_CODE }
+        : INVITE_CODE
+          ? { name: 'online', initialCode: INVITE_CODE }
+          : { name: 'start', error: null },
   );
   const [me, setMe] = useState<MeState>(supabase ? { status: 'loading' } : { status: 'offline' });
   const [xp, setXp] = useState<XpState>({ status: 'off' });
@@ -251,6 +258,11 @@ export default function App() {
           error={screen.name === 'start' ? (screen.error ?? (me.status === 'offline' ? me.error ?? null : null)) : null}
           onStart={start}
           onPlaySample={playSample}
+          onGroups={() =>
+            me.status === 'ready'
+              ? setScreen({ name: 'groups' })
+              : setScreen({ name: 'start', error: 'โหมดกลุ่มต้องเชื่อมต่อ Supabase' })
+          }
           onOnline={() =>
             me.status === 'ready'
               ? setScreen({ name: 'online' })
@@ -261,6 +273,26 @@ export default function App() {
       );
     case 'loading':
       return <LoadingScreen message={screen.message} onCancel={goHome} />;
+    case 'groups':
+      return (
+        <GroupsScreen
+          initialCode={screen.initialCode}
+          onBack={goHome}
+          onOpen={(groupId) => setScreen({ name: 'group', groupId })}
+        />
+      );
+    case 'group':
+      return (
+        <GroupScreen
+          key={screen.groupId}
+          groupId={screen.groupId}
+          guest={guest}
+          onBack={() => setScreen({ name: 'groups' })}
+          onLeft={() => setScreen({ name: 'groups' })}
+          onRegister={openAccount}
+          onXpAwarded={refreshMe}
+        />
+      );
     case 'challenge':
       return (
         <ChallengeScreen

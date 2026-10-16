@@ -1,6 +1,6 @@
 // Edge Function: เล่นชุดโจทย์ล็อกแบบแยกเวลา (ลิงก์ท้าเพื่อน / โจทย์ประจำวันของกลุ่ม)
 // เซิร์ฟเวอร์ส่งโจทย์ทีละข้อ จับเวลาเอง ตรวจคำตอบเอง และเฉลยหลังตอบเท่านั้น
-// action: create_challenge | start | next | answer
+// action: create_challenge | start | start_daily | next | answer
 import { createClient, type SupabaseClient } from 'npm:@supabase/supabase-js@2';
 import { calcPoints, checkFillAnswer, formatFillAnswer } from '../_shared/rules.ts';
 import { limitMsOf, pickQuestions, toPublic, type StoredQuestion } from '../_shared/questions.ts';
@@ -9,6 +9,9 @@ const CHALLENGE_TTL_MS = 24 * 60 * 60 * 1000;
 const ANSWER_GRACE_MS = 800;
 const COUNTS = [5, 10, 20];
 const CODE_CHARS = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+const DAILY_COUNT = 10;
+/** วันที่ตามเวลาไทย (UTC+7) เช่น 2026-10-16 ต้องตรงกับ public.today_th() */
+const todayTh = () => new Date(Date.now() + 7 * 3600_000).toISOString().slice(0, 10);
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -90,6 +93,60 @@ async function createChallenge(uid: string, settings: Record<string, unknown>) {
 
 // ---------- เริ่มเล่น ----------
 
+/** สร้าง play ใหม่ หรือกลับเข้า play เดิมที่ยังเล่นไม่จบ (เล่นได้ชุดละครั้ง) */
+async function startPlay(uid: string, setId: string, closed: boolean): Promise<{ playId: string; total: number }> {
+  const { data: existing } = await admin
+    .from('quiz_plays')
+    .select('id,finished_at')
+    .eq('set_id', setId)
+    .eq('user_id', uid)
+    .maybeSingle();
+  if (existing?.finished_at) throw new PlayError('already_played');
+  const total = (await loadSet(setId)).length;
+  if (existing) return { playId: existing.id, total };
+  if (closed) throw new PlayError('challenge_expired');
+  const { data: play, error } = await admin.from('quiz_plays').insert({ set_id: setId, user_id: uid }).select('id').single();
+  if (error?.code === '23505') return startPlay(uid, setId, closed);
+  if (error) throw error;
+  return { playId: play.id, total };
+}
+
+/** โจทย์ประจำวันของกลุ่ม: คนแรกของวันที่กดเล่นเป็นคนสร้างชุด */
+async function startDaily(uid: string, groupId: string) {
+  const { data: member } = await admin
+    .from('group_members')
+    .select('user_id')
+    .eq('group_id', groupId)
+    .eq('user_id', uid)
+    .maybeSingle();
+  if (!member) throw new PlayError('not_member');
+
+  const day = todayTh();
+  const readDaily = async () =>
+    (await admin.from('group_daily').select('set_id').eq('group_id', groupId).eq('day', day).maybeSingle()).data;
+  let daily = await readDaily();
+  if (!daily) {
+    const { data: group } = await admin.from('groups').select('settings').eq('id', groupId).single();
+    const questions = (await pickQuestions(admin, group!.settings, DAILY_COUNT)).slice(0, DAILY_COUNT);
+    if (questions.length < 5) throw new PlayError('no_questions');
+    const { data: set, error } = await admin
+      .from('quiz_sets')
+      .insert({ kind: 'daily', settings: { ...group!.settings, count: questions.length }, questions, created_by: uid })
+      .select('id')
+      .single();
+    if (error) throw error;
+    const { error: e2 } = await admin.from('group_daily').insert({ group_id: groupId, day, set_id: set.id });
+    if (e2?.code === '23505') {
+      // มีคนในกลุ่มสร้างชุดของวันนี้พร้อมกันพอดี -> ใช้ชุดของเขา
+      await admin.from('quiz_sets').delete().eq('id', set.id);
+    } else if (e2) {
+      throw e2;
+    }
+    daily = await readDaily();
+  }
+  return startPlay(uid, daily!.set_id, false);
+}
+
 async function startChallenge(uid: string, code: string) {
   const { data: ch } = await admin
     .from('challenges')
@@ -97,21 +154,7 @@ async function startChallenge(uid: string, code: string) {
     .eq('code', code.toUpperCase().trim())
     .maybeSingle();
   if (!ch) throw new PlayError('challenge_not_found');
-
-  const { data: existing } = await admin
-    .from('quiz_plays')
-    .select('id,finished_at')
-    .eq('set_id', ch.set_id)
-    .eq('user_id', uid)
-    .maybeSingle();
-  if (existing?.finished_at) throw new PlayError('already_played');
-  if (existing) return { playId: existing.id, total: (await loadSet(ch.set_id)).length };
-  if (new Date(ch.expires_at).getTime() < Date.now()) throw new PlayError('challenge_expired');
-
-  const { data: play, error } = await admin.from('quiz_plays').insert({ set_id: ch.set_id, user_id: uid }).select('id').single();
-  if (error?.code === '23505') return startChallenge(uid, code);
-  if (error) throw error;
-  return { playId: play.id, total: (await loadSet(ch.set_id)).length };
+  return startPlay(uid, ch.set_id, new Date(ch.expires_at).getTime() < Date.now());
 }
 
 // ---------- ส่งโจทย์ทีละข้อ ----------
@@ -243,6 +286,8 @@ Deno.serve(async (req) => {
         return json(await createChallenge(uid, body.settings ?? {}));
       case 'start':
         return json(await startChallenge(uid, String(body.code ?? '')));
+      case 'start_daily':
+        return json(await startDaily(uid, String(body.groupId ?? '')));
       case 'next':
         return json(await next(uid, String(body.playId ?? '')));
       case 'answer':

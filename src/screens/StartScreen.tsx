@@ -44,6 +44,7 @@ interface Props {
   /** การ์ดโปรไฟล์ (ถ้ามี) แสดงใต้ชื่อแอพ */
   profileSlot?: ReactNode;
   onOnline: () => void;
+  onGroups: () => void;
 }
 
 function Segmented<T extends string | number>({
@@ -78,7 +79,7 @@ function Segmented<T extends string | number>({
   );
 }
 
-export function StartScreen({ initial, error, onStart, onPlaySample, profileSlot, onOnline }: Props) {
+export function StartScreen({ initial, error, onStart, onPlaySample, profileSlot, onOnline, onGroups }: Props) {
   const [s, setS] = useState<GameSettings>(initial);
   const set = <K extends keyof GameSettings>(key: K, value: GameSettings[K]) => setS((prev) => ({ ...prev, [key]: value }));
 
@@ -138,6 +139,11 @@ export function StartScreen({ initial, error, onStart, onPlaySample, profileSlot
           <span className="mode-tab__icon">🌐</span>
           <span className="mode-tab__name">ออนไลน์</span>
           <span className="mode-tab__desc">สร้างห้องเล่นกับเพื่อน</span>
+        </button>
+        <button type="button" role="tab" aria-selected={false} className="mode-tab mode-tab--wide" onClick={onGroups}>
+          <span className="mode-tab__icon">🏆</span>
+          <span className="mode-tab__name">กลุ่มเพื่อน</span>
+          <span className="mode-tab__desc">โจทย์ประจำวัน + ตารางอันดับ</span>
         </button>
       </div>
 
