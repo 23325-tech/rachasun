@@ -59,6 +59,7 @@ import { GachaScreen } from './screens/GachaScreen';
 import { MistakeScreen } from './screens/MistakeScreen';
 import { PhotoTutorScreen } from './screens/PhotoTutorScreen';
 import { DreamScreen } from './screens/DreamScreen';
+import { ClanScreen } from './screens/ClanScreen';
 import { fetchDream, nextExam, type DreamPlan } from './lib/dream';
 import { TCAS_BY_KEY } from './data/tcas';
 import { fetchMistakes, fetchReviewQuestions } from './lib/mistakes';
@@ -75,6 +76,7 @@ type Screen =
   | { name: 'mistakes' }
   | { name: 'photo' }
   | { name: 'dream' }
+  | { name: 'clan' }
   | { name: 'result'; questions: Question[]; results: AnswerResult[]; review?: boolean }
   | { name: 'battle'; questions: Question[]; questionCount: number; players: BattlePlayer[]; bots: Bot[]; runId: number; intro?: boolean }
   | { name: 'battleResult'; players: BattlePlayer[] }
@@ -476,6 +478,7 @@ export default function App() {
             else if (a === 'analysis') setScreen({ name: 'analysis' });
             else if (a === 'mistakes') setScreen({ name: 'mistakes' });
             else if (a === 'photo') setScreen({ name: 'photo' });
+            else if (a === 'clan') setScreen({ name: 'clan' });
             else setScreen({ name: 'mock' });
           }}
         />
@@ -579,6 +582,8 @@ export default function App() {
       ) : (
         <LoadingScreen message={t('กำลังโหลดฤดูกาล...', 'Loading season...')} onCancel={goHome} />
       );
+    case 'clan':
+      return <ClanScreen meId={profileId ?? null} onBack={goHome} />;
     case 'dream':
       return <DreamScreen onBack={goHome} onOpenPlan={() => setScreen({ name: 'analysis', level: 'upper' })} />;
     case 'photo':
