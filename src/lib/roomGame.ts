@@ -1,6 +1,7 @@
 import type { BattlePlayer, CardKind, RoundOutcome } from '../game/battle';
 import type { Difficulty, Subject } from '../types';
 import { ensureSession } from './supabase';
+import { t } from './i18n';
 
 /** สถานะเกมที่เซิร์ฟเวอร์เปิดเผย (rooms.state) ต้องตรงกับ supabase/functions/room-game */
 export interface OnlineGameState {
@@ -69,19 +70,19 @@ export function noteServerTime(serverNow: number, sentAt: number, receivedAt: nu
 export const serverNow = () => Date.now() + clockOffset;
 
 const GAME_ERRORS: Record<string, string> = {
-  need_two_players: 'ต้องมีผู้เล่นอย่างน้อย 2 คน',
-  not_host: 'เฉพาะเจ้าของห้องเท่านั้น',
-  no_questions: 'เตรียมโจทย์ไม่สำเร็จ ลองใหม่อีกครั้ง',
-  too_late: 'หมดเวลาแล้ว',
-  round_closed: 'ข้อนี้ปิดไปแล้ว',
-  not_alive: 'คุณตกรอบแล้ว',
-  not_in_room: 'คุณไม่ได้อยู่ในห้องนี้',
-  already_playing: 'เกมเริ่มไปแล้ว',
-  no_card: 'ไม่มีการ์ดใบนี้แล้ว',
-  already_answered: 'ตอบไปแล้ว ใช้การ์ดไม่ได้',
-  bad_target: 'เลือกเป้าหมายไม่ได้',
-  target_answered: 'เพื่อนคนนี้ตอบไปแล้ว',
-  target_low_time: 'เวลาเพื่อนเหลือน้อยเกินไปแล้ว',
+  get need_two_players() { return t('ต้องมีผู้เล่นอย่างน้อย 2 คน', 'Need at least 2 players'); },
+  get not_host() { return t('เฉพาะเจ้าของห้องเท่านั้น', 'Host only'); },
+  get no_questions() { return t('เตรียมโจทย์ไม่สำเร็จ ลองใหม่อีกครั้ง', 'Couldn\'t prepare questions, try again'); },
+  get too_late() { return t('หมดเวลาแล้ว', 'Too late'); },
+  get round_closed() { return t('ข้อนี้ปิดไปแล้ว', 'This question is closed'); },
+  get not_alive() { return t('คุณตกรอบแล้ว', 'You\'re out'); },
+  get not_in_room() { return t('คุณไม่ได้อยู่ในห้องนี้', 'You\'re not in this room'); },
+  get already_playing() { return t('เกมเริ่มไปแล้ว', 'Game already started'); },
+  get no_card() { return t('ไม่มีการ์ดใบนี้แล้ว', 'You don\'t have this card'); },
+  get already_answered() { return t('ตอบไปแล้ว ใช้การ์ดไม่ได้', 'Already answered, card unavailable'); },
+  get bad_target() { return t('เลือกเป้าหมายไม่ได้', 'Invalid target'); },
+  get target_answered() { return t('เพื่อนคนนี้ตอบไปแล้ว', 'They already answered'); },
+  get target_low_time() { return t('เวลาเพื่อนเหลือน้อยเกินไปแล้ว', 'Their time is too low'); },
 };
 
 export async function callGame(

@@ -12,6 +12,7 @@ import { CardBar, type ActiveCard } from '../components/CardBar';
 import type { CardKind } from '../game/battle';
 import { Crosshair, Eye, FlagCheckered, Gift, Hourglass, Lightbulb, Lightning, ShieldCheck, SkipForward, SmileyMeh, Users, WifiSlash } from '@phosphor-icons/react';
 import { VersusIntro } from '../components/VersusIntro';
+import { t } from '../lib/i18n';
 
 interface Props {
   roomId: string;
@@ -22,13 +23,18 @@ interface Props {
 
 const AIM_AT = 500;
 const BANG_AT = 1100;
-const REASON_TEXT = { wrong: 'ตอบผิด', timeout: 'หมดเวลา', slowest: 'ตอบช้าสุด', counter: 'โดนยิงสวน' } as const;
+const REASON_TEXT = {
+  get wrong() { return t('ตอบผิด', 'wrong'); },
+  get timeout() { return t('หมดเวลา', 'time out'); },
+  get slowest() { return t('ตอบช้าสุด', 'slowest'); },
+  get counter() { return t('โดนยิงสวน', 'counter-shot'); },
+};
 const CARD_TEXT: Record<CardKind, string> = {
-  shield: 'โล่',
+  get shield() { return t('โล่', 'Shield'); },
   fifty: '50/50',
-  slow: 'ลดเวลาเพื่อน',
-  extra: 'เพิ่มเวลาตัวเอง',
-  counter: 'ยิงสวน',
+  get slow() { return t('ลดเวลาเพื่อน', 'Slow a rival'); },
+  get extra() { return t('เพิ่มเวลาตัวเอง', 'Extra time'); },
+  get counter() { return t('ยิงสวน', 'Counter'); },
 };
 
 /** อัปเดตทุก 100ms ให้ตัวจับเวลาเดิน */
@@ -221,7 +227,7 @@ export function OnlineBattleView({ roomId, state: s, myId, onLeave }: Props) {
   const opponents = s.players
     .filter((p) => p.id !== myId && isAlive(p))
     .map((p) => ({ id: p.id, name: p.name, avatar: p.avatar, answered: s.answered.includes(p.id) }));
-  const nameOf = (id: string) => (id === myId ? 'คุณ' : s.players.find((p) => p.id === id)?.name ?? '?');
+  const nameOf = (id: string) => (id === myId ? t('คุณ', 'You') : s.players.find((p) => p.id === id)?.name ?? '?');
   const sudden = s.round >= s.questionCount;
   const subject = q ? SUBJECTS[q.subject] : null;
   const remaining = myDeadline ? Math.max(0, myDeadline - now) : 0;
@@ -231,11 +237,11 @@ export function OnlineBattleView({ roomId, state: s, myId, onLeave }: Props) {
   return (
     <div className={`screen battle ${sudden ? 'battle--sudden' : ''} ${myHit && hitStage === 'bang' ? 'battle--me-hit' : ''}`}>
       <header className="quiz__top">
-        <button type="button" className="icon-btn" onClick={onLeave} aria-label="ออกจากห้อง">
+        <button type="button" className="icon-btn" onClick={onLeave} aria-label={t('ออกจากห้อง', 'Leave room')}>
           ✕
         </button>
         <div className="quiz__progress">
-          {sudden ? <span className="sudden-tag"><Lightning weight="fill" className="ico" /> SUDDEN DEATH</span> : <>ข้อ {s.round + 1}/{s.questionCount}</>}
+          {sudden ? <span className="sudden-tag"><Lightning weight="fill" className="ico" /> SUDDEN DEATH</span> : <>{t('ข้อ', 'Q')} {s.round + 1}/{s.questionCount}</>}
         </div>
         <div className="quiz__score">
           <Users weight="fill" className="ico" /> {s.players.filter(isAlive).length}/{s.players.length}
@@ -253,7 +259,7 @@ export function OnlineBattleView({ roomId, state: s, myId, onLeave }: Props) {
 
       {showDealt && newCard && (
         <div className="card-toast pop-in" role="status">
-          <Gift weight="fill" className="ico" /> ได้การ์ด <strong>{CARD_TEXT[newCard]}</strong>!
+          <Gift weight="fill" className="ico" /> {t('ได้การ์ด', 'Got card')} <strong>{CARD_TEXT[newCard]}</strong>!
         </div>
       )}
 
@@ -261,14 +267,14 @@ export function OnlineBattleView({ roomId, state: s, myId, onLeave }: Props) {
         <VersusIntro
           players={s.players}
           meId={myId}
-          subtitle={`เริ่มใน ${Math.ceil((s.startsAt! - now) / 1000)} วินาที`}
+          subtitle={t(`เริ่มใน ${Math.ceil((s.startsAt! - now) / 1000)} วินาที`, `Starting in ${Math.ceil((s.startsAt! - now) / 1000)} s`)}
         />
       )}
 
       {beforeStart ? (
         <div className="countdown pop-in" key={`cd-${s.round}`}>
           <span className="countdown__num">{Math.ceil((s.startsAt! - now) / 1000)}</span>
-          <span className="countdown__label">{s.round === 0 ? 'เตรียมตัว!' : 'ข้อต่อไป'}</span>
+          <span className="countdown__label">{s.round === 0 ? t('เตรียมตัว!', 'Get ready!') : t('ข้อต่อไป', 'Next question')}</span>
         </div>
       ) : (
         <>
@@ -278,10 +284,10 @@ export function OnlineBattleView({ roomId, state: s, myId, onLeave }: Props) {
             </div>
           )}
           {slowedBy && meAlive && !answeredThisRound && (
-            <p className="slowed-note shake"><Hourglass weight="fill" className="ico" /> {nameOf(slowedBy)} ลดเวลาคุณ!</p>
+            <p className="slowed-note shake"><Hourglass weight="fill" className="ico" /> {t(`${nameOf(slowedBy)} ลดเวลาคุณ!`, `${nameOf(slowedBy)} slowed you down!`)}</p>
           )}
 
-          {sudden && s.phase === 'question' && <div className="sudden-banner pop-in"><Lightning weight="fill" className="ico" /> ผิดหรือช้าสุด = ตกรอบทันที!</div>}
+          {sudden && s.phase === 'question' && <div className="sudden-banner pop-in"><Lightning weight="fill" className="ico" /> {t('ผิดหรือช้าสุด = ตกรอบทันที!', 'Wrong or slowest = out!')}</div>}
 
           {q && subject && (
             <article key={`q-${s.round}`} className="card question-card pop-in">
@@ -316,9 +322,9 @@ export function OnlineBattleView({ roomId, state: s, myId, onLeave }: Props) {
             />
           )}
 
-          {!meAlive && !showingReveal && <p className="waiting"><Eye weight="fill" className="ico" /> คุณตกรอบแล้ว กำลังดูเพื่อนแข่งต่อ...</p>}
+          {!meAlive && !showingReveal && <p className="waiting"><Eye weight="fill" className="ico" /> {t('คุณตกรอบแล้ว กำลังดูเพื่อนแข่งต่อ...', 'You\'re out — watching the others...')}</p>}
           {s.phase === 'question' && answeredThisRound && !answerError && (
-            <p className="waiting">{myCard?.skipped ? 'ข้ามข้อนี้แล้ว รอคนอื่นอยู่...' : 'ล็อกคำตอบแล้ว รอคนอื่นอยู่...'}</p>
+            <p className="waiting">{myCard?.skipped ? t('ข้ามข้อนี้แล้ว รอคนอื่นอยู่...', 'Skipped, waiting for others...') : t('ล็อกคำตอบแล้ว รอคนอื่นอยู่...', 'Answer locked, waiting for others...')}</p>
           )}
 
           {s.items && myCards && meAlive && !showingReveal && q && (
@@ -340,27 +346,27 @@ export function OnlineBattleView({ roomId, state: s, myId, onLeave }: Props) {
         <div className="reveal-sheet slide-up">
           {reveal.answerText !== undefined && (
             <p className="reveal-sheet__answer">
-              เฉลย: <strong>{reveal.answerText}</strong>
+              {t('เฉลย:', 'Answer:')} <strong>{reveal.answerText}</strong>
             </p>
           )}
           <div className="shot-list">
             {reveal.outcome.damages.length === 0 && reveal.disconnected.length === 0 ? (
-              <p className="shot-list__none"><SmileyMeh weight="fill" className="ico" /> ไม่มีใครโดนยิงข้อนี้</p>
+              <p className="shot-list__none"><SmileyMeh weight="fill" className="ico" /> {t('ไม่มีใครโดนยิงข้อนี้', 'Nobody got hit this round')}</p>
             ) : (
               <>
                 {reveal.outcome.damages.map((d) =>
                   d.redirectedTo ? (
                     <p key={`${d.playerId}-r`} className="shot-list__item shot-list__item--counter">
-                      <Crosshair weight="fill" className="ico" /> <strong>{nameOf(d.playerId)}</strong> ยิงสวน! ดาเมจเด้งไปหา <strong>{nameOf(d.redirectedTo)}</strong>
+                      <Crosshair weight="fill" className="ico" /> <strong>{nameOf(d.playerId)}</strong> {t('ยิงสวน! ดาเมจเด้งไปหา', 'countered! Damage bounced to')} <strong>{nameOf(d.redirectedTo)}</strong>
                     </p>
                   ) : d.blocked ? (
                     <p key={`${d.playerId}-${d.reason}`} className="shot-list__item shot-list__item--blocked">
-                      <ShieldCheck weight="fill" className="ico" /> <strong>{nameOf(d.playerId)}</strong> ใช้โล่กันกระสุนไว้ได้! ({REASON_TEXT[d.reason]})
+                      <ShieldCheck weight="fill" className="ico" /> <strong>{nameOf(d.playerId)}</strong> {t('ใช้โล่กันกระสุนไว้ได้!', 'blocked it with a shield!')} ({REASON_TEXT[d.reason]})
                     </p>
                   ) : (
                   <p key={`${d.playerId}-${d.reason}`} className={`shot-list__item ${d.playerId === myId ? 'is-me' : ''}`}>
-                    <Lightning weight="fill" className="ico" /> <strong>{nameOf(d.playerId)}</strong> โดนยิง ({REASON_TEXT[d.reason]})
-                    {reveal.outcome.eliminated.includes(d.playerId) && <span className="shot-list__out"> ตกรอบ!</span>}
+                    <Lightning weight="fill" className="ico" /> <strong>{nameOf(d.playerId)}</strong> {t('โดนยิง', 'got hit')} ({REASON_TEXT[d.reason]})
+                    {reveal.outcome.eliminated.includes(d.playerId) && <span className="shot-list__out"> {t('ตกรอบ!', 'Out!')}</span>}
                   </p>
                   ),
                 )}
@@ -368,25 +374,25 @@ export function OnlineBattleView({ roomId, state: s, myId, onLeave }: Props) {
                   .filter(([, r]) => r.skipped)
                   .map(([id]) => (
                     <p key={`skip-${id}`} className="shot-list__item">
-                      <SkipForward weight="fill" className="ico" /> <strong>{nameOf(id)}</strong> ใช้การ์ดข้ามข้อนี้
+                      <SkipForward weight="fill" className="ico" /> <strong>{nameOf(id)}</strong> {t('ใช้การ์ดข้ามข้อนี้', 'used a skip card')}
                     </p>
                   ))}
                 {reveal.disconnected.map((id) => (
                   <p key={id} className={`shot-list__item ${id === myId ? 'is-me' : ''}`}>
-                    <WifiSlash weight="fill" className="ico" /> <strong>{nameOf(id)}</strong> หลุดการเชื่อมต่อ <span className="shot-list__out">ตกรอบ!</span>
+                    <WifiSlash weight="fill" className="ico" /> <strong>{nameOf(id)}</strong> {t('หลุดการเชื่อมต่อ', 'disconnected')} <span className="shot-list__out">{t('ตกรอบ!', 'Out!')}</span>
                   </p>
                 ))}
               </>
             )}
           </div>
           <details className="explain">
-            <summary><Lightbulb weight="fill" className="ico" /> ดูคำอธิบาย</summary>
+            <summary><Lightbulb weight="fill" className="ico" /> {t('ดูคำอธิบาย', 'Show explanation')}</summary>
             <MathText text={reveal.explanation} />
           </details>
           {s.phase === 'finished' ? (
-            <p className="game-over pop-in"><FlagCheckered weight="fill" className="ico" /> จบเกม!</p>
+            <p className="game-over pop-in"><FlagCheckered weight="fill" className="ico" /> {t('จบเกม!', 'Game over!')}</p>
           ) : (
-            <p className="next-in">ข้อต่อไปใน {nextIn} วินาที...</p>
+            <p className="next-in">{t(`ข้อต่อไปใน ${nextIn} วินาที...`, `Next question in ${nextIn} s...`)}</p>
           )}
         </div>
       )}

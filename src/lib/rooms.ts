@@ -1,6 +1,7 @@
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import type { Difficulty, Level, Subject, Track } from '../types';
 import { ensureSession, PUBLIC_URL } from './supabase';
+import { t } from './i18n';
 
 export interface RoomSettings {
   subject: Subject | 'all';
@@ -34,13 +35,13 @@ export interface RoomPlayer {
 }
 
 const ROOM_ERRORS: Record<string, string> = {
-  room_not_found: 'ไม่พบห้องนี้ ตรวจรหัสอีกครั้งนะ',
-  room_in_game: 'ห้องนี้กำลังเล่นอยู่ รอจบรอบแล้วค่อยเข้าใหม่',
-  room_full: 'ห้องเต็มแล้ว (สูงสุด 8 คน)',
-  profile_required: 'ตั้งชื่อเล่นก่อนเข้าห้อง',
-  not_host: 'เฉพาะเจ้าของห้องเท่านั้น',
-  invalid_settings: 'ค่าตั้งห้องไม่ถูกต้อง',
-  not_ready: 'ยังไม่ถึงเวลาเริ่ม',
+  get room_not_found() { return t('ไม่พบห้องนี้ ตรวจรหัสอีกครั้งนะ', 'Room not found, check the code'); },
+  get room_in_game() { return t('ห้องนี้กำลังเล่นอยู่ รอจบรอบแล้วค่อยเข้าใหม่', 'This room is mid-game, join after the round'); },
+  get room_full() { return t('ห้องเต็มแล้ว (สูงสุด 8 คน)', 'Room is full (max 8)'); },
+  get profile_required() { return t('ตั้งชื่อเล่นก่อนเข้าห้อง', 'Set a nickname first'); },
+  get not_host() { return t('เฉพาะเจ้าของห้องเท่านั้น', 'Host only'); },
+  get invalid_settings() { return t('ค่าตั้งห้องไม่ถูกต้อง', 'Invalid room settings'); },
+  get not_ready() { return t('ยังไม่ถึงเวลาเริ่ม', 'Not time to start yet'); },
 };
 
 function friendly(message: string): string {

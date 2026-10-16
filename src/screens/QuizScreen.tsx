@@ -13,6 +13,7 @@ import { FillAnswerInput } from '../components/FillAnswerInput';
 import { ReportPanel } from '../components/ReportPanel';
 import { PlayerAvatar } from '../components/PlayerAvatar';
 import { Alarm, BookOpenText, Confetti, Lightbulb, Star, XCircle } from '@phosphor-icons/react';
+import { t } from '../lib/i18n';
 
 interface Props {
   questions: Question[];
@@ -85,13 +86,13 @@ export function QuizScreen({ questions, onFinish, onQuit, avatar }: Props) {
   return (
     <div className="screen quiz">
       <header className="quiz__top">
-        <button type="button" className="icon-btn" onClick={onQuit} aria-label="ออกจากเกม">
+        <button type="button" className="icon-btn" onClick={onQuit} aria-label={t('ออกจากเกม', 'Quit game')}>
           ✕
         </button>
         <div className="quiz__progress">
-          ข้อ {index + 1}/{questions.length}
+          {t('ข้อ', 'Q')} {index + 1}/{questions.length}
         </div>
-        <div className="quiz__score" aria-label="คะแนน">
+        <div className="quiz__score" aria-label={t('คะแนน', 'Score')}>
           <Star weight="fill" className="ico" /> {totalScore}
         </div>
       </header>
@@ -106,7 +107,7 @@ export function QuizScreen({ questions, onFinish, onQuit, avatar }: Props) {
           <span className="tag tag--ghost">
             {'★'.repeat(DIFFICULTY_STARS[q.difficulty])} {DIFFICULTY_LABEL[q.difficulty]}
           </span>
-          <span className="tag tag--ghost">{q.track === 'entrance' ? 'สอบเข้า' : 'สอบปกติ'}</span>
+          <span className="tag tag--ghost">{q.track === 'entrance' ? t('สอบเข้า', 'Entrance') : t('สอบปกติ', 'School')}</span>
           {q.chapter && chapterName(q.chapter) && <span className="tag tag--ghost"><BookOpenText weight="fill" className="ico" /> {chapterName(q.chapter)}</span>}
         </div>
         <MathText className="question-card__prompt" text={q.prompt} />
@@ -137,7 +138,7 @@ export function QuizScreen({ questions, onFinish, onQuit, avatar }: Props) {
                 <span className="verdict__emoji bounce">
               <Confetti weight="fill" size={34} />
             </span>
-                <span>ถูกต้อง!</span>
+                <span>{t('ถูกต้อง!', 'Correct!')}</span>
                 <span className="verdict__points">+{current.points}</span>
               </>
             ) : (
@@ -145,22 +146,22 @@ export function QuizScreen({ questions, onFinish, onQuit, avatar }: Props) {
                 <span className="verdict__emoji shake">
               {current.timedOut ? <Alarm weight="fill" size={34} /> : <XCircle weight="fill" size={34} />}
             </span>
-                <span>{current.timedOut ? 'หมดเวลา!' : 'ผิดจ้า'}</span>
+                <span>{current.timedOut ? t('หมดเวลา!', 'Time\'s up!') : t('ผิดจ้า', 'Wrong')}</span>
               </>
             )}
           </div>
           {q.type === 'fill' && !current.correct && (
             <p className="reveal-sheet__answer">
-              เฉลย: <strong>{formatFillAnswer(q.answer)}</strong>
+              {t('เฉลย:', 'Answer:')} <strong>{formatFillAnswer(q.answer)}</strong>
             </p>
           )}
           <div className="reveal-sheet__explain">
-            <span className="reveal-sheet__label"><Lightbulb weight="fill" className="ico" /> คำอธิบาย</span>
+            <span className="reveal-sheet__label"><Lightbulb weight="fill" className="ico" /> {t('คำอธิบาย', 'Explanation')}</span>
             <MathText text={q.explanation} />
           </div>
           {q.source === 'bank' && <ReportPanel key={q.id} questionId={q.id} />}
           <button type="button" className="btn btn--primary btn--block btn--big" onClick={next}>
-            {isLast ? 'ดูผลลัพธ์' : 'ข้อต่อไป ➜'}
+            {isLast ? t('ดูผลลัพธ์', 'See results') : t('ข้อต่อไป ➜', 'Next ➜')}
           </button>
         </div>
       )}

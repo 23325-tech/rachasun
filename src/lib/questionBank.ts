@@ -2,6 +2,7 @@ import type { Difficulty, FillAnswer, Level, Question, Subject, Track } from '..
 import { SAMPLE_QUESTIONS } from '../data/sampleQuestions';
 import { ensureSession, supabase } from './supabase';
 import { shuffle } from './shuffle';
+import { t } from './i18n';
 
 /** Edge Function สร้างได้ครั้งละไม่เกินเท่านี้ */
 const GENERATE_BATCH = 10;
@@ -65,11 +66,11 @@ function fromRow(r: QuestionRow): Question {
  * onStatus ใช้แสดงข้อความระหว่างโหลด
  */
 export async function loadQuiz(req: QuizRequest, onStatus?: (msg: string) => void): Promise<QuizLoadResult> {
-  if (!supabase) throw new Error('เชื่อมต่อเซิร์ฟเวอร์ไม่ได้');
+  if (!supabase) throw new Error(t('เชื่อมต่อเซิร์ฟเวอร์ไม่ได้', 'Can\'t connect to the server'));
   // ต้องมี session (แขกก็ได้) เพราะการให้ AI สร้างโจทย์จำกัดจำนวนต่อผู้เล่น
   const sb = await ensureSession();
 
-  onStatus?.('กำลังหยิบโจทย์จากคลัง...');
+  onStatus?.(t('กำลังหยิบโจทย์จากคลัง...', 'Picking questions from the bank...'));
   const { data, error } = await sb.rpc('get_random_questions', {
     p_subjects: req.subjects,
     p_difficulty: req.difficulty,
@@ -78,13 +79,13 @@ export async function loadQuiz(req: QuizRequest, onStatus?: (msg: string) => voi
     p_level: req.level,
     p_chapters: req.chapters?.length ? req.chapters : null,
   });
-  if (error) throw new Error(`ดึงโจทย์จากคลังไม่สำเร็จ: ${error.message}`);
+  if (error) throw new Error(t(`ดึงโจทย์จากคลังไม่สำเร็จ: ${error.message}`, `Couldn't load questions: ${error.message}`));
   const fromBank = (data as QuestionRow[]).map(fromRow);
 
   const missing = req.count - fromBank.length;
   if (missing <= 0) return { questions: fromBank, generated: 0 };
 
-  onStatus?.(`AI กำลังสร้างโจทย์ใหม่ ${missing} ข้อ... (อาจใช้เวลา 10-40 วินาที)`);
+  onStatus?.(t(`AI กำลังสร้างโจทย์ใหม่ ${missing} ข้อ... (อาจใช้เวลา 10-40 วินาที)`, `AI is creating ${missing} new questions... (may take 10-40 s)`));
   const batches: number[] = [];
   for (let left = missing; left > 0; left -= GENERATE_BATCH) batches.push(Math.min(left, GENERATE_BATCH));
 
@@ -105,7 +106,7 @@ export async function loadQuiz(req: QuizRequest, onStatus?: (msg: string) => voi
   }
 
   const questions = shuffle([...fromBank, ...generated]);
-  if (!questions.length) throw new Error(firstError || 'ไม่มีโจทย์ให้เล่น');
+  if (!questions.length) throw new Error(firstError || t('ไม่มีโจทย์ให้เล่น', 'No questions available'));
   return { questions, generated: generated.length };
 }
 
@@ -116,13 +117,16 @@ async function describeFunctionError(err: unknown): Promise<string> {
     try {
       const body = await ctx.json();
       if (body?.error === 'rate_limited')
-        return `ให้ AI สร้างโจทย์ใหม่ครบโควตาชั่วโมงนี้แล้ว (${body.limit} ข้อ/ชม.) ลองลดจำนวนข้อ เปลี่ยนวิชา หรือรอสักพักนะ`;
-      if (body?.error) return `สร้างโจทย์ไม่สำเร็จ: ${body.error}`;
+        return t(
+      `ให้ AI สร้างโจทย์ใหม่ครบโควตาชั่วโมงนี้แล้ว (${body.limit} ข้อ/ชม.) ลองลดจำนวนข้อ เปลี่ยนวิชา หรือรอสักพักนะ`,
+      `AI question quota reached for this hour (${body.limit}/h). Try fewer questions, another subject, or wait a bit.`,
+    );
+      if (body?.error) return t(`สร้างโจทย์ไม่สำเร็จ: ${body.error}`, `Couldn't create questions: ${body.error}`);
     } catch {
       /* ignore */
     }
   }
-  return `สร้างโจทย์ไม่สำเร็จ: ${(err as Error)?.message ?? String(err)}`;
+  return t(`สร้างโจทย์ไม่สำเร็จ: ${(err as Error)?.message ?? String(err)}`, `Couldn't create questions: ${(err as Error)?.message ?? String(err)}`);
 }
 
 /** โจทย์ตัวอย่างในเครื่อง ใช้ตอนออฟไลน์หรือยังไม่ได้ตั้งค่า Supabase */
@@ -138,10 +142,10 @@ export function sampleQuiz(subjects: Subject[], count: number): Question[] {
 export type ReportReason = 'wrong_answer' | 'unclear' | 'display' | 'other';
 
 export const REPORT_REASONS: { value: ReportReason; label: string }[] = [
-  { value: 'wrong_answer', label: 'เฉลยผิด' },
-  { value: 'unclear', label: 'โจทย์ไม่ชัด / ตัวเลือกซ้ำ' },
-  { value: 'display', label: 'สูตร/ตัวอักษรแสดงผลเพี้ยน' },
-  { value: 'other', label: 'อื่นๆ' },
+  { value: 'wrong_answer', get label() { return t('เฉลยผิด', 'Wrong answer key'); } },
+  { value: 'unclear', get label() { return t('โจทย์ไม่ชัด / ตัวเลือกซ้ำ', 'Unclear / duplicate choices'); } },
+  { value: 'display', get label() { return t('สูตร/ตัวอักษรแสดงผลเพี้ยน', 'Formula/text displays wrong'); } },
+  { value: 'other', get label() { return t('อื่นๆ', 'Other'); } },
 ];
 
 export type ReportOutcome = 'ok' | 'duplicate';

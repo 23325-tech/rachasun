@@ -6,6 +6,7 @@ import { MatchmakingView } from './MatchmakingView';
 import { OnlineBattleView } from './OnlineBattleView';
 import { BattleResultScreen } from './BattleResultScreen';
 import { Brain, DoorOpen } from '@phosphor-icons/react';
+import { t } from '../lib/i18n';
 
 interface Props {
   roomId: string;
@@ -39,8 +40,8 @@ export function RoomScreen({ roomId, myId, guest, onLeave, onGone, onRegister, o
     const reload = async () => {
       const r = await fetchRoom(roomId);
       if (!alive) return;
-      if (!r.room) return onGone('ห้องนี้ถูกปิดแล้ว');
-      if (!r.players.some((p) => p.user_id === myId)) return onGone('คุณไม่ได้อยู่ในห้องนี้แล้ว');
+      if (!r.room) return onGone(t('ห้องนี้ถูกปิดแล้ว', 'This room was closed'));
+      if (!r.players.some((p) => p.user_id === myId)) return onGone(t('คุณไม่ได้อยู่ในห้องนี้แล้ว', 'You\'re no longer in this room'));
       setRoom(r.room);
       setPlayers(r.players);
     };
@@ -90,7 +91,7 @@ export function RoomScreen({ roomId, myId, guest, onLeave, onGone, onRegister, o
     return (
       <div className="screen loading">
         <div className="loading__brain"><DoorOpen weight="fill" className="ico" /></div>
-        <p className="loading__msg">กำลังเข้าห้อง...</p>
+        <p className="loading__msg">{t('กำลังเข้าห้อง...', 'Joining room...')}</p>
       </div>
     );
   }
@@ -121,8 +122,8 @@ export function RoomScreen({ roomId, myId, guest, onLeave, onGone, onRegister, o
     return (
       <div className="screen loading">
         <div className="loading__brain"><Brain weight="fill" className="ico" /></div>
-        <p className="loading__msg">กำลังเตรียมโจทย์ให้ทุกคน...</p>
-        <p className="loading__sub">ถ้าคลังโจทย์ไม่พอ AI จะสร้างเพิ่ม อาจใช้เวลา 10-40 วินาที</p>
+        <p className="loading__msg">{t('กำลังเตรียมโจทย์ให้ทุกคน...', 'Preparing questions for everyone...')}</p>
+        <p className="loading__sub">{t('ถ้าคลังโจทย์ไม่พอ AI จะสร้างเพิ่ม อาจใช้เวลา 10-40 วินาที', 'If the bank runs short, AI makes more — may take 10-40 s')}</p>
         <div className="loading__dots" aria-hidden>
           <span />
           <span />
@@ -139,7 +140,7 @@ export function RoomScreen({ roomId, myId, guest, onLeave, onGone, onRegister, o
         players={state.players}
         meId={myId}
         onHome={onLeave}
-        homeLabel="ออกจากห้อง"
+        homeLabel={t('ออกจากห้อง', 'Leave room')}
         onReplay={
           room.kind === 'public'
             ? onFindAgain
@@ -147,8 +148,8 @@ export function RoomScreen({ roomId, myId, guest, onLeave, onGone, onRegister, o
               ? () => void callGame('rematch', { roomId }).catch(() => {})
               : undefined
         }
-        replayLabel={room.kind === 'public' ? 'หาเกมใหม่' : 'เล่นอีกรอบ (กลับล็อบบี้)'}
-        waitingLabel="รอเจ้าของห้องเริ่มรอบใหม่..."
+        replayLabel={room.kind === 'public' ? t('หาเกมใหม่', 'Find a new game') : t('เล่นอีกรอบ (กลับล็อบบี้)', 'Play again (back to lobby)')}
+        waitingLabel={t('รอเจ้าของห้องเริ่มรอบใหม่...', 'Waiting for the host to start again...')}
         xp={
           myXp
             ? { status: 'saved', gained: myXp.gained, total: myXp.total, rpDelta: myXp.rpDelta, rp: myXp.rp }

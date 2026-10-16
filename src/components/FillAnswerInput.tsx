@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { FillQuestion } from '../types';
 import { PaperPlaneTilt } from '@phosphor-icons/react';
+import { t } from '../lib/i18n';
 
 interface Props {
   question: FillQuestion;
@@ -41,7 +42,7 @@ export function FillAnswerInput({ question, revealed, correct, onSubmit }: Props
           autoCapitalize="off"
           spellCheck={false}
           enterKeyHint="done"
-          placeholder={isNumber ? 'พิมพ์ตัวเลข เช่น 2.5 หรือ 1/4' : 'พิมพ์คำตอบ'}
+          placeholder={isNumber ? t('พิมพ์ตัวเลข เช่น 2.5 หรือ 1/4', 'Type a number, e.g. 2.5 or 1/4') : t('พิมพ์คำตอบ', 'Type your answer')}
           value={value}
           disabled={revealed}
           onChange={(e) => setValue(e.target.value)}
@@ -50,7 +51,7 @@ export function FillAnswerInput({ question, revealed, correct, onSubmit }: Props
       </div>
       {!revealed && (
         <button type="submit" className="btn btn--primary btn--block" disabled={!value.trim()}>
-          ส่งคำตอบ <PaperPlaneTilt weight="fill" className="ico" />
+          {t('ส่งคำตอบ', 'Submit')} <PaperPlaneTilt weight="fill" className="ico" />
         </button>
       )}
     </form>

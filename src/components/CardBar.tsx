@@ -2,6 +2,7 @@ import { useState, createElement } from 'react';
 import type { CardCounts, CardKind } from '../game/battle';
 import { PlayerAvatar } from './PlayerAvatar';
 import { Cards, Crosshair, Hourglass, HourglassHigh, Scissors, ShieldCheck, SkipForward, type Icon } from '@phosphor-icons/react';
+import { t } from '../lib/i18n';
 
 export type ActiveCard = Exclude<CardKind, 'shield'>;
 
@@ -27,11 +28,11 @@ interface Props {
 }
 
 const INFO: Record<CardKind, { icon: Icon; name: string; hint: string }> = {
-  shield: { icon: ShieldCheck, name: 'โล่', hint: 'กันอัตโนมัติ' },
-  fifty: { icon: Scissors, name: '50/50', hint: 'ตัดตัวเลือกผิด 2 ข้อ' },
-  slow: { icon: Hourglass, name: 'ลดเวลา', hint: 'เวลาเพื่อนเหลือครึ่ง' },
-  extra: { icon: HourglassHigh, name: 'เพิ่มเวลา', hint: '+50% ให้ตัวเอง' },
-  counter: { icon: Crosshair, name: 'ยิงสวน', hint: 'โดนยิงแล้วเด้งไปหาเพื่อน' },
+  shield: { icon: ShieldCheck, get name() { return t('โล่', 'Shield'); }, get hint() { return t('กันอัตโนมัติ', 'Blocks a hit'); } },
+  fifty: { icon: Scissors, name: '50/50', get hint() { return t('ตัดตัวเลือกผิด 2 ข้อ', 'Remove 2 wrong choices'); } },
+  slow: { icon: Hourglass, get name() { return t('ลดเวลา', 'Slow'); }, get hint() { return t('เวลาเพื่อนเหลือครึ่ง', "Halve a rival's time"); } },
+  extra: { icon: HourglassHigh, get name() { return t('เพิ่มเวลา', 'Extra time'); }, get hint() { return t('+50% ให้ตัวเอง', '+50% for you'); } },
+  counter: { icon: Crosshair, get name() { return t('ยิงสวน', 'Counter'); }, get hint() { return t('โดนยิงแล้วเด้งไปหาเพื่อน', 'Bounce a hit to a rival'); } },
 };
 
 const ORDER: CardKind[] = ['shield', 'fifty', 'slow', 'extra', 'counter'];
@@ -42,7 +43,7 @@ export function CardBar({ cards, questionType, opponents, answered, open, usedCa
 
   if (!owned.length) {
     return <p className="card-bar__empty">
-        <Cards weight="fill" size={16} /> ยังไม่มีการ์ด · ได้การ์ดสุ่มทุก 3 ข้อ</p>;
+        <Cards weight="fill" size={16} /> {t('ยังไม่มีการ์ด · ได้การ์ดสุ่มทุก 3 ข้อ', 'No cards yet · get a random card every 3 questions')}</p>;
   }
 
   const canUse = (k: ActiveCard) => {
@@ -54,7 +55,7 @@ export function CardBar({ cards, questionType, opponents, answered, open, usedCa
   };
 
   const info = (k: CardKind) =>
-    k === 'fifty' && questionType === 'fill' ? { icon: SkipForward, name: 'ข้ามข้อ', hint: 'ไม่เสียหัวใจ ไม่ได้คะแนน' } : INFO[k];
+    k === 'fifty' && questionType === 'fill' ? { icon: SkipForward, name: t('ข้ามข้อ', 'Skip'), hint: t('ไม่เสียหัวใจ ไม่ได้คะแนน', 'No heart lost, no points') } : INFO[k];
 
   return (
     <>
@@ -88,22 +89,22 @@ export function CardBar({ cards, questionType, opponents, answered, open, usedCa
                 </span>
               <span className="power-card__name">{i.name}</span>
               <span className="power-card__count">x{count}</span>
-              <span className="power-card__hint">{used ? 'ใช้แล้ว ✓' : i.hint}</span>
+              <span className="power-card__hint">{used ? t('ใช้แล้ว ✓', 'Used ✓') : i.hint}</span>
             </button>
           );
         })}
       </div>
-      {usedCard && <p className="card-bar__note">ใช้การ์ดได้ข้อละ 1 ใบ</p>}
+      {usedCard && <p className="card-bar__note">{t('ใช้การ์ดได้ข้อละ 1 ใบ', '1 card per question')}</p>}
 
       {picking && (
         <div className="overlay" onClick={() => setPicking(null)}>
           <div className="overlay__card pop-in" onClick={(e) => e.stopPropagation()}>
             <div className="overlay__emoji">{createElement(INFO[picking].icon, { weight: 'fill', size: 56 })}</div>
-            <h2>{picking === 'slow' ? 'ลดเวลาใคร?' : 'ยิงสวนไปหาใคร?'}</h2>
+            <h2>{picking === 'slow' ? t('ลดเวลาใคร?', 'Slow down who?') : t('ยิงสวนไปหาใคร?', 'Counter toward who?')}</h2>
             <p className="muted">
               {picking === 'slow'
-                ? 'เวลาที่เหลือของเพื่อนจะเหลือครึ่งหนึ่ง (อย่างน้อย 5 วิ)'
-                : 'ถ้าข้อนี้คุณโดนยิง ดาเมจจะเด้งไปหาเพื่อนคนนี้แทน'}
+                ? t('เวลาที่เหลือของเพื่อนจะเหลือครึ่งหนึ่ง (อย่างน้อย 5 วิ)', 'Their remaining time is halved (min 5 s)')
+                : t('ถ้าข้อนี้คุณโดนยิง ดาเมจจะเด้งไปหาเพื่อนคนนี้แทน', 'If you get hit this round, the damage goes to them instead')}
             </p>
             <div className="target-list">
               {opponents.map((o) => {
@@ -123,13 +124,13 @@ export function CardBar({ cards, questionType, opponents, answered, open, usedCa
                       <PlayerAvatar code={o.avatar} size={28} />
                     </span>
                     <span className="target-btn__name">{o.name}</span>
-                    {disabled && <span className="muted">ตอบแล้ว</span>}
+                    {disabled && <span className="muted">{t('ตอบแล้ว', 'Answered')}</span>}
                   </button>
                 );
               })}
             </div>
             <button type="button" className="btn btn--ghost btn--block" onClick={() => setPicking(null)}>
-              ยกเลิก
+              {t('ยกเลิก', 'Cancel')}
             </button>
           </div>
         </div>

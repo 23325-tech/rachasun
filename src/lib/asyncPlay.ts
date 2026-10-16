@@ -1,6 +1,7 @@
 import type { Difficulty, Subject, Level, Track } from '../types';
 import { ensureSession, PUBLIC_URL } from './supabase';
 import { noteServerTime } from './roomGame';
+import { t } from './i18n';
 
 /** โจทย์ที่เซิร์ฟเวอร์ส่งมา (ไม่มีเฉลย) */
 export interface AsyncQuestion {
@@ -63,14 +64,14 @@ export interface ChallengeBoard {
 }
 
 const ERRORS: Record<string, string> = {
-  challenge_not_found: 'ไม่พบคำท้านี้ ตรวจลิงก์อีกครั้งนะ',
-  challenge_expired: 'คำท้านี้หมดเวลาแล้ว (24 ชั่วโมง)',
-  already_played: 'คุณเล่นชุดนี้ไปแล้ว',
-  question_closed: 'ข้อนี้ปิดไปแล้ว',
-  no_questions: 'เตรียมโจทย์ไม่สำเร็จ ลองใหม่อีกครั้ง',
-  invalid_settings: 'ค่าที่เลือกไม่ถูกต้อง',
-  profile_required: 'ตั้งชื่อเล่นก่อนนะ',
-  not_member: 'คุณไม่ได้อยู่ในกลุ่มนี้',
+  get challenge_not_found() { return t('ไม่พบคำท้านี้ ตรวจลิงก์อีกครั้งนะ', 'Challenge not found, check the link'); },
+  get challenge_expired() { return t('คำท้านี้หมดเวลาแล้ว (24 ชั่วโมง)', 'This challenge has expired (24 h)'); },
+  get already_played() { return t('คุณเล่นชุดนี้ไปแล้ว', 'You\'ve already played this set'); },
+  get question_closed() { return t('ข้อนี้ปิดไปแล้ว', 'This question is closed'); },
+  get no_questions() { return t('เตรียมโจทย์ไม่สำเร็จ ลองใหม่อีกครั้ง', 'Couldn\'t prepare questions, try again'); },
+  get invalid_settings() { return t('ค่าที่เลือกไม่ถูกต้อง', 'Invalid settings'); },
+  get profile_required() { return t('ตั้งชื่อเล่นก่อนนะ', 'Set a nickname first'); },
+  get not_member() { return t('คุณไม่ได้อยู่ในกลุ่มนี้', 'You\'re not in this group'); },
 };
 
 async function call<T>(action: string, body: Record<string, unknown>): Promise<T> {
@@ -87,7 +88,7 @@ async function call<T>(action: string, body: Record<string, unknown>): Promise<T
   }
   if (payload?.serverNow) noteServerTime(payload.serverNow, sentAt, receivedAt);
   if (payload?.error) throw new Error(ERRORS[payload.error] ?? payload.error);
-  if (!payload) throw new Error(error?.message ?? 'ไม่ได้รับข้อมูลจากเซิร์ฟเวอร์');
+  if (!payload) throw new Error(error?.message ?? t('ไม่ได้รับข้อมูลจากเซิร์ฟเวอร์', 'No data from the server'));
   return payload;
 }
 

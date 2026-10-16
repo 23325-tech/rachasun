@@ -4,6 +4,7 @@ import type { Room, RoomPlayer } from '../lib/rooms';
 import { callGame, serverNow } from '../lib/roomGame';
 import { PlayerAvatar } from '../components/PlayerAvatar';
 import { DiceFive, MagnifyingGlass, Users } from '@phosphor-icons/react';
+import { t } from '../lib/i18n';
 
 interface Props {
   room: Room;
@@ -45,10 +46,10 @@ export function MatchmakingView({ room, players, myId, onCancel }: Props) {
   return (
     <div className="screen matchmaking">
       <header className="quiz__top">
-        <button type="button" className="icon-btn" onClick={onCancel} aria-label="ยกเลิกการหา">
+        <button type="button" className="icon-btn" onClick={onCancel} aria-label={t('ยกเลิกการหา', 'Cancel search')}>
           ✕
         </button>
-        <div className="quiz__progress"><DiceFive weight="fill" className="ico" /> สุ่มหาคู่แข่ง</div>
+        <div className="quiz__progress"><DiceFive weight="fill" className="ico" /> {t('สุ่มหาคู่แข่ง', 'Matchmaking')}</div>
         <div className="quiz__score">
           <Users weight="fill" className="ico" /> {players.length}/{MATCH_FULL}
         </div>
@@ -62,16 +63,16 @@ export function MatchmakingView({ room, players, myId, onCancel }: Props) {
 
       <p className="match-status" role="status">
         {ready
-          ? 'เจอแล้ว! กำลังเริ่มเกม...'
+          ? t('เจอแล้ว! กำลังเริ่มเกม...', 'Found! Starting game...')
           : enough
-            ? `เริ่มใน ${secondsLeft} วินาที (หรือทันทีเมื่อครบ ${MATCH_FULL} คน)`
-            : 'กำลังหาผู้เล่นคนอื่น...'}
+            ? t(`เริ่มใน ${secondsLeft} วินาที (หรือทันทีเมื่อครบ ${MATCH_FULL} คน)`, `Starting in ${secondsLeft} s (or as soon as ${MATCH_FULL} join)`)
+            : t('กำลังหาผู้เล่นคนอื่น...', 'Looking for other players...')}
       </p>
       <p className="match-sub">
-        {subjectLabel} · {difficultyText(s.difficulty)} · {trackLabel(s.level, s.track)} · 10 ข้อ
-        {room.mode === 'items' ? ' · การ์ดพลัง' : ''}
+        {subjectLabel} · {difficultyText(s.difficulty)} · {trackLabel(s.level, s.track)} · {t('10 ข้อ', '10 questions')}
+        {room.mode === 'items' ? t(' · การ์ดพลัง', ' · Power cards') : ''}
         <br />
-        ค้นหามาแล้ว {Math.floor(searching / 60)}:{String(searching % 60).padStart(2, '0')}
+        {t('ค้นหามาแล้ว', 'Searching for')} {Math.floor(searching / 60)}:{String(searching % 60).padStart(2, '0')}
       </p>
 
       <ul className="match-players">
@@ -82,7 +83,7 @@ export function MatchmakingView({ room, players, myId, onCancel }: Props) {
               <span className="match-slot__avatar">
                 <PlayerAvatar code={p?.avatar} size={40} />
               </span>
-              <span className="match-slot__name">{p ? (p.user_id === myId ? 'คุณ' : p.nickname) : 'ว่าง'}</span>
+              <span className="match-slot__name">{p ? (p.user_id === myId ? t('คุณ', 'You') : p.nickname) : t('ว่าง', 'Open')}</span>
             </li>
           );
         })}
@@ -90,7 +91,7 @@ export function MatchmakingView({ room, players, myId, onCancel }: Props) {
 
       <div className="cta-bar">
         <button type="button" className="btn btn--ghost btn--block" onClick={onCancel}>
-          ยกเลิกการหา
+          {t('ยกเลิกการหา', 'Cancel search')}
         </button>
       </div>
     </div>

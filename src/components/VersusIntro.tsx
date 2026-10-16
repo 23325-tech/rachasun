@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect } from 'react';
 import { use3D } from '../lib/perf';
 import { PlayerAvatar } from './PlayerAvatar';
+import { t } from '../lib/i18n';
 
 const StageScene = lazy(() => import('./StageScene').then((m) => ({ default: m.StageScene })));
 
@@ -28,10 +29,10 @@ export function VersusIntro({ players, meId, subtitle, autoCloseMs, onDone }: Pr
     return () => clearTimeout(t);
   }, [autoCloseMs, onDone]);
 
-  const label = (p: VsPlayer) => <span className={`vs-name ${p.id === meId ? 'is-me' : ''}`}>{p.id === meId ? 'คุณ' : p.name}</span>;
+  const label = (p: VsPlayer) => <span className={`vs-name ${p.id === meId ? 'is-me' : ''}`}>{p.id === meId ? t('คุณ', 'You') : p.name}</span>;
 
   return (
-    <div className="vs-intro" role="dialog" aria-label="ผู้เล่นในเกมนี้" onClick={onDone}>
+    <div className="vs-intro" role="dialog" aria-label={t('ผู้เล่นในเกมนี้', 'Players in this game')} onClick={onDone}>
       <div className="vs-intro__badge">
         <span>VS</span>
       </div>
@@ -54,8 +55,8 @@ export function VersusIntro({ players, meId, subtitle, autoCloseMs, onDone }: Pr
           ))}
         </div>
       )}
-      <p className="vs-intro__sub">{subtitle ?? `${players.length} คน · ตอบถูกและเร็ว ยิงหัวใจคนอื่น!`}</p>
-      {onDone && <p className="vs-intro__skip">แตะเพื่อข้าม</p>}
+      <p className="vs-intro__sub">{subtitle ?? t(`${players.length} คน · ตอบถูกและเร็ว ยิงหัวใจคนอื่น!`, `${players.length} players · answer right and fast to shoot hearts!`)}</p>
+      {onDone && <p className="vs-intro__skip">{t('แตะเพื่อข้าม', 'Tap to skip')}</p>}
     </div>
   );
 }

@@ -22,6 +22,7 @@ import { FillAnswerInput } from '../components/FillAnswerInput';
 import { PlayerGrid, type HitStage, type PlayerStatus } from '../components/PlayerGrid';
 import { DIFFICULTY_LABEL, SUBJECTS } from '../data/subjects';
 import { Eye, FlagCheckered, Lightbulb, Lightning, LockSimple, SkipForward, SmileyMeh, Users, WarningCircle } from '@phosphor-icons/react';
+import { t } from '../lib/i18n';
 
 export const ME_ID = 'me';
 
@@ -57,7 +58,12 @@ const BANG_AT = 1100;
 const AUTO_NEXT_MS = 6000;
 const SPECTATE_SPEED = 0.15;
 
-const REASON_TEXT = { wrong: 'ตอบผิด', timeout: 'หมดเวลา', slowest: 'ตอบช้าสุด', counter: 'โดนยิงสวน' } as const;
+const REASON_TEXT = {
+  get wrong() { return t('ตอบผิด', 'wrong'); },
+  get timeout() { return t('หมดเวลา', 'time out'); },
+  get slowest() { return t('ตอบช้าสุด', 'slowest'); },
+  get counter() { return t('โดนยิงสวน', 'counter-shot'); },
+};
 
 export function BattleScreen({ questions, questionCount, initialPlayers, bots, onFinish, onQuit }: Props) {
   const [players, setPlayers] = useState(initialPlayers);
@@ -254,7 +260,7 @@ export function BattleScreen({ questions, questionCount, initialPlayers, bots, o
     (outcome?.damages ?? []).map((d) => [d.playerId, { lost: d.heartsLost, reason: d.reason }]),
   );
   const myHit = outcome?.damages.find((d) => d.playerId === ME_ID);
-  const nameOf = (id: string) => (id === ME_ID ? 'คุณ' : players.find((p) => p.id === id)?.name ?? id);
+  const nameOf = (id: string) => (id === ME_ID ? t('คุณ', 'You') : players.find((p) => p.id === id)?.name ?? id);
 
   const subject = SUBJECTS[q.subject];
   const myGiven = myAnswer?.given ?? null;
@@ -262,7 +268,7 @@ export function BattleScreen({ questions, questionCount, initialPlayers, bots, o
   return (
     <div className={`screen battle ${sudden ? 'battle--sudden' : ''} ${myHit && hitStage === 'bang' ? 'battle--me-hit' : ''}`}>
       <header className="quiz__top">
-        <button type="button" className="icon-btn" onClick={onQuit} aria-label="ออกจากเกม">
+        <button type="button" className="icon-btn" onClick={onQuit} aria-label={t('ออกจากเกม', 'Quit game')}>
           ✕
         </button>
         <div className="quiz__progress">
@@ -270,11 +276,11 @@ export function BattleScreen({ questions, questionCount, initialPlayers, bots, o
             <span className="sudden-tag"><Lightning weight="fill" className="ico" /> SUDDEN DEATH</span>
           ) : (
             <>
-              ข้อ {round + 1}/{questionCount}
+              {t('ข้อ', 'Q')} {round + 1}/{questionCount}
             </>
           )}
         </div>
-        <div className="quiz__score" aria-label="ผู้เล่นที่เหลือ">
+        <div className="quiz__score" aria-label={t('ผู้เล่นที่เหลือ', 'Players left')}>
           <Users weight="fill" className="ico" /> {alivePlayers(players).length}/{players.length}
         </div>
       </header>
@@ -295,7 +301,7 @@ export function BattleScreen({ questions, questionCount, initialPlayers, bots, o
         />
       )}
 
-      {sudden && phase === 'question' && <div className="sudden-banner pop-in"><Lightning weight="fill" className="ico" /> ผิดหรือช้าสุด = ตกรอบทันที!</div>}
+      {sudden && phase === 'question' && <div className="sudden-banner pop-in"><Lightning weight="fill" className="ico" /> {t('ผิดหรือช้าสุด = ตกรอบทันที!', 'Wrong or slowest = out!')}</div>}
 
       <article key={`q-${round}`} className="card question-card pop-in">
         <div className="question-card__meta">
@@ -329,38 +335,38 @@ export function BattleScreen({ questions, questionCount, initialPlayers, bots, o
         )
       ) : null}
 
-      {phase === 'question' && myAnswer && <p className="waiting"><LockSimple weight="fill" className="ico" /> ล็อกคำตอบแล้ว รอคนอื่นอยู่...</p>}
+      {phase === 'question' && myAnswer && <p className="waiting"><LockSimple weight="fill" className="ico" /> {t('ล็อกคำตอบแล้ว รอคนอื่นอยู่...', 'Answer locked, waiting for others...')}</p>}
 
       {phase === 'reveal' && outcome && (
         <div className="reveal-sheet slide-up">
           {q.type === 'fill' && (
             <p className="reveal-sheet__answer">
-              เฉลย: <strong>{formatFillAnswer(q.answer)}</strong>
+              {t('เฉลย:', 'Answer:')} <strong>{formatFillAnswer(q.answer)}</strong>
             </p>
           )}
           <div className="shot-list">
             {outcome.damages.length === 0 ? (
-              <p className="shot-list__none"><SmileyMeh weight="fill" className="ico" /> ไม่มีใครโดนยิงข้อนี้</p>
+              <p className="shot-list__none"><SmileyMeh weight="fill" className="ico" /> {t('ไม่มีใครโดนยิงข้อนี้', 'Nobody got hit this round')}</p>
             ) : (
               outcome.damages.map((d) => (
                 <p key={d.playerId} className={`shot-list__item ${d.playerId === ME_ID ? 'is-me' : ''}`}>
-                  <Lightning weight="fill" className="ico" /> <strong>{nameOf(d.playerId)}</strong> โดนยิง ({REASON_TEXT[d.reason]})
-                  {outcome.eliminated.includes(d.playerId) && <span className="shot-list__out"> ตกรอบ!</span>}
+                  <Lightning weight="fill" className="ico" /> <strong>{nameOf(d.playerId)}</strong> {t('โดนยิง', 'got hit')} ({REASON_TEXT[d.reason]})
+                  {outcome.eliminated.includes(d.playerId) && <span className="shot-list__out"> {t('ตกรอบ!', 'Out!')}</span>}
                 </p>
               ))
             )}
           </div>
           <details className="explain" onToggle={(e) => setExplainOpen((e.target as HTMLDetailsElement).open)}>
-            <summary><Lightbulb weight="fill" className="ico" /> ดูคำอธิบาย</summary>
+            <summary><Lightbulb weight="fill" className="ico" /> {t('ดูคำอธิบาย', 'Show explanation')}</summary>
             <MathText text={q.explanation} />
           </details>
           {!outcome.gameOver && !fast && spectate !== 'asking' && (
             <button type="button" className="btn btn--primary btn--block auto-next" onClick={nextRound}>
               <span className="auto-next__fill" style={{ transform: `scaleX(${explainOpen ? 1 : autoLeft / AUTO_NEXT_MS})` }} />
-              <span className="auto-next__label">ข้อต่อไป ➜</span>
+              <span className="auto-next__label">{t('ข้อต่อไป ➜', 'Next ➜')}</span>
             </button>
           )}
-          {outcome.gameOver && <p className="game-over pop-in"><FlagCheckered weight="fill" className="ico" /> จบเกม!</p>}
+          {outcome.gameOver && <p className="game-over pop-in"><FlagCheckered weight="fill" className="ico" /> {t('จบเกม!', 'Game over!')}</p>}
         </div>
       )}
 
@@ -368,8 +374,8 @@ export function BattleScreen({ questions, questionCount, initialPlayers, bots, o
         <div className="overlay">
           <div className="overlay__card pop-in">
             <div className="overlay__emoji"><WarningCircle weight="fill" className="ico" /></div>
-            <h2>คุณตกรอบแล้ว!</h2>
-            <p>อันดับที่ {players.find((p) => p.id === ME_ID)!.rank} จาก {players.length}</p>
+            <h2>{t('คุณตกรอบแล้ว!', 'You\'re out!')}</h2>
+            <p>{t(`อันดับที่ ${players.find((p) => p.id === ME_ID)!.rank} จาก ${players.length}`, `Rank ${players.find((p) => p.id === ME_ID)!.rank} of ${players.length}`)}</p>
             <button
               type="button"
               className="btn btn--primary btn--block"
@@ -378,10 +384,10 @@ export function BattleScreen({ questions, questionCount, initialPlayers, bots, o
                 nextRound();
               }}
             >
-              <Eye weight="fill" className="ico" /> ดูต่อ (เร่งความเร็ว)
+              <Eye weight="fill" className="ico" /> {t('ดูต่อ (เร่งความเร็ว)', 'Keep watching (fast)')}
             </button>
             <button type="button" className="btn btn--ghost btn--block" onClick={skipToEnd}>
-              <SkipForward weight="fill" className="ico" /> ข้ามไปดูผล
+              <SkipForward weight="fill" className="ico" /> {t('ข้ามไปดูผล', 'Skip to results')}
             </button>
           </div>
         </div>
@@ -389,7 +395,7 @@ export function BattleScreen({ questions, questionCount, initialPlayers, bots, o
 
       {fast && (
         <button type="button" className="btn btn--ghost skip-fab" onClick={skipToEnd}>
-          <SkipForward weight="fill" className="ico" /> ข้ามไปดูผล
+          <SkipForward weight="fill" className="ico" /> {t('ข้ามไปดูผล', 'Skip to results')}
         </button>
       )}
     </div>

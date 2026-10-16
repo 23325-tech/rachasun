@@ -5,6 +5,7 @@ import { Barbell, Fire, Handshake, Star, Trophy } from '@phosphor-icons/react';
 import { RankMedal } from '../components/icons';
 import { lazy, Suspense } from 'react';
 import { use3D } from '../lib/perf';
+import { t } from '../lib/i18n';
 
 const StageScene = lazy(() => import('../components/StageScene').then((m) => ({ default: m.StageScene })));
 
@@ -24,20 +25,20 @@ interface Props {
 }
 
 function headline(rank: number, total: number, sharedFirst: boolean) {
-  if (rank === 1 && sharedFirst) return { icon: Handshake, title: 'เสมอกัน!' };
-  if (rank === 1) return { icon: Trophy, title: 'ชนะเลิศ!' };
-  if (rank <= Math.ceil(total / 2)) return { icon: Fire, title: 'เกือบแล้ว!' };
-  return { icon: Barbell, title: 'แก้มือรอบหน้า!' };
+  if (rank === 1 && sharedFirst) return { icon: Handshake, title: t('เสมอกัน!', 'It\'s a tie!') };
+  if (rank === 1) return { icon: Trophy, title: t('ชนะเลิศ!', 'Winner!') };
+  if (rank <= Math.ceil(total / 2)) return { icon: Fire, title: t('เกือบแล้ว!', 'So close!') };
+  return { icon: Barbell, title: t('แก้มือรอบหน้า!', 'Get them next time!') };
 }
 
 export function BattleResultScreen({
   players,
   meId,
   onReplay,
-  replayLabel = 'ดวลอีกรอบ',
+  replayLabel = t('ดวลอีกรอบ', 'Rematch'),
   waitingLabel,
   onHome,
-  homeLabel = 'หน้าแรก',
+  homeLabel = t('หน้าแรก', 'Home'),
   xp,
   guest,
   onRegister,
@@ -56,7 +57,7 @@ export function BattleResultScreen({
           <h.icon weight="fill" className="ico" /> {h.title}
         </h1>
         <div className="result__score">
-          อันดับ {myRank} จาก {players.length}
+          {t(`อันดับ ${myRank} จาก ${players.length}`, `Rank ${myRank} of ${players.length}`)}
         </div>
       </header>
 
@@ -72,7 +73,7 @@ export function BattleResultScreen({
               <PlayerAvatar code={p.avatar} size={36} />
             </span>
             <span className="ranking__name">
-              {p.id === meId ? 'คุณ' : p.name}
+              {p.id === meId ? t('คุณ', 'You') : p.name}
               {p.isBot && <span className="ranking__bot">BOT</span>}
             </span>
             <span className="ranking__score"><Star weight="fill" className="ico" /> {p.score}</span>
@@ -98,7 +99,7 @@ export function BattleResultScreen({
 
 /** แท่นรางวัล 3 อันดับแรก: ที่ 1 ดีใจ ที่ 2-3 ปรบมือ */
 function Podium({ top, meId }: { top: BattlePlayer[]; meId: string }) {
-  const name = (p: BattlePlayer) => (p.id === meId ? 'คุณ' : p.name);
+  const name = (p: BattlePlayer) => (p.id === meId ? t('คุณ', 'You') : p.name);
   if (use3D()) {
     return (
       <Suspense fallback={<div className="podium-3d" />}>

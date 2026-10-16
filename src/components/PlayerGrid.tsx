@@ -4,6 +4,7 @@ import { Alarm, ChatCircleDots, CheckCircle, Crosshair, Heart, Lightning, LockSi
 import { createElement, lazy, Suspense, useMemo } from 'react';
 import type { Pose } from '../three/chibi';
 import { chibiOf } from '../lib/look';
+import { t } from '../lib/i18n';
 
 const Avatar3D = lazy(() => import('./Avatar3D').then((m) => ({ default: m.Avatar3D })));
 
@@ -77,14 +78,14 @@ export function PlayerGrid({ players, maxHearts, meId, status, hits, hitStage }:
                 </span>
               )}
             </div>
-            <div className="pcard__name">{p.id === meId ? 'คุณ' : p.name}</div>
+            <div className="pcard__name">{p.id === meId ? t('คุณ', 'You') : p.name}</div>
             {(p.cards?.shield ?? 0) > 0 && (
-              <span className="pcard__shield" aria-label={`มีโล่ ${p.cards?.shield} อัน`}>
+              <span className="pcard__shield" aria-label={t(`มีโล่ ${p.cards?.shield} อัน`, `${p.cards?.shield} shield(s)`)}>
                 <ShieldCheck weight="fill" size={14} />
                 {(p.cards?.shield ?? 0) > 1 ? p.cards?.shield : ''}
               </span>
             )}
-            <div className="pcard__hearts" aria-label={`หัวใจ ${p.hearts} ดวง`}>
+            <div className="pcard__hearts" aria-label={t(`หัวใจ ${p.hearts} ดวง`, `${p.hearts} hearts`)}>
               {Array.from({ length: maxHearts }, (_, i) => {
                 const breaking = i >= breakingFrom && i < breakingTo;
                 const full = i < p.hearts;

@@ -8,6 +8,7 @@ import { TimerBar } from '../components/TimerBar';
 import { ChoiceList } from '../components/ChoiceList';
 import { FillAnswerInput } from '../components/FillAnswerInput';
 import { Alarm, Brain, Confetti, Hourglass, Lightbulb, Star, WarningCircle, XCircle } from '@phosphor-icons/react';
+import { t } from '../lib/i18n';
 
 interface Props {
   playId: string;
@@ -111,10 +112,10 @@ export function AsyncPlayScreen({ playId, title, onDone, onQuit }: Props) {
     return (
       <div className="screen loading">
         <div className="loading__brain"><Brain weight="fill" className="ico" /></div>
-        <p className="loading__msg">{error || 'กำลังโหลดโจทย์...'}</p>
+        <p className="loading__msg">{error || t('กำลังโหลดโจทย์...', 'Loading questions...')}</p>
         {error && (
           <button type="button" className="btn btn--ghost" onClick={load}>
-            ลองใหม่
+            {t('ลองใหม่', 'Retry')}
           </button>
         )}
       </div>
@@ -128,11 +129,11 @@ export function AsyncPlayScreen({ playId, title, onDone, onQuit }: Props) {
   return (
     <div className="screen quiz">
       <header className="quiz__top">
-        <button type="button" className="icon-btn" onClick={onQuit} aria-label="ออก (เล่นต่อทีหลังได้)">
+        <button type="button" className="icon-btn" onClick={onQuit} aria-label={t('ออก (เล่นต่อทีหลังได้)', 'Quit (resume later)')}>
           ✕
         </button>
         <div className="quiz__progress">
-          {title} · ข้อ {cur.index + 1}/{cur.total}
+          {title} · {t('ข้อ', 'Q')} {cur.index + 1}/{cur.total}
         </div>
         <div className="quiz__score"><Star weight="fill" className="ico" /> {result ? result.score : cur.score}</div>
       </header>
@@ -169,7 +170,7 @@ export function AsyncPlayScreen({ playId, title, onDone, onQuit }: Props) {
         />
       )}
 
-      {!result && given !== null && !error && <p className="waiting"><Hourglass weight="fill" className="ico" /> กำลังตรวจคำตอบ...</p>}
+      {!result && given !== null && !error && <p className="waiting"><Hourglass weight="fill" className="ico" /> {t('กำลังตรวจคำตอบ...', 'Checking answer...')}</p>}
       {error && <p className="form-error"><WarningCircle weight="fill" className="ico" /> {error}</p>}
 
       {result && (
@@ -180,7 +181,7 @@ export function AsyncPlayScreen({ playId, title, onDone, onQuit }: Props) {
                 <span className="verdict__emoji bounce">
               <Confetti weight="fill" size={34} />
             </span>
-                <span>ถูกต้อง!</span>
+                <span>{t('ถูกต้อง!', 'Correct!')}</span>
                 <span className="verdict__points">+{result.points}</span>
               </>
             ) : (
@@ -188,17 +189,17 @@ export function AsyncPlayScreen({ playId, title, onDone, onQuit }: Props) {
                 <span className="verdict__emoji shake">
               {result.timedOut ? <Alarm weight="fill" size={34} /> : <XCircle weight="fill" size={34} />}
             </span>
-                <span>{result.timedOut ? 'หมดเวลา!' : 'ผิดจ้า'}</span>
+                <span>{result.timedOut ? t('หมดเวลา!', 'Time\'s up!') : t('ผิดจ้า', 'Wrong')}</span>
               </>
             )}
           </div>
           {result.answerText !== undefined && !result.correct && (
             <p className="reveal-sheet__answer">
-              เฉลย: <strong>{result.answerText}</strong>
+              {t('เฉลย:', 'Answer:')} <strong>{result.answerText}</strong>
             </p>
           )}
           <div className="reveal-sheet__explain">
-            <span className="reveal-sheet__label"><Lightbulb weight="fill" className="ico" /> คำอธิบาย</span>
+            <span className="reveal-sheet__label"><Lightbulb weight="fill" className="ico" /> {t('คำอธิบาย', 'Explanation')}</span>
             <MathText text={result.explanation} />
           </div>
           <button
@@ -206,7 +207,7 @@ export function AsyncPlayScreen({ playId, title, onDone, onQuit }: Props) {
             className="btn btn--primary btn--block btn--big"
             onClick={() => (result.done ? onDone({ score: result.score, xp: result.xp }) : load())}
           >
-            {isLast || result.done ? 'ดูอันดับ' : 'ข้อต่อไป ➜'}
+            {isLast || result.done ? t('ดูอันดับ', 'See leaderboard') : t('ข้อต่อไป ➜', 'Next ➜')}
           </button>
         </div>
       )}

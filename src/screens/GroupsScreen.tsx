@@ -11,7 +11,7 @@ interface Props {
   onBack: () => void;
 }
 
-const DIFFICULTIES = DIFFICULTY_OPTIONS.map((d) => ({ value: d.value, label: `${d.icon} ${d.label}` }));
+const DIFFICULTIES = DIFFICULTY_OPTIONS;
 
 
 /** กลุ่มของฉัน + สร้างกลุ่ม + เข้ากลุ่มด้วยรหัส */
@@ -151,7 +151,7 @@ export function GroupsScreen({ initialCode = '', onOpen, onBack }: Props) {
                   className={`segmented__opt ${difficulty === d.value ? 'is-active' : ''}`}
                   onClick={() => setDifficulty(d.value)}
                 >
-                  {d.label}
+                  <d.icon weight="fill" className="ico" /> {d.label}
                 </button>
               ))}
             </div>

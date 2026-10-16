@@ -8,6 +8,7 @@ import { SUBJECTS } from '../data/subjects';
 import { MathText } from '../components/MathText';
 import { XpBadge, type XpState } from '../components/XpBadge';
 import { Alarm, ArrowsClockwise, Barbell, Check, Fire, House, Plant, Trophy, X } from '@phosphor-icons/react';
+import { t } from '../lib/i18n';
 
 interface Props {
   questions: Question[];
@@ -22,10 +23,10 @@ interface Props {
 }
 
 function rankFor(accuracy: number) {
-  if (accuracy >= 0.9) return { icon: Trophy, title: 'สุดยอด!' };
-  if (accuracy >= 0.7) return { icon: Fire, title: 'เก่งมาก!' };
-  if (accuracy >= 0.5) return { icon: Barbell, title: 'ดีเลย สู้ต่อ!' };
-  return { icon: Plant, title: 'ฝึกอีกนิดนะ!' };
+  if (accuracy >= 0.9) return { icon: Trophy, title: t('สุดยอด!', 'Outstanding!') };
+  if (accuracy >= 0.7) return { icon: Fire, title: t('เก่งมาก!', 'Great job!') };
+  if (accuracy >= 0.5) return { icon: Barbell, title: t('ดีเลย สู้ต่อ!', 'Nice, keep going!') };
+  return { icon: Plant, title: t('ฝึกอีกนิดนะ!', 'A bit more practice!') };
 }
 
 export function ResultScreen({ questions, results, onReplay, onHome, xp, guest, onRegister, avatar }: Props) {
@@ -53,7 +54,7 @@ export function ResultScreen({ questions, results, onReplay, onHome, xp, guest, 
         <h1 className="result__title">
           {avatar && <rank.icon weight="fill" className="ico" />} {rank.title}
         </h1>
-        <div className="result__score">{total.toLocaleString()} คะแนน</div>
+        <div className="result__score">{total.toLocaleString()} {t('คะแนน', 'points')}</div>
       </header>
 
       <XpBadge xp={xp} guest={guest} onRegister={onRegister} />
@@ -63,15 +64,15 @@ export function ResultScreen({ questions, results, onReplay, onHome, xp, guest, 
           <div className="stat__num">
             {correct}/{results.length}
           </div>
-          <div className="stat__label">ตอบถูก</div>
+          <div className="stat__label">{t('ตอบถูก', 'Correct')}</div>
         </div>
         <div className="stat">
           <div className="stat__num">{Math.round(accuracy * 100)}%</div>
-          <div className="stat__label">ความแม่น</div>
+          <div className="stat__label">{t('ความแม่น', 'Accuracy')}</div>
         </div>
         <div className="stat">
           <div className="stat__num">{avgSec.toFixed(1)}s</div>
-          <div className="stat__label">เวลาเฉลี่ย</div>
+          <div className="stat__label">{t('เวลาเฉลี่ย', 'Avg. time')}</div>
         </div>
       </div>
 
@@ -91,10 +92,10 @@ export function ResultScreen({ questions, results, onReplay, onHome, xp, guest, 
 
       <div className="bottom-bar bottom-bar--row">
         <button type="button" className="btn btn--ghost" onClick={onHome}>
-          <House weight="fill" className="ico" /> หน้าแรก
+          <House weight="fill" className="ico" /> {t('หน้าแรก', 'Home')}
         </button>
         <button type="button" className="btn btn--primary btn--grow" onClick={onReplay}>
-          เล่นอีกครั้ง <ArrowsClockwise weight="fill" className="ico" />
+          {t('เล่นอีกครั้ง', 'Play again')} <ArrowsClockwise weight="fill" className="ico" />
         </button>
       </div>
     </div>
