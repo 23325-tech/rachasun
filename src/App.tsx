@@ -54,6 +54,7 @@ import { SeasonRewardModal } from './components/SeasonRewardModal';
 import { keepFrame, lookOf, WARDROBE } from './lib/look';
 import { fetchPetCare, isHungry, type PetCareState } from './lib/petCare';
 import { PetScreen } from './screens/PetScreen';
+import { GachaScreen } from './screens/GachaScreen';
 import { SeasonScreen } from './screens/SeasonScreen';
 import { GemTopupScreen } from './screens/GemTopupScreen';
 import { VersusIntro } from './components/VersusIntro';
@@ -78,6 +79,7 @@ type Screen =
   | { name: 'season' }
   | { name: 'gems' }
   | { name: 'pets' }
+  | { name: 'gacha' }
   | { name: 'mock' }
   | { name: 'mockExam'; session: MockSession }
   | { name: 'mockResult'; review: MockReview };
@@ -378,6 +380,7 @@ export default function App() {
           season={season ? { no: season.no, endsAt: season.endsAt, rank: season.me.rank } : undefined}
           onSeason={() => setScreen({ name: 'season' })}
           onPets={() => setScreen({ name: 'pets' })}
+          onGacha={() => setScreen({ name: 'gacha' })}
           pet={(() => {
             const it = profile ? WARDROBE.find((w) => w.slot === 'pet' && w.value === lookOf(profile.avatar).pet && w.value !== 'n') : undefined;
             const st = it && petCare?.pets.find((x) => x.id === it.id);
@@ -543,6 +546,8 @@ export default function App() {
       ) : (
         <LoadingScreen message={t('กำลังโหลดฤดูกาล...', 'Loading season...')} onCancel={goHome} />
       );
+    case 'gacha':
+      return profile ? <GachaScreen code={profile.avatar} onBack={goHome} onChanged={() => loadShop().catch(() => {})} /> : null;
     case 'pets':
       return profile ? (
         <PetScreen
@@ -579,6 +584,7 @@ export default function App() {
             loadShop().catch(() => {});
           }}
           onTopup={() => setScreen({ name: 'gems' })}
+          onGacha={() => setScreen({ name: 'gacha' })}
           onWear={async (avatar) => {
             const updated = await updateProfile(profile.id, { avatar: keepFrame(avatar, profile.avatar) });
             setMe((m) => (m.status === 'ready' ? { ...m, profile: updated } : m));

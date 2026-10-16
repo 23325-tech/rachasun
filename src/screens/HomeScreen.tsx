@@ -37,6 +37,7 @@ interface Props {
   coins?: number;
   onShop: () => void;
   onPets: () => void;
+  onGacha: () => void;
   /** สัตว์เลี้ยงที่พาอยู่: เลเวล + หิวไหม (ยังไม่โหลด = ไม่มี) */
   pet?: { level: number; hungry: boolean };
   /** การ์ดเช็กอินรายวัน */
@@ -146,6 +147,11 @@ export function HomeScreen(p: Props) {
           <button type="button" className={`hm-dress ${p.dressNew ? 'is-new' : ''}`} onClick={p.onDress}>
             <TShirt weight="fill" size={18} />
             {p.dressNew ? t('แต่งตัวละครของคุณ!', 'Dress up your character!') : t('แต่งตัว', 'Dress up')}
+          </button>
+        )}
+        {profile && (
+          <button type="button" className="hm-gacha" onClick={p.onGacha}>
+            <Sparkle weight="fill" size={18} /> {t('ตู้สุ่ม', 'Gacha')}
           </button>
         )}
         {profile && (

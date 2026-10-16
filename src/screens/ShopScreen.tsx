@@ -18,6 +18,7 @@ interface Props {
   onWear: (code: string) => Promise<void>;
   /** ไปหน้าเติมเพชร */
   onTopup: () => void;
+  onGacha: () => void;
 }
 
 const RARITY_TEXT: Record<Rarity, string> = {
@@ -31,7 +32,7 @@ const SWATCH_SLOTS: Slot[] = ['skin', 'hair', 'eyes'];
 const FULL_SLOTS: Slot[] = ['outfit', 'item', 'aura'];
 
 /** ร้านค้า: ของประจำ (ธรรมดา) + ของหมุนเวียน 8 ชิ้น (หายากขึ้นไป) ลองสวมก่อนซื้อได้ */
-export function ShopScreen({ code, state, onBack, onBought, onWear, onTopup }: Props) {
+export function ShopScreen({ code, state, onBack, onBought, onWear, onTopup, onGacha }: Props) {
   const saved = lookOf(code);
   const [picked, setPicked] = useState<WardrobeItem | null>(null);
   const [busy, setBusy] = useState(false);
@@ -148,6 +149,14 @@ export function ShopScreen({ code, state, onBack, onBought, onWear, onTopup }: P
         <div className="dressing__podium" />
         {picked && !has && <span className="shop__trying">{t('กำลังลองสวม:', 'Trying on:')} {picked.name}</span>}
       </section>
+
+      <button type="button" className="gacha-banner" onClick={onGacha}>
+        <Sparkle weight="fill" size={26} />
+        <span>
+          <strong>{t('ตู้สุ่มด้วยเหรียญ', 'Coin gacha')}</strong>
+          <small>{t('ลุ้นสัตว์เลี้ยงตำนาน/มิธิก · การันตีทุก 60 ครั้ง', 'Win Legend/Mythic pets · guaranteed every 60 draws')}</small>
+        </span>
+      </button>
 
       <section>
         <h2 className="section-title">
