@@ -11,6 +11,8 @@ export interface QuizRequest {
   difficulty: Difficulty;
   track: Track;
   level: Level;
+  /** รหัสบทที่เลือก (ว่าง = ทุกบท) */
+  chapters?: string[];
   count: number;
 }
 
@@ -25,6 +27,7 @@ interface QuestionRow {
   subject: Subject;
   difficulty: Difficulty;
   track: Track;
+  chapter: string | null;
   type: 'mcq' | 'fill';
   prompt: string;
   choices: string[] | null;
@@ -40,6 +43,7 @@ function fromRow(r: QuestionRow): Question {
     subject: r.subject,
     difficulty: r.difficulty,
     track: r.track,
+    chapter: r.chapter,
     prompt: r.prompt,
     explanation: r.explanation,
     timeLimitSec: r.time_limit_sec ?? undefined,
@@ -72,6 +76,7 @@ export async function loadQuiz(req: QuizRequest, onStatus?: (msg: string) => voi
     p_track: req.track,
     p_limit: req.count,
     p_level: req.level,
+    p_chapters: req.chapters?.length ? req.chapters : null,
   });
   if (error) throw new Error(`ดึงโจทย์จากคลังไม่สำเร็จ: ${error.message}`);
   const fromBank = (data as QuestionRow[]).map(fromRow);
@@ -86,7 +91,7 @@ export async function loadQuiz(req: QuizRequest, onStatus?: (msg: string) => voi
   const results = await Promise.allSettled(
     batches.map((count) =>
       sb.functions.invoke<{ questions: QuestionRow[] }>('generate-questions', {
-        body: { subjects: req.subjects, difficulty: req.difficulty, track: req.track, level: req.level, count },
+        body: { subjects: req.subjects, difficulty: req.difficulty, track: req.track, level: req.level, chapters: req.chapters ?? [], count },
       }),
     ),
   );

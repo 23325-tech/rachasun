@@ -359,6 +359,13 @@ button {
   touch-action: manipulation;
   transition: background-color 0.15s, color 0.15s;
 }
+/* 4 ตัวเลือกขึ้นไป (เช่น ความยาก): ตัวเล็กลงและขึ้นบรรทัดใหม่ได้ จอมือถือจะได้ไม่ล้น */
+.segmented:has(> :nth-child(4)) .segmented__opt {
+  padding: 7px 2px;
+  font-size: 0.85rem;
+  line-height: 1.25;
+  white-space: normal;
+}
 .segmented__opt.is-active {
   background: var(--bg-1);
   color: #fff;
@@ -432,6 +439,52 @@ button {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 8px;
+}
+/* เลือกบท */
+.chapter-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.chapter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  padding: 6px 10px 6px 6px;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: #efe9ff;
+  color: var(--ink);
+  font-size: 0.85rem;
+  text-align: left;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.chapter-chip.is-active {
+  background: var(--bg-1);
+  color: #fff;
+  box-shadow: 0 2px 0 var(--ink);
+}
+.chapter-chip__no {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  color: var(--ink);
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+.chapter-picker__clear {
+  margin-left: 8px;
+  font-size: 0.82rem;
+}
+.chapter-picker__more {
+  justify-self: start;
+  font-size: 0.85rem;
 }
 .home-level {
   margin-bottom: 4px;

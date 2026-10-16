@@ -253,7 +253,7 @@ async function answer(uid: string, playId: string, index: number, given: unknown
 
 async function awardXp(play: PlayRow, questions: StoredQuestion[]) {
   const { data: answers } = await admin.from('quiz_play_answers').select('idx,correct').eq('play_id', play.id);
-  const c = { easy: 0, medium: 0, hard: 0 };
+  const c = { easy: 0, medium: 0, hard: 0, challenge: 0 };
   for (const a of answers ?? []) if (a.correct) c[questions[a.idx].difficulty]++;
   const { data } = await admin.rpc('record_online_game', {
     p_user: play.user_id,
@@ -261,6 +261,7 @@ async function awardXp(play: PlayRow, questions: StoredQuestion[]) {
     p_correct_easy: c.easy,
     p_correct_medium: c.medium,
     p_correct_hard: c.hard,
+      p_correct_challenge: c.challenge,
     p_rank: 0, // ไม่มีอันดับในเกม -> ไม่มีโบนัสชนะ
     p_players: 1,
   });

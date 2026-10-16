@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { settingsLabel, trackLabel } from '../data/subjects';
+import { settingsLabel, trackLabel, difficultyText } from '../data/subjects';
 import type { Room, RoomPlayer } from '../lib/rooms';
 import { callGame, serverNow } from '../lib/roomGame';
 
@@ -14,7 +14,6 @@ interface Props {
 const MATCH_FULL = 8;
 const MATCH_WAIT_MS = 30_000;
 
-const DIFF_TEXT = { easy: '🌱 ง่าย', medium: '🔥 กลาง', hard: '💀 ยาก' } as const;
 
 /** ห้องสาธารณะที่ยังรอคน: แสดงคนที่เจอแล้ว + เวลาที่เหลือก่อนเริ่ม */
 export function MatchmakingView({ room, players, myId, onCancel }: Props) {
@@ -67,7 +66,7 @@ export function MatchmakingView({ room, players, myId, onCancel }: Props) {
             : 'กำลังหาผู้เล่นคนอื่น...'}
       </p>
       <p className="match-sub">
-        {subjectLabel} · {DIFF_TEXT[s.difficulty]} · {trackLabel(s.level, s.track)} · 10 ข้อ
+        {subjectLabel} · {difficultyText(s.difficulty)} · {trackLabel(s.level, s.track)} · 10 ข้อ
         {room.mode === 'items' ? ' · 🃏 การ์ดพลัง' : ''}
         <br />
         ค้นหามาแล้ว {Math.floor(searching / 60)}:{String(searching % 60).padStart(2, '0')}

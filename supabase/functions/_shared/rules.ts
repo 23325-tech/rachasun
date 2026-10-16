@@ -4,7 +4,7 @@
  */
 
 export type Subject = 'math' | 'science' | 'physics' | 'chemistry' | 'biology' | 'english';
-export type Difficulty = 'easy' | 'medium' | 'hard';
+export type Difficulty = 'easy' | 'medium' | 'hard' | 'challenge';
 export type QuestionType = 'mcq' | 'fill';
 
 export type FillAnswer =
@@ -54,8 +54,8 @@ export function formatFillAnswer(answer: FillAnswer): string {
 
 /** เวลาพื้นฐาน (วินาที) ตามรูปแบบโจทย์และความยาก */
 const BASE_SECONDS: Record<QuestionType, Record<Difficulty, number>> = {
-  mcq: { easy: 20, medium: 30, hard: 45 },
-  fill: { easy: 30, medium: 45, hard: 75 },
+  mcq: { easy: 20, medium: 30, hard: 45, challenge: 75 },
+  fill: { easy: 30, medium: 45, hard: 75, challenge: 120 },
 };
 
 /** ตัวคูณตามวิชา วิชาที่ต้องคำนวณได้เวลามากกว่า */

@@ -490,7 +490,7 @@ async function awardXp(room: RoomRow, players: BattlePlayer[], roundsPlayed: num
 
   const xp: Record<string, { gained: number; total: number; rpDelta?: number; rp?: number }> = {};
   for (const p of players) {
-    const c = { easy: 0, medium: 0, hard: 0 };
+    const c = { easy: 0, medium: 0, hard: 0, challenge: 0 };
     for (const a of answers ?? []) if (a.user_id === p.id && a.correct) c[diffOf(a.round)]++;
     const { data, error } = await admin.rpc('record_online_game', {
       p_user: p.id,
@@ -498,6 +498,7 @@ async function awardXp(room: RoomRow, players: BattlePlayer[], roundsPlayed: num
       p_correct_easy: c.easy,
       p_correct_medium: c.medium,
       p_correct_hard: c.hard,
+      p_correct_challenge: c.challenge,
       p_rank: p.rank ?? players.length,
       p_players: players.length,
     });

@@ -71,9 +71,24 @@ export const DIFFICULTY_LABEL: Record<Difficulty, string> = {
   easy: 'ง่าย',
   medium: 'กลาง',
   hard: 'ยาก',
+  challenge: 'ท้าทาย',
 };
 
-export const DIFFICULTY_STARS: Record<Difficulty, number> = { easy: 1, medium: 2, hard: 3 };
+/** ตัวเลือกความยาก (ใช้ทุกหน้าที่ให้เลือก) */
+export const DIFFICULTY_OPTIONS: { value: Difficulty; label: string; icon: string }[] = [
+  { value: 'easy', label: 'ง่าย', icon: '🌱' },
+  { value: 'medium', label: 'กลาง', icon: '🔥' },
+  { value: 'hard', label: 'ยาก', icon: '💀' },
+  { value: 'challenge', label: 'ท้าทาย', icon: '🧠' },
+];
+
+/** เช่น "🔥 กลาง" */
+export const difficultyText = (d: Difficulty) => {
+  const o = DIFFICULTY_OPTIONS.find((x) => x.value === d)!;
+  return `${o.icon} ${o.label}`;
+};
+
+export const DIFFICULTY_STARS: Record<Difficulty, number> = { easy: 1, medium: 2, hard: 3, challenge: 4 };
 
 export const CHOICE_LABELS = ['ก', 'ข', 'ค', 'ง'] as const;
 

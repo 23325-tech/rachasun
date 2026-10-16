@@ -1,5 +1,5 @@
 export type Subject = 'math' | 'science' | 'physics' | 'chemistry' | 'biology' | 'english';
-export type Difficulty = 'easy' | 'medium' | 'hard';
+export type Difficulty = 'easy' | 'medium' | 'hard' | 'challenge';
 /** entrance = แนวเตรียมสอบเข้า, school = แนวสอบปกติในโรงเรียน */
 export type Track = 'entrance' | 'school';
 /** ระดับชั้น: primary = ประถม, lower = ม.ต้น, upper = ม.ปลาย, uni = มหาลัย */
@@ -10,6 +10,8 @@ interface QuestionBase {
   subject: Subject;
   difficulty: Difficulty;
   track: Track;
+  /** รหัสบท เช่น upper.math.7 */
+  chapter?: string | null;
   /** ข้อความโจทย์ ใส่ LaTeX ได้ด้วย $...$ (ในบรรทัด) หรือ $$...$$ (บรรทัดแยก) */
   prompt: string;
   /** path รูปภาพ/ไดอะแกรม เช่น /img/right-triangle.svg */

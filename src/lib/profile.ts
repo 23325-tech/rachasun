@@ -81,6 +81,7 @@ export interface GameRecord {
   correctEasy: number;
   correctMedium: number;
   correctHard: number;
+  correctChallenge?: number;
   rank?: number;
   players?: number;
 }
@@ -98,6 +99,7 @@ export async function recordGame(g: GameRecord): Promise<XpResult> {
     p_correct_easy: g.correctEasy,
     p_correct_medium: g.correctMedium,
     p_correct_hard: g.correctHard,
+    p_correct_challenge: g.correctChallenge ?? 0,
     p_rank: g.rank ?? null,
     p_players: g.players ?? null,
   });

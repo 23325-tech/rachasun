@@ -16,7 +16,9 @@ const GENERATE_BATCH = 10;
 export interface StoredQuestion {
   id: string;
   subject: 'math' | 'science' | 'physics' | 'chemistry' | 'biology' | 'english';
-  difficulty: 'easy' | 'medium' | 'hard';
+  difficulty: 'easy' | 'medium' | 'hard' | 'challenge';
+  /** รหัสบท เช่น upper.math.7 (โจทย์เก่าบางข้อยังไม่มี) */
+  chapter?: string | null;
   track: string;
   type: 'mcq' | 'fill';
   prompt: string;

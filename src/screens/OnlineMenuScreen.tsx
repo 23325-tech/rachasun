@@ -1,13 +1,9 @@
 import { useState } from 'react';
-import type { Difficulty } from '../types';
+import { DIFFICULTY_OPTIONS } from '../data/subjects';
 import { LevelSubjectFields } from '../components/LevelSubjectFields';
 import type { MatchSettings } from '../lib/rooms';
 
-const DIFFICULTIES: { value: Difficulty; label: string }[] = [
-  { value: 'easy', label: '🌱 ง่าย' },
-  { value: 'medium', label: '🔥 กลาง' },
-  { value: 'hard', label: '💀 ยาก' },
-];
+const DIFFICULTIES = DIFFICULTY_OPTIONS.map((d) => ({ value: d.value, label: `${d.icon} ${d.label}` }));
 
 interface Props {
   initialMatch: MatchSettings;

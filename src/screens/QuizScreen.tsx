@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { AnswerResult, Question } from '../types';
 import { DIFFICULTY_LABEL, DIFFICULTY_STARS, SUBJECTS } from '../data/subjects';
+import { chapterName } from '../data/chapters';
 import { getTimeLimitSec } from '../lib/timing';
 import { calcPoints } from '../lib/scoring';
 import { checkFillAnswer, formatFillAnswer } from '../lib/checkAnswer';
@@ -102,6 +103,7 @@ export function QuizScreen({ questions, onFinish, onQuit }: Props) {
             {'★'.repeat(DIFFICULTY_STARS[q.difficulty])} {DIFFICULTY_LABEL[q.difficulty]}
           </span>
           <span className="tag tag--ghost">{q.track === 'entrance' ? 'สอบเข้า' : 'สอบปกติ'}</span>
+          {q.chapter && chapterName(q.chapter) && <span className="tag tag--ghost">📖 {chapterName(q.chapter)}</span>}
         </div>
         <MathText className="question-card__prompt" text={q.prompt} />
         {q.image && <img className="question-card__img" src={q.image} alt={q.imageAlt ?? ''} />}

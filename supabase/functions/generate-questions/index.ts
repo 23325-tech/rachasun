@@ -2,10 +2,11 @@
 // ต้องตั้ง secret GEMINI_API_KEY ใน Supabase (Edge Functions > Secrets)
 // ตั้ง GEMINI_MODEL เพิ่มได้ถ้าอยากเปลี่ยนโมเดลหลัก
 import { createClient } from 'npm:@supabase/supabase-js@2';
+import { chapterName, chaptersOf } from '../_shared/chapters.ts';
 
 const SUBJECTS = ['math', 'science', 'physics', 'chemistry', 'biology', 'english'] as const;
 const LEVELS = ['primary', 'lower', 'upper', 'uni'] as const;
-const DIFFICULTIES = ['easy', 'medium', 'hard'] as const;
+const DIFFICULTIES = ['easy', 'medium', 'hard', 'challenge'] as const;
 const TRACKS = ['entrance', 'school'] as const;
 const MAX_COUNT = 10;
 /** ผู้เล่นหนึ่งคนให้ AI สร้างได้ไม่เกินกี่ข้อต่อชั่วโมง (เรียกจาก Edge Function อื่นไม่จำกัด) */
@@ -43,7 +44,13 @@ const SUBJECT_TH: Record<Subject, string> = {
   biology: 'ชีววิทยา',
   english: 'ภาษาอังกฤษ',
 };
-const DIFFICULTY_TH: Record<Difficulty, string> = { easy: 'ง่าย', medium: 'ปานกลาง', hard: 'ยาก' };
+const DIFFICULTY_TH: Record<Difficulty, string> = {
+  easy: 'ง่าย (ทบทวนพื้นฐาน ใช้ความรู้ขั้นเดียว เหมาะกับคนที่เพิ่งเริ่มเรียนบทนี้)',
+  medium: 'ปานกลาง (ต้องเข้าใจแนวคิด คิด 2-3 ขั้น)',
+  hard: 'ยาก (คิดหลายขั้น มีกับดักที่พบบ่อย ระดับข้อสอบที่ต้องตั้งใจทำ)',
+  challenge:
+    'ท้าทาย (โจทย์คิดวิเคราะห์จริงสำหรับเด็กเก่ง ต้องเชื่อมหลายแนวคิดหรือหลายบท คิด 4 ขั้นขึ้นไป ห้ามเป็นแค่การแทนสูตรหรือคำนวณยาว)',
+};
 const LEVEL_TH: Record<Level, string> = {
   primary: 'ประถมศึกษา (ป.1-ป.6) ใช้ภาษาง่าย ประโยคสั้น ตัวเลขไม่ซับซ้อน ไม่ใช้สูตรขั้นสูง',
   lower: 'มัธยมศึกษาตอนต้น (ม.1-ม.3)',
@@ -77,6 +84,7 @@ const RESPONSE_SCHEMA = {
         type: 'OBJECT',
         properties: {
           subject: { type: 'STRING', enum: [...SUBJECTS] },
+          chapter: { type: 'STRING' },
           type: { type: 'STRING', enum: ['mcq', 'fill'] },
           prompt: { type: 'STRING' },
           choices: { type: 'ARRAY', items: { type: 'STRING' } },
@@ -88,9 +96,10 @@ const RESPONSE_SCHEMA = {
           answer_unit: { type: 'STRING' },
           answer_accepted: { type: 'ARRAY', items: { type: 'STRING' } },
         },
-        required: ['subject', 'type', 'prompt', 'explanation'],
+        required: ['subject', 'chapter', 'type', 'prompt', 'explanation'],
         propertyOrdering: [
           'subject',
+          'chapter',
           'type',
           'prompt',
           'choices',
@@ -108,13 +117,28 @@ const RESPONSE_SCHEMA = {
   required: ['questions'],
 };
 
-function buildPrompt(subjects: Subject[], difficulty: Difficulty, track: Track, level: Level, count: number) {
+/** รายการบทที่อนุญาต พร้อมคำอธิบายสำหรับ prompt */
+function chapterList(ids: string[]) {
+  return ids.map((id) => `  - ${id}: ${chapterName(id)}`).join('\n');
+}
+
+function buildPrompt(
+  subjects: Subject[],
+  difficulty: Difficulty,
+  track: Track,
+  level: Level,
+  count: number,
+  chapterIds: string[],
+  focused: boolean,
+) {
   return `คุณคือครูผู้เชี่ยวชาญที่ออกข้อสอบสำหรับนักเรียนไทย
 สร้างโจทย์ ${count} ข้อ
 - ระดับชั้น: ${LEVEL_TH[level]}
 - วิชา: ${subjects.map((s) => `${SUBJECT_TH[s]} (${s})`).join(', ')}${subjects.length > 1 ? ' — กระจายวิชาให้ใกล้เคียงกัน' : ''}
 - ความยาก: ${DIFFICULTY_TH[difficulty]} (เทียบกับระดับชั้นนี้)
 - แนว: ${TRACK_TH[level][track]}
+- บท: ${focused ? 'ออกเฉพาะบทต่อไปนี้ กระจายให้ทั่วทุกบท' : 'เลือกบทให้หลากหลาย'} และระบุรหัสบทในช่อง chapter ของทุกข้อ
+${chapterList(chapterIds)}
 
 กติกา:
 1. ผสมรูปแบบ: ประมาณ 70% เป็นปรนัย (type "mcq") อีก 30% เป็นเติมคำตอบ (type "fill")
@@ -127,7 +151,7 @@ function buildPrompt(subjects: Subject[], difficulty: Difficulty, track: Track, 
 5. ห้ามอ้างถึงรูปภาพหรือกราฟ เพราะไม่มีรูปประกอบ
 6. โจทย์และคำอธิบายเป็นภาษาไทย ยกเว้นวิชาภาษาอังกฤษให้โจทย์เป็นภาษาอังกฤษ แต่คำอธิบายเป็นภาษาไทย
 7. explanation: อธิบายวิธีคิดทีละขั้นสั้นๆ (2-4 ประโยค) และคำนวณให้ถูกต้องก่อนเลือกเฉลย เฉลยต้องตรงกับคำอธิบาย
-8. โจทย์ต้องทำได้ภายใน 20-90 วินาที`;
+8. ${difficulty === 'challenge' ? 'โจทย์ต้องทำได้ภายใน 2-3 นาทีสำหรับคนที่เก่ง' : 'โจทย์ต้องทำได้ภายใน 20-90 วินาที'}`;
 }
 
 // โมเดลบางครั้งเขียน "\text" ใน JSON โดยไม่ escape -> JSON แปลง "\t" เป็นอักขระ Tab
@@ -146,6 +170,7 @@ function wrapBareLatex(s: string): string {
 
 interface RawQuestion {
   subject?: string;
+  chapter?: string;
   type?: string;
   prompt?: string;
   choices?: string[];
@@ -159,13 +184,23 @@ interface RawQuestion {
 }
 
 /** แปลงผลจาก AI เป็นแถวในตาราง ถ้ารูปแบบไม่ถูกต้องคืน null (ข้อนั้นจะถูกทิ้ง) */
-function toRow(q: RawQuestion, allowed: Subject[], difficulty: Difficulty, track: Track, level: Level, model: string) {
+function toRow(
+  q: RawQuestion,
+  allowed: Subject[],
+  difficulty: Difficulty,
+  track: Track,
+  level: Level,
+  chapterIds: string[],
+  model: string,
+) {
   const subject = q.subject as Subject;
   if (!allowed.includes(subject)) return null;
   const prompt = q.prompt && repairLatex(q.prompt).trim();
   const explanation = q.explanation && repairLatex(q.explanation).trim();
   if (!prompt || !explanation) return null;
-  const base = { subject, difficulty, track, level, prompt, explanation, model };
+  // บทต้องอยู่ในรายการและตรงกับวิชาของข้อ ไม่งั้นเก็บแบบไม่ระบุบท
+  const chapter = q.chapter && chapterIds.includes(q.chapter) && q.chapter.split('.')[1] === subject ? q.chapter : null;
+  const base = { subject, difficulty, track, level, chapter, prompt, explanation, model };
 
   if (q.type === 'mcq') {
     const choices = q.choices?.map((c) => wrapBareLatex(repairLatex(String(c)).trim()));
@@ -264,11 +299,16 @@ Deno.serve(async (req) => {
     const track = body.track as Track;
     const count = Math.floor(Number(body.count));
     const level = (body.level ?? 'upper') as Level;
+    const requested: string[] = Array.isArray(body.chapters) ? body.chapters.map(String) : [];
 
     if (!LEVELS.includes(level)) return json({ error: 'invalid level' }, 400);
     if (!subjects.length || subjects.some((s) => !LEVEL_SUBJECTS[level].includes(s)))
       return json({ error: 'invalid subjects' }, 400);
     if (!DIFFICULTIES.includes(difficulty)) return json({ error: 'invalid difficulty' }, 400);
+    // บทที่ขอต้องเป็นของระดับและวิชาที่เลือก
+    const allChapterIds = subjects.flatMap((s) => chaptersOf(level, s).map((c) => c.id));
+    if (requested.some((id) => !allChapterIds.includes(id))) return json({ error: 'invalid chapters' }, 400);
+    const chapterIds = requested.length ? requested : allChapterIds;
     if (!TRACKS.includes(track) || !TRACK_TH[level][track]) return json({ error: 'invalid track' }, 400);
     if (!(count >= 1 && count <= MAX_COUNT)) return json({ error: `count must be 1-${MAX_COUNT}` }, 400);
 
@@ -283,9 +323,9 @@ Deno.serve(async (req) => {
       if (used + count > HOURLY_LIMIT) return json({ error: 'rate_limited', used, limit: HOURLY_LIMIT }, 429);
     }
 
-    const { data, model, fallbacks } = await callGemini(buildPrompt(subjects, difficulty, track, level, count), apiKey);
+    const { data, model, fallbacks } = await callGemini(buildPrompt(subjects, difficulty, track, level, count, chapterIds, requested.length > 0), apiKey);
     const rows = (data.questions ?? [])
-      .map((q) => toRow(q, subjects, difficulty, track, level, model))
+      .map((q) => toRow(q, subjects, difficulty, track, level, chapterIds, model))
       .filter((r): r is NonNullable<typeof r> => r !== null)
       .slice(0, count);
 

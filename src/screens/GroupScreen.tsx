@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { groupBoard, groupLink, leaveGroup, type GroupBoard } from '../lib/groups';
 import { startDaily } from '../lib/asyncPlay';
 import { AsyncPlayScreen } from './AsyncPlayScreen';
-import { settingsLabel } from '../data/subjects';
+import { settingsLabel, difficultyText } from '../data/subjects';
 import { XpBadge, type XpState } from '../components/XpBadge';
 
 interface Props {
@@ -15,7 +15,6 @@ interface Props {
 }
 
 const MEDAL = ['🥇', '🥈', '🥉'];
-const DIFF_TEXT = { easy: '🌱 ง่าย', medium: '🔥 กลาง', hard: '💀 ยาก' } as const;
 
 /** หน้ากลุ่ม: โจทย์ประจำวัน + อันดับวันนี้ / สัปดาห์นี้ */
 export function GroupScreen({ groupId, guest, onBack, onLeft, onRegister, onXpAwarded }: Props) {
@@ -124,7 +123,7 @@ export function GroupScreen({ groupId, guest, onBack, onLeft, onRegister, onXpAw
 
       <section className="code-card pop-in">
         <span className="code-card__label">
-          {settingsLabel(g.settings)} · {DIFF_TEXT[g.settings.difficulty]} · 10 ข้อ/วัน
+          {settingsLabel(g.settings)} · {difficultyText(g.settings.difficulty)} · 10 ข้อ/วัน
         </span>
         <span className="code-card__code code-card__code--small">{g.code}</span>
         <button type="button" className="btn btn--ghost btn--block" onClick={share}>

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { LEVELS, subjectInfo } from '../data/subjects';
+import { LEVELS, subjectInfo, difficultyText } from '../data/subjects';
 import { challengeLink, fetchChallengeBoard, startChallenge, type ChallengeBoard } from '../lib/asyncPlay';
 import { AsyncPlayScreen } from './AsyncPlayScreen';
 import { XpBadge, type XpState } from '../components/XpBadge';
@@ -15,7 +15,6 @@ interface Props {
 }
 
 const MEDAL = ['🥇', '🥈', '🥉'];
-const DIFF_TEXT = { easy: '🌱 ง่าย', medium: '🔥 กลาง', hard: '💀 ยาก' } as const;
 
 function timeLeft(expiresAt: string) {
   const ms = new Date(expiresAt).getTime() - Date.now();
@@ -141,7 +140,7 @@ export function ChallengeScreen({ code, guest, autoPlay, onHome, onRegister, onX
           {iAmCreator ? 'คำท้าของคุณ' : `${board.creator?.nickname ?? 'เพื่อน'} ท้าคุณ!`}
         </h1>
         <p className="challenge-hero__meta">
-          {subject} · {DIFF_TEXT[s.difficulty]} · {board.count} ข้อ
+          {subject} · {difficultyText(s.difficulty)} · {board.count} ข้อ
         </p>
         <p className={`challenge-hero__time ${board.expired ? 'is-expired' : ''}`}>⏳ {timeLeft(board.expiresAt)}</p>
       </section>

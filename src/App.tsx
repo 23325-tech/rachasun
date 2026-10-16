@@ -85,7 +85,7 @@ const toRoomSettings = (s: GameSettings): RoomSettings => ({
 const subjectsOf = (s: GameSettings): Subject[] => (s.subject === 'all' ? LEVELS[s.level].subjects : [s.subject]);
 
 function countCorrect(questions: Question[], results: AnswerResult[]): Record<Difficulty, number> {
-  const out: Record<Difficulty, number> = { easy: 0, medium: 0, hard: 0 };
+  const out: Record<Difficulty, number> = { easy: 0, medium: 0, hard: 0, challenge: 0 };
   for (const r of results) {
     const q = questions.find((x) => x.id === r.questionId);
     if (q && r.correct) out[q.difficulty]++;
@@ -111,6 +111,7 @@ export default function App() {
     botLevel: 'normal',
     level: 'upper',
     subject: 'all',
+    chapters: [],
     difficulty: 'medium',
     track: 'school',
     count: 10,
@@ -249,7 +250,14 @@ export default function App() {
     setScreen({ name: 'loading', message: 'กำลังเตรียมโจทย์...' });
     try {
       const { questions } = await loadQuiz(
-        { subjects: subjectsOf(s), difficulty: s.difficulty, track: s.track, level: s.level, count: totalNeeded(s) },
+        {
+          subjects: subjectsOf(s),
+          difficulty: s.difficulty,
+          track: s.track,
+          level: s.level,
+          chapters: s.subject === 'all' ? [] : s.chapters,
+          count: totalNeeded(s),
+        },
         (message) => loadId === loadIdRef.current && setScreen({ name: 'loading', message }),
       );
       if (loadId !== loadIdRef.current) return;
@@ -412,6 +420,7 @@ export default function App() {
               correctEasy: c.easy,
               correctMedium: c.medium,
               correctHard: c.hard,
+              correctChallenge: c.challenge,
             });
           }}
         />
@@ -446,6 +455,7 @@ export default function App() {
               correctEasy: stats.correct.easy,
               correctMedium: stats.correct.medium,
               correctHard: stats.correct.hard,
+              correctChallenge: stats.correct.challenge,
               rank: mine.rank ?? players.length,
               players: players.length,
             });

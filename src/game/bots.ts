@@ -24,9 +24,9 @@ const BOT_ROSTER = [
 
 /** ความแม่นพื้นฐาน (โอกาสตอบถูก) ตามระดับบอท และความยากของข้อ */
 const ACCURACY: Record<BotLevel, Record<Difficulty, number>> = {
-  chill: { easy: 0.7, medium: 0.55, hard: 0.4 },
-  normal: { easy: 0.85, medium: 0.72, hard: 0.58 },
-  pro: { easy: 0.95, medium: 0.88, hard: 0.78 },
+  chill: { easy: 0.7, medium: 0.55, hard: 0.4, challenge: 0.25 },
+  normal: { easy: 0.85, medium: 0.72, hard: 0.58, challenge: 0.42 },
+  pro: { easy: 0.95, medium: 0.88, hard: 0.78, challenge: 0.65 },
 };
 
 /** ช่วงเวลาที่ใช้ตอบ เป็นสัดส่วนของเวลาเต็ม */

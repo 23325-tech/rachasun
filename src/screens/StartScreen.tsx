@@ -1,7 +1,8 @@
 import { useEffect, useState, type CSSProperties, type ReactNode } from 'react';
 import type { Difficulty, Level, Subject, Track } from '../types';
-import { adjustForLevel, LEVELS, subjectInfo } from '../data/subjects';
+import { adjustForLevel, DIFFICULTY_OPTIONS, LEVELS, subjectInfo } from '../data/subjects';
 import { LevelPicker } from '../components/LevelPicker';
+import { ChapterPicker } from '../components/ChapterPicker';
 import { BOT_LEVELS, type BotLevel } from '../game/bots';
 import { heartsFor } from '../game/battle';
 
@@ -16,24 +17,23 @@ export interface GameSettings {
   botLevel: BotLevel;
   level: Level;
   subject: SubjectFilter;
+  /** บทที่เลือก (ว่าง = ทุกบท) ใช้กับฝึกเดี่ยว/ดวลบอท เมื่อเลือกวิชาเดียว */
+  chapters: string[];
   difficulty: Difficulty;
   track: Track;
   count: number;
 }
 
 /** เปลี่ยนระดับชั้น: วิชา/แนวข้อสอบที่ไม่มีในระดับใหม่จะกลับเป็นค่าเริ่มต้น */
-export const withLevel = (s: GameSettings, level: Level): GameSettings => adjustForLevel(s, level);
+export const withLevel = (s: GameSettings, level: Level): GameSettings =>
+  s.level === level ? s : { ...adjustForLevel(s, level), chapters: [] };
 
-const DIFFICULTIES: { value: Difficulty; label: string; icon: string }[] = [
-  { value: 'easy', label: 'ง่าย', icon: '🌱' },
-  { value: 'medium', label: 'กลาง', icon: '🔥' },
-  { value: 'hard', label: 'ยาก', icon: '💀' },
-];
+const DIFFICULTIES = DIFFICULTY_OPTIONS;
 const COUNTS = [5, 10, 20];
 const BOT_COUNTS = [1, 3, 5, 7];
 
 /** เวลาเฉลี่ยโดยประมาณต่อข้อ (วินาที) ใช้แสดงว่ารอบนี้ใช้เวลาราวกี่นาที */
-const AVG_SEC: Record<Difficulty, number> = { easy: 25, medium: 40, hard: 60 };
+const AVG_SEC: Record<Difficulty, number> = { easy: 25, medium: 40, hard: 60, challenge: 110 };
 
 interface Props {
   initial: GameSettings;
@@ -108,7 +108,10 @@ export function StartScreen({
   };
 
   const levelInfo = LEVELS[s.level];
-  const subjectName = s.subject === 'all' ? 'ทุกวิชา' : subjectInfo(s.subject, s.level).name;
+  const subjectName =
+    s.subject === 'all'
+      ? 'ทุกวิชา'
+      : subjectInfo(s.subject, s.level).name + (s.chapters.length && s.mode !== 'challenge' ? ` (${s.chapters.length} บท)` : '');
   const difficultyLabel = DIFFICULTIES.find((d) => d.value === s.difficulty)!.label;
   const minutes = Math.max(1, Math.round((s.count * AVG_SEC[s.difficulty]) / 60));
 
@@ -200,7 +203,7 @@ export function StartScreen({
             type="button"
             className={`subject-card subject-card--all ${s.subject === 'all' ? 'is-active' : ''}`}
             aria-pressed={s.subject === 'all'}
-            onClick={() => set('subject', 'all')}
+            onClick={() => setS((prev) => ({ ...prev, subject: 'all', chapters: [] }))}
           >
             <span className="subject-card__emoji" aria-hidden>
               🌈
@@ -222,7 +225,7 @@ export function StartScreen({
                 className={`subject-card ${s.subject === key ? 'is-active' : ''}`}
                 style={{ '--c': sub.color } as CSSProperties}
                 aria-pressed={s.subject === key}
-                onClick={() => set('subject', key)}
+                onClick={() => setS((prev) => (prev.subject === key ? prev : { ...prev, subject: key, chapters: [] }))}
               >
                 <span className="subject-card__emoji" aria-hidden>
                   {sub.emoji}
@@ -241,6 +244,9 @@ export function StartScreen({
       </section>
 
       <section className="settings-card" aria-label="ตั้งค่ารอบนี้">
+        {s.subject !== 'all' && s.mode !== 'challenge' && (
+          <ChapterPicker level={s.level} subject={s.subject} value={s.chapters} onChange={(v) => set('chapters', v)} />
+        )}
         <Segmented label="ความยาก" options={DIFFICULTIES} value={s.difficulty} onChange={(v) => set('difficulty', v)} />
         {levelInfo.tracks.length > 1 && (
           <Segmented<Track> label="แนวข้อสอบ" options={levelInfo.tracks} value={s.track} onChange={(v) => set('track', v)} />

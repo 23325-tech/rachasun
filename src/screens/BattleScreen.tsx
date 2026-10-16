@@ -86,7 +86,7 @@ export function BattleScreen({ questions, questionCount, initialPlayers, bots, o
   // ref ล่าสุดสำหรับใช้ใน timer callback
   const stateRef = useRef({ players, myAnswer, botPlan, limitMs, round, q });
   stateRef.current = { players, myAnswer, botPlan, limitMs, round, q };
-  const myStatsRef = useRef<MyBattleStats>({ rounds: 0, correct: { easy: 0, medium: 0, hard: 0 } });
+  const myStatsRef = useRef<MyBattleStats>({ rounds: 0, correct: { easy: 0, medium: 0, hard: 0, challenge: 0 } });
   const timersRef = useRef<number[]>([]);
   const later = (fn: () => void, ms: number) => timersRef.current.push(window.setTimeout(fn, ms));
   useEffect(() => () => timersRef.current.forEach(clearTimeout), []);
