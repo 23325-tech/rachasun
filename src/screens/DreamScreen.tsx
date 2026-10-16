@@ -12,6 +12,11 @@ import {
   saveDream,
   type DreamGoal,
   type DreamPlan,
+  effectiveScores,
+  fetchMockScores,
+  scoreValues,
+  subjectGaps,
+  type MockScore,
 } from '../lib/dream';
 
 interface Props {
@@ -24,6 +29,8 @@ const fmtDate = (d: Date) => d.toLocaleDateString(t('th-TH', 'en-GB'), { day: 'n
 /** เป้าหมายคณะในฝัน: ค่าน้ำหนักที่นักเรียนกรอกเอง คะแนนรวมเทียบเป้า และนับถอยหลังถึงวันสอบ */
 export function DreamScreen({ onBack }: Props) {
   const [plan, setPlan] = useState<DreamPlan | null>(null);
+  const [mock, setMock] = useState<Record<string, MockScore>>({});
+  const [open, setOpen] = useState<number | null>(0);
   const [editing, setEditing] = useState<{ index: number; goal: DreamGoal } | null>(null);
   const [scoreDraft, setScoreDraft] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
@@ -31,6 +38,7 @@ export function DreamScreen({ onBack }: Props) {
   const [saved, setSaved] = useState('');
 
   useEffect(() => {
+    fetchMockScores().then(setMock).catch(() => {});
     fetchDream()
       .then((p) => {
         setPlan(p);
@@ -135,7 +143,9 @@ export function DreamScreen({ onBack }: Props) {
       )}
 
       {plan.goals.map((g, i) => {
-        const c = composite(g, plan.scores);
+        const eff = effectiveScores(plan.scores, mock, Object.keys(g.weights));
+        const c = composite(g, scoreValues(eff));
+        const gaps = subjectGaps(g, scoreValues(eff));
         const next = nextExam(g, plan.examOverrides);
         const gap = Math.round((g.target - c.total) * 100) / 100;
         return (
@@ -173,15 +183,47 @@ export function DreamScreen({ onBack }: Props) {
             {c.missing.length > 0 && (
               <p className="dream-goal__missing">
                 {t('ยังไม่มีคะแนน', 'No score yet')}: {c.missing.map(subjectName).join(', ')}
+                {c.missing.some((k) => TCAS_BY_KEY[k]?.mock) && t(' · วิชาที่มีจำลองสอบในเว็บ ลองทำเพื่อดึงคะแนนอัตโนมัติ', ' · try the in-app mock exam to fill these in')}
               </p>
             )}
-            <ul className="dream-goal__weights">
-              {Object.entries(g.weights).map(([k, w]) => (
-                <li key={k}>
-                  {subjectName(k)} <b>{w}%</b>
-                </li>
-              ))}
-            </ul>
+            <button type="button" className="dream-goal__toggle" onClick={() => setOpen(open === i ? null : i)} aria-expanded={open === i}>
+              {open === i ? t('ซ่อนรายวิชา', 'Hide subjects') : t('ดูส่วนที่ขาดรายวิชา', 'See gap by subject')}
+            </button>
+            {open === i && (
+              <ul className="dream-gaps">
+                {gaps.map((x, k) => {
+                  const e = eff[x.key];
+                  return (
+                    <li key={x.key} className={k === 0 && x.room > 0 && gap > 0 && c.missing.length === 0 ? 'is-best' : ''}>
+                      <div className="dream-gaps__top">
+                        <span className="dream-gaps__name">
+                          {subjectName(x.key)} <small>{x.weight}%</small>
+                        </span>
+                        <span className="dream-gaps__score">{x.score === null ? '-' : x.score}</span>
+                      </div>
+                      <div className="dream-gaps__meta">
+                        {e && (
+                          <span className={`dream-gaps__src dream-gaps__src--${e.source}`}>
+                            {e.source === 'mock' ? t(`จำลองสอบ เฉลี่ย ${e.n} ครั้ง`, `Mock avg of ${e.n}`) : t('กรอกเอง', 'Typed in')}
+                          </span>
+                        )}
+                        <span>
+                          {t('ได้', 'Earns')} {x.earned.toFixed(2)}/{x.weight}
+                        </span>
+                        {x.score !== null && gap > 0 && c.missing.length === 0 && (
+                          <b>
+                            {x.needAlone !== null
+                              ? t(`ถ้าเพิ่มวิชานี้วิชาเดียว ต้อง +${x.needAlone}`, `Alone it needs +${x.needAlone}`)
+                              : t('เพิ่มวิชานี้วิชาเดียวไม่พอ', 'Not enough alone')}
+                          </b>
+                        )}
+                        {k === 0 && x.room > 0 && gap > 0 && c.missing.length === 0 && <b className="dream-gaps__best">{t('เพิ่มคะแนนรวมได้มากสุด', 'Biggest upside')}</b>}
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
             <div className="dream-goal__tools">
               {i > 0 && (
                 <button type="button" className="btn btn--ghost" disabled={busy} onClick={() => move(i)}>
@@ -213,7 +255,7 @@ export function DreamScreen({ onBack }: Props) {
       {used.length > 0 && (
         <section className="settings-card">
           <h2 className="section-title section-title--dark">{t('คะแนนของฉัน (เต็ม 100)', 'My scores (out of 100)')}</h2>
-          <p className="muted dream__note">{t('ใส่คะแนนที่คาดว่าจะได้ หรือคะแนนสอบจริง เว้นว่างได้', 'Enter your expected or real score. Leave blank if unknown.')}</p>
+          <p className="muted dream__note">{t('ใส่คะแนนที่คาดว่าจะได้ หรือคะแนนสอบจริง วิชาที่มีจำลองสอบเว้นว่างไว้ = ใช้ค่าเฉลี่ย 3 ครั้งล่าสุดอัตโนมัติ', 'Enter expected or real scores. Leave a mock-exam subject blank to use your average of the last 3 mocks.')}</p>
           <div className="dream__scores">
             {used.map((k) => (
               <label key={k} className="dream__score">
@@ -226,8 +268,11 @@ export function DreamScreen({ onBack }: Props) {
                   max={100}
                   value={scoreDraft[k] ?? ''}
                   onChange={(e) => setScoreDraft((d) => ({ ...d, [k]: e.target.value }))}
-                  placeholder="-"
+                  placeholder={TCAS_BY_KEY[k]?.mock && mock[TCAS_BY_KEY[k].mock!] ? String(mock[TCAS_BY_KEY[k].mock!].avg) : '-'}
                 />
+                {TCAS_BY_KEY[k]?.mock && mock[TCAS_BY_KEY[k].mock!] && !scoreDraft[k] && (
+                  <small className="dream__auto">{t('ใช้คะแนนจำลองสอบ', 'From mock exams')}</small>
+                )}
               </label>
             ))}
           </div>

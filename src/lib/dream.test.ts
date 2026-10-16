@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('./supabase', () => ({ ensureSession: vi.fn() }));
 
-import { composite, daysUntil, examDate, nextExam, type DreamGoal } from './dream';
+import { composite, daysUntil, effectiveScores, examDate, nextExam, subjectGaps, type DreamGoal } from './dream';
 
 const goal: DreamGoal = { university: 'U', faculty: 'F', target: 70, weights: { tgat: 20, tpat3: 30, a_math1: 50 } };
 
@@ -30,5 +30,24 @@ describe('countdown', () => {
   it('skips exams that already happened', () => {
     expect(nextExam(goal, {}, new Date('2027-02-01T09:00:00+07:00'))?.key).toBe('a_math1');
     expect(nextExam(goal, {}, new Date('2027-04-01T09:00:00+07:00'))).toBeNull();
+  });
+});
+
+describe('mock scores and gaps', () => {
+  const g: DreamGoal = { university: '', faculty: 'F', target: 70, weights: { tgat: 20, a_phy: 30, a_math1: 50 } };
+  const mock = { physics: { avg: 60, n: 3, last: 70, lastAt: '' }, math1: { avg: 50, n: 1, last: 50, lastAt: '' } };
+
+  it('prefers typed scores over the mock average', () => {
+    const eff = effectiveScores({ tgat: 80, a_math1: 90 }, mock, Object.keys(g.weights));
+    expect(eff).toEqual({ tgat: { score: 80, source: 'manual' }, a_phy: { score: 60, source: 'mock', n: 3 }, a_math1: { score: 90, source: 'manual' } });
+  });
+
+  it('ranks subjects by upside and computes the raise needed alone', () => {
+    // 16 + 18 + 25 = 59 -> ขาด 11
+    const gaps = subjectGaps(g, { tgat: 80, a_phy: 60, a_math1: 50 });
+    expect(gaps.map((x) => x.key)).toEqual(['a_math1', 'a_phy', 'tgat']);
+    expect(gaps[0]).toMatchObject({ earned: 25, room: 25, needAlone: 22 });
+    expect(gaps[1].needAlone).toBe(36.7);
+    expect(gaps[2].needAlone).toBeNull(); // 80 + 55 > 100
   });
 });

@@ -81,3 +81,73 @@ export function nextExam(goal: DreamGoal, overrides: Record<string, string>, now
   }
   return best;
 }
+
+export interface MockScore {
+  /** เฉลี่ย 3 ครั้งล่าสุด (เต็ม 100) */
+  avg: number;
+  n: number;
+  last: number;
+  lastAt: string;
+}
+
+export async function fetchMockScores(): Promise<Record<string, MockScore>> {
+  const sb = await ensureSession();
+  const { data, error } = await sb.rpc('my_mock_scores');
+  if (error) throw new Error(error.message);
+  return (data ?? {}) as Record<string, MockScore>;
+}
+
+export interface SubjectScore {
+  score: number;
+  source: 'manual' | 'mock';
+  /** จำนวนครั้งจำลองสอบที่ใช้เฉลี่ย */
+  n?: number;
+}
+
+/** คะแนนที่ใช้คิด: กรอกเองมาก่อน (เช่น คะแนนสอบจริง) ถ้าไม่ได้กรอกใช้ค่าเฉลี่ยจำลองสอบ */
+export function effectiveScores(manual: Record<string, number>, mock: Record<string, MockScore>, keys: string[]) {
+  const out: Record<string, SubjectScore> = {};
+  for (const key of keys) {
+    if (manual[key] !== undefined && manual[key] !== null) out[key] = { score: manual[key], source: 'manual' };
+    else {
+      const m = TCAS_BY_KEY[key]?.mock && mock[TCAS_BY_KEY[key].mock!];
+      if (m) out[key] = { score: Number(m.avg), source: 'mock', n: m.n };
+    }
+  }
+  return out;
+}
+
+export const scoreValues = (s: Record<string, SubjectScore>) => Object.fromEntries(Object.entries(s).map(([k, v]) => [k, v.score]));
+
+export interface SubjectGap {
+  key: string;
+  weight: number;
+  score: number | null;
+  /** คะแนนรวมที่วิชานี้ให้ตอนนี้ */
+  earned: number;
+  /** คะแนนรวมที่ยังเพิ่มได้ถ้าวิชานี้ได้เต็ม */
+  room: number;
+  /** ต้องเพิ่มคะแนนวิชานี้อีกเท่าไหร่ ถ้าเพิ่มวิชาเดียวให้ถึงเป้า (null = วิชาเดียวไม่พอ) */
+  needAlone: number | null;
+}
+
+/** ส่วนที่ขาดรายวิชา เรียงจากวิชาที่เพิ่มคะแนนรวมได้มากที่สุด */
+export function subjectGaps(goal: DreamGoal, scores: Record<string, number>): SubjectGap[] {
+  const gap = goal.target - composite(goal, scores).total;
+  return Object.entries(goal.weights)
+    .map(([key, weight]) => {
+      const score = scores[key] ?? null;
+      const s = score ?? 0;
+      const room = (weight * (100 - s)) / 100;
+      const need = gap > 0 ? (gap * 100) / weight : 0;
+      return {
+        key,
+        weight,
+        score,
+        earned: Math.round(((weight * s) / 100) * 100) / 100,
+        room: Math.round(room * 100) / 100,
+        needAlone: score === null ? null : s + need <= 100 ? Math.ceil(need * 10) / 10 : null,
+      };
+    })
+    .sort((a, b) => b.room - a.room);
+}

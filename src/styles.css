@@ -5686,3 +5686,80 @@ html[lang="en"] .checkin__label {
 .dream-edit__sum.is-ok {
   color: var(--good-dark);
 }
+
+/* 25.2: ส่วนที่ขาดรายวิชา */
+.dream-goal__toggle {
+  justify-self: start;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #4b2fd6;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.dream-gaps {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.dream-gaps li {
+  padding: 8px 10px;
+  border: 2px solid #e4dcfa;
+  border-radius: 12px;
+  background: #fff;
+}
+.dream-gaps li.is-best {
+  border-color: #ff9a3d;
+  background: #fff6ec;
+}
+.dream-gaps__top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+.dream-gaps__name {
+  font-weight: 700;
+  font-size: 0.88rem;
+}
+.dream-gaps__name small {
+  color: var(--ink-soft, #6b6290);
+  font-weight: 600;
+}
+.dream-gaps__score {
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+.dream-gaps__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  margin-top: 2px;
+  font-size: 0.75rem;
+}
+.dream-gaps__meta b {
+  color: #c2304a;
+}
+.dream-gaps__src {
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: #efeaff;
+  color: #4b2fd6;
+}
+.dream-gaps__src--manual {
+  background: #eef2f6;
+  color: #445;
+}
+.dream-gaps__meta .dream-gaps__best {
+  color: #d26a00;
+}
+.dream__auto {
+  color: #4b2fd6;
+  font-size: 0.7rem;
+}
