@@ -264,6 +264,7 @@ async function review(uid: string, attemptId: string, submitNow: boolean) {
   const r = a.result!;
   return {
     attemptId: a.id,
+    paperId: paper.id,
     exam: paper.exam,
     no: paper.no,
     title: BLUEPRINTS[paper.exam].title,

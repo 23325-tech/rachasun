@@ -16,6 +16,8 @@ export interface Profile {
   rp: number;
   /** ระดับชั้นที่เลือกไว้ (ค่าเริ่มต้นตอนเปิดแอพ) */
   level: Level;
+  /** ไม่แสดงชื่อในอันดับจำลองสอบ */
+  leaderboard_anon?: boolean;
 }
 
 
@@ -188,4 +190,10 @@ export async function loginWithGoogle(): Promise<void> {
 
 export async function logout(): Promise<void> {
   await client().auth.signOut();
+}
+
+/** ตั้งค่าไม่แสดงชื่อในอันดับจำลองสอบ */
+export async function setLeaderboardAnon(id: string, anon: boolean): Promise<void> {
+  const { error } = await client().from('profiles').update({ leaderboard_anon: anon }).eq('id', id);
+  if (error) throw new Error(error.message);
 }

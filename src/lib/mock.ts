@@ -59,6 +59,7 @@ export interface MockReviewQuestion extends MockPublicQuestion {
 
 export interface MockReview {
   attemptId: string;
+  paperId: string;
   exam: MockExam;
   no: number;
   title: string;
@@ -131,3 +132,18 @@ const TITLE_EN: Record<string, string> = {
   ภาษาอังกฤษ: 'English',
 };
 export const paperTitle = (title: string) => t(title, TITLE_EN[title] ?? title);
+
+export interface MockLeaderboard {
+  takers: number;
+  me: { rank: number; score: number; secs: number } | null;
+  top: { rank: number; score: number; secs: number; isMe: boolean; anon: boolean; nickname: string | null; tag: number | null; avatar: string | null }[];
+}
+
+/** อันดับของชุดข้อสอบ (เต็มชุด/ครึ่งชุด) */
+export async function fetchMockLeaderboard(paperId: string, half: boolean): Promise<MockLeaderboard> {
+  const sb = await ensureSession();
+  const { data, error } = await sb.rpc('mock_leaderboard', { p_paper: paperId, p_half: half });
+  if (error) throw new Error(error.message);
+  const d = data as MockLeaderboard;
+  return { ...d, me: d.me && { ...d.me, score: Number(d.me.score) }, top: d.top.map((r) => ({ ...r, score: Number(r.score) })) };
+}

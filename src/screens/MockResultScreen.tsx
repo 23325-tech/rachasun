@@ -2,13 +2,14 @@ import { useState } from 'react';
 import { MathText } from '../components/MathText';
 import { chapterName } from '../data/chapters';
 import { CHOICE5, type MockGiven, type MockReview, type MockReviewQuestion, paperTitle } from '../lib/mock';
-import { BookOpenText, ChartBar, CheckCircle, Confetti, Exam, XCircle } from '@phosphor-icons/react';
+import { BookOpenText, ChartBar, CheckCircle, Confetti, Exam, XCircle, Trophy } from '@phosphor-icons/react';
 import { t } from '../lib/i18n';
 
 interface Props {
   review: MockReview;
   onBack: () => void;
   onAnalysis: () => void;
+  onBoard: () => void;
 }
 
 const pct = (x: number) => `${Math.round(x * 100)}%`;
@@ -27,7 +28,7 @@ function answerText(q: MockReviewQuestion): string {
 }
 
 /** ผลสอบจำลอง: คะแนน เทียบกับคนอื่น รายบท และเฉลยทุกข้อ */
-export function MockResultScreen({ review, onBack, onAnalysis }: Props) {
+export function MockResultScreen({ review, onBack, onAnalysis, onBoard }: Props) {
   const [filter, setFilter] = useState<'wrong' | 'all'>('wrong');
   const chapters = Object.entries(review.byChapter)
     .map(([id, v]) => ({ id, ...v, acc: v.ok / v.n }))
@@ -83,6 +84,9 @@ export function MockResultScreen({ review, onBack, onAnalysis }: Props) {
             </li>
           ))}
         </ul>
+        <button type="button" className="btn btn--primary btn--block" onClick={onBoard}>
+          <Trophy weight="fill" className="ico" /> {t('ดูอันดับชุดนี้', 'See leaderboard')}
+        </button>
         <button type="button" className="btn btn--ghost btn--block" onClick={onAnalysis}>
           <ChartBar weight="fill" className="ico" /> {t('ดูแผนฝึกจากผลสอบนี้', 'See a study plan from this exam')}
         </button>

@@ -19,7 +19,8 @@ import { NicknameForm } from '../components/NicknameForm';
 import { PlayerAvatar } from '../components/PlayerAvatar';
 import { TierIcon } from '../components/icons';
 import { SeasonFrames } from '../components/SeasonFrames';
-import { Cube, DoorOpen, Key, WarningCircle } from '@phosphor-icons/react';
+import { Cube, DoorOpen, Key, UserCircle, WarningCircle } from '@phosphor-icons/react';
+import { setLeaderboardAnon } from '../lib/profile';
 import { isLowEnd, reduce3DSetting, setReduce3D } from '../lib/perf';
 import { t } from '../lib/i18n';
 
@@ -304,6 +305,29 @@ export function AccountScreen({ user, profile, needsPassword, onBack, onChanged 
           />
         </label>
       </section>
+
+      {profile && (
+        <section className="settings-card">
+          <label className="toggle-row">
+            <span className="toggle-row__icon">
+              <UserCircle weight="fill" />
+            </span>
+            <span className="toggle-row__text">
+              <b>{t('ไม่แสดงชื่อในอันดับจำลองสอบ', 'Hide my name on mock exam leaderboards')}</b>
+              <small>{t('คนอื่นจะเห็นเป็น ผู้เล่นนิรนาม', 'Others will see you as Anonymous')}</small>
+            </span>
+            <input
+              type="checkbox"
+              className="switch"
+              checked={!!profile.leaderboard_anon}
+              onChange={async (e) => {
+                await setLeaderboardAnon(profile.id, e.target.checked);
+                await onChanged();
+              }}
+            />
+          </label>
+        </section>
+      )}
 
       {profile && <SeasonFrames avatar={profile.avatar} onChanged={onChanged} />}
 

@@ -1,18 +1,19 @@
 import { createElement, useEffect, useState } from 'react';
 import { listMocks, MOCK_ICON, type MockAttemptSummary, type MockExam, type MockPaper, paperTitle } from '../lib/mock';
-import { Exam, WarningCircle, Wrench } from '@phosphor-icons/react';
+import { Exam, WarningCircle, Wrench, Trophy } from '@phosphor-icons/react';
 import { t } from '../lib/i18n';
 
 interface Props {
   onBack: () => void;
   onStart: (paperId: string, half: boolean) => Promise<void>;
   onReview: (attemptId: string) => void;
+  onBoard: (paper: MockPaper) => void;
 }
 
 const EXAM_ORDER: MockExam[] = ['math1', 'math2', 'physics', 'chemistry', 'biology', 'english'];
 
 /** เลือกวิชาและชุดข้อสอบจำลอง A-Level */
-export function MockMenuScreen({ onBack, onStart, onReview }: Props) {
+export function MockMenuScreen({ onBack, onStart, onReview, onBoard }: Props) {
   const [data, setData] = useState<{ papers: MockPaper[]; attempts: MockAttemptSummary[] } | null>(null);
   const [busy, setBusy] = useState('');
   const [error, setError] = useState('');
@@ -88,7 +89,12 @@ export function MockMenuScreen({ onBack, onStart, onReview }: Props) {
               </h2>
               {papers.map((p) => (
                 <div key={p.id} className="mock-paper">
-                  <span className="mock-paper__no">{t('ชุดที่', 'Set')} {p.no}</span>
+                  <span className="mock-paper__no">
+                    {t('ชุดที่', 'Set')} {p.no}
+                    <button type="button" className="mock-paper__board" onClick={() => onBoard(p)}>
+                      <Trophy weight="fill" size={14} /> {t('อันดับ', 'Ranks')}
+                    </button>
+                  </span>
                   {button(p, false)}
                   {button(p, true)}
                 </div>

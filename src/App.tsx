@@ -25,6 +25,7 @@ import { ShopScreen } from './screens/ShopScreen';
 import { CheckinCard } from './components/CheckinCard';
 import { fetchShopState, type ShopState } from './lib/shop';
 import { MockMenuScreen } from './screens/MockMenuScreen';
+import { MockLeaderboardScreen } from './screens/MockLeaderboardScreen';
 import { MockExamScreen } from './screens/MockExamScreen';
 import { MockResultScreen } from './screens/MockResultScreen';
 import { reviewMock, startMock, submitMock, type MockReview, type MockSession } from './lib/mock';
@@ -80,6 +81,7 @@ type Screen =
   | { name: 'gems' }
   | { name: 'pets' }
   | { name: 'gacha' }
+  | { name: 'mockBoard'; paperId: string; title: string; no: number; half: boolean }
   | { name: 'mock' }
   | { name: 'mockExam'; session: MockSession }
   | { name: 'mockResult'; review: MockReview };
@@ -509,6 +511,7 @@ export default function App() {
             if (r.submitted) setScreen({ name: 'mockResult', review: await reviewMock(r.attemptId) });
             else setScreen({ name: 'mockExam', session: r });
           }}
+          onBoard={(p) => setScreen({ name: 'mockBoard', paperId: p.id, title: p.title, no: p.no, half: false })}
           onReview={(attemptId) =>
             reviewMock(attemptId)
               .then((review) => setScreen({ name: 'mockResult', review }))
@@ -534,12 +537,15 @@ export default function App() {
         <MockResultScreen
           review={screen.review}
           onBack={() => setScreen({ name: 'mock' })}
+          onBoard={() => setScreen({ name: 'mockBoard', paperId: screen.review.paperId, title: screen.review.title, no: screen.review.no, half: screen.review.half })}
           onAnalysis={() => {
             changeLevel('upper');
             setScreen({ name: 'analysis' });
           }}
         />
       );
+    case 'mockBoard':
+      return <MockLeaderboardScreen paperId={screen.paperId} title={screen.title} no={screen.no} half={screen.half} onBack={() => setScreen({ name: 'mock' })} />;
     case 'season':
       return season ? (
         <SeasonScreen season={season} meId={profile?.id ?? null} onBack={goHome} />

@@ -5070,3 +5070,51 @@ html[lang="en"] .checkin__label {
 .shot-icon svg {
   filter: drop-shadow(0 2px 0 rgba(43, 26, 74, 0.45));
 }
+
+/* 23: อันดับจำลองสอบ */
+.mock-paper__board {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-left: 8px;
+  padding: 2px 8px;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: #fff6c7;
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.mock-board__tabs {
+  max-width: 260px;
+  margin: 0 auto;
+}
+.mock-board__me {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+.mock-board__me-rank {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 700;
+}
+.mock-board__time {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: 6px;
+  color: var(--ink-soft, #6b6290);
+  font-size: 0.72rem;
+}
+.mock-board__anon {
+  color: #b9add9;
+}
+.mock-board__note {
+  color: #fff;
+  text-align: center;
+  font-size: 0.8rem;
+}
