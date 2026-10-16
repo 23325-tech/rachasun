@@ -44,6 +44,8 @@ interface Props {
   onLevelChange?: (level: Level) => void;
   /** เปิดหน้าวิเคราะห์จุดอ่อน */
   onAnalysis?: () => void;
+  /** เปิดจำลองสอบ A-Level (ม.ปลาย) */
+  onMock?: () => void;
   /** การ์ดโปรไฟล์ (ถ้ามี) แสดงใต้ชื่อแอพ */
   profileSlot?: ReactNode;
   onOnline: () => void;
@@ -93,6 +95,7 @@ export function StartScreen({
   onPlaySample,
   onLevelChange,
   onAnalysis,
+  onMock,
   profileSlot,
   onOnline,
   onGroups,
@@ -194,6 +197,19 @@ export function StartScreen({
           <span className="analysis-cta__body">
             <strong>วิเคราะห์จุดอ่อนของฉัน</strong>
             <span>ดูว่าถนัดบทไหน บทไหนควรฝึก</span>
+          </span>
+          <span aria-hidden>›</span>
+        </button>
+      )}
+
+      {onMock && s.level === 'upper' && (
+        <button type="button" className="analysis-cta analysis-cta--mock" onClick={onMock}>
+          <span className="analysis-cta__icon" aria-hidden>
+            📝
+          </span>
+          <span className="analysis-cta__body">
+            <strong>จำลองสอบ A-Level</strong>
+            <span>เต็มชุด 90 นาที / ครึ่งชุด · เทียบคะแนนกับคนอื่น</span>
           </span>
           <span aria-hidden>›</span>
         </button>

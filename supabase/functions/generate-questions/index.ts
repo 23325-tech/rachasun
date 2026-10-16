@@ -3,6 +3,7 @@
 // ตั้ง GEMINI_MODEL เพิ่มได้ถ้าอยากเปลี่ยนโมเดลหลัก
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { chapterName, chaptersOf } from '../_shared/chapters.ts';
+import { repairLatex, wrapBareLatex } from '../_shared/latex.ts';
 
 const SUBJECTS = ['math', 'science', 'physics', 'chemistry', 'biology', 'english'] as const;
 const LEVELS = ['primary', 'lower', 'upper', 'uni'] as const;
@@ -152,20 +153,6 @@ ${chapterList(chapterIds)}
 6. โจทย์และคำอธิบายเป็นภาษาไทย ยกเว้นวิชาภาษาอังกฤษให้โจทย์เป็นภาษาอังกฤษ แต่คำอธิบายเป็นภาษาไทย
 7. explanation: อธิบายวิธีคิดทีละขั้นสั้นๆ (2-4 ประโยค) และคำนวณให้ถูกต้องก่อนเลือกเฉลย เฉลยต้องตรงกับคำอธิบาย
 8. ${difficulty === 'challenge' ? 'โจทย์ต้องทำได้ภายใน 2-3 นาทีสำหรับคนที่เก่ง' : 'โจทย์ต้องทำได้ภายใน 20-90 วินาที'}`;
-}
-
-// โมเดลบางครั้งเขียน "\text" ใน JSON โดยไม่ escape -> JSON แปลง "\t" เป็นอักขระ Tab
-// ซ่อมกลับเป็นคำสั่ง LaTeX: \t \f \b \r \v ไม่ควรมีในโจทย์อยู่แล้ว ส่วน \n ซ่อมเฉพาะในวงเล็บ $...$
-const CONTROL_TO_LETTER: Record<string, string> = { '\t': 't', '\f': 'f', '\b': 'b', '\r': 'r', '\v': 'v' };
-
-export function repairLatex(s: string): string {
-  const fixed = s.replace(/[\t\f\b\v]|\r(?=[a-zA-Z])/g, (c) => '\\' + CONTROL_TO_LETTER[c]);
-  return fixed.replace(/\$\$[\s\S]+?\$\$|\$[^$]+?\$/g, (m) => m.replace(/\n(?=[a-zA-Z])/g, '\\n'));
-}
-
-/** ตัวเลือกที่มีคำสั่ง LaTeX แต่ลืมครอบ $...$ เช่น "\text{50 J}" */
-function wrapBareLatex(s: string): string {
-  return !s.includes('$') && /\\[a-zA-Z]+|[\^_]\{/.test(s) ? `$${s}$` : s;
 }
 
 interface RawQuestion {

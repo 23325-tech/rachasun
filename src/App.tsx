@@ -18,6 +18,10 @@ import { createPlayers, type BattlePlayer } from './game/battle';
 import { createBots, type Bot } from './game/bots';
 import { StartScreen, withLevel, type GameSettings } from './screens/StartScreen';
 import { AnalysisScreen } from './screens/AnalysisScreen';
+import { MockMenuScreen } from './screens/MockMenuScreen';
+import { MockExamScreen } from './screens/MockExamScreen';
+import { MockResultScreen } from './screens/MockResultScreen';
+import { reviewMock, startMock, submitMock, type MockReview, type MockSession } from './lib/mock';
 import { LoadingScreen } from './screens/LoadingScreen';
 import { QuizScreen } from './screens/QuizScreen';
 import { ResultScreen } from './screens/ResultScreen';
@@ -52,7 +56,10 @@ type Screen =
   | { name: 'challenge'; code: string; autoPlay?: boolean }
   | { name: 'groups'; initialCode?: string }
   | { name: 'group'; groupId: string }
-  | { name: 'analysis' };
+  | { name: 'analysis' }
+  | { name: 'mock' }
+  | { name: 'mockExam'; session: MockSession }
+  | { name: 'mockResult'; review: MockReview };
 
 /** loading = กำลังโหลดผู้ใช้, offline = ไม่มี Supabase (เล่นได้แต่ไม่เก็บ XP) */
 type MeState =
@@ -330,6 +337,11 @@ export default function App() {
           }}
           onPlaySample={playSample}
           onLevelChange={changeLevel}
+          onMock={() =>
+            me.status === 'ready'
+              ? setScreen({ name: 'mock' })
+              : setScreen({ name: 'start', error: 'การจำลองสอบต้องเชื่อมต่ออินเทอร์เน็ต' })
+          }
           onAnalysis={() =>
             me.status === 'ready'
               ? setScreen({ name: 'analysis' })
@@ -381,6 +393,46 @@ export default function App() {
               track: 'school',
               count: 10,
             });
+          }}
+        />
+      );
+    case 'mock':
+      return (
+        <MockMenuScreen
+          onBack={goHome}
+          onStart={async (paperId, half) => {
+            const r = await startMock(paperId, half);
+            if (r.submitted) setScreen({ name: 'mockResult', review: await reviewMock(r.attemptId) });
+            else setScreen({ name: 'mockExam', session: r });
+          }}
+          onReview={(attemptId) =>
+            reviewMock(attemptId)
+              .then((review) => setScreen({ name: 'mockResult', review }))
+              .catch((e) => setScreen({ name: 'start', error: e instanceof Error ? e.message : String(e) }))
+          }
+        />
+      );
+    case 'mockExam':
+      return (
+        <MockExamScreen
+          key={screen.session.attemptId}
+          session={screen.session}
+          onExit={() => setScreen({ name: 'mock' })}
+          onSubmit={async () => {
+            const review = await submitMock(screen.session.attemptId);
+            setScreen({ name: 'mockResult', review });
+            refreshMe();
+          }}
+        />
+      );
+    case 'mockResult':
+      return (
+        <MockResultScreen
+          review={screen.review}
+          onBack={() => setScreen({ name: 'mock' })}
+          onAnalysis={() => {
+            changeLevel('upper');
+            setScreen({ name: 'analysis' });
           }}
         />
       );
