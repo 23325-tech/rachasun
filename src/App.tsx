@@ -19,6 +19,8 @@ import { ProfileCard } from './components/ProfileCard';
 import type { XpState } from './components/XpBadge';
 import { OnlineMenuScreen } from './screens/OnlineMenuScreen';
 import { RoomScreen } from './screens/RoomScreen';
+import { ChallengeScreen } from './screens/ChallengeScreen';
+import { createChallenge } from './lib/asyncPlay';
 import { createRoom, findMatch, joinRoom, leaveRoom, type MatchSettings, type RoomSettings } from './lib/rooms';
 
 type Screen =
@@ -30,7 +32,8 @@ type Screen =
   | { name: 'battle'; questions: Question[]; questionCount: number; players: BattlePlayer[]; bots: Bot[]; runId: number }
   | { name: 'battleResult'; players: BattlePlayer[] }
   | { name: 'online'; initialCode?: string }
-  | { name: 'lobby'; roomId: string };
+  | { name: 'lobby'; roomId: string }
+  | { name: 'challenge'; code: string; autoPlay?: boolean };
 
 /** loading = กำลังโหลดผู้ใช้, offline = ไม่มี Supabase (เล่นได้แต่ไม่เก็บ XP) */
 type MeState =
@@ -42,18 +45,19 @@ const ALL_SUBJECTS = Object.keys(SUBJECTS) as Subject[];
 /** โจทย์สำรองสำหรับ Sudden Death (ถ้าใช้หมดจะวนกลับมาใช้ข้อเดิม) */
 const SUDDEN_DEATH_SPARE = 5;
 
-/** ลิงก์ชวนเพื่อน ?room=CODE (อ่านครั้งเดียวตอนเปิดแอพ แล้วลบออกจาก URL) */
-function takeInviteCode(): string | undefined {
+/** อ่านรหัสจากลิงก์ เช่น ?room=CODE หรือ ?challenge=CODE (ครั้งเดียวตอนเปิดแอพ แล้วลบออกจาก URL) */
+function takeLinkCode(param: 'room' | 'challenge', length: number): string | undefined {
   const url = new URL(window.location.href);
-  const code = url.searchParams.get('room')?.toUpperCase().replace(/[^A-Z0-9]/g, '');
+  const code = url.searchParams.get(param)?.toUpperCase().replace(/[^A-Z0-9]/g, '');
   if (!code) return undefined;
-  url.searchParams.delete('room');
+  url.searchParams.delete(param);
   window.history.replaceState(null, '', url.toString());
-  return code.slice(0, 5);
+  return code.slice(0, length);
 }
 
 /** อ่านครั้งเดียวตอนโหลดแอพ (ถ้าอ่านใน useState initializer, StrictMode จะเรียกซ้ำแล้วรหัสหาย) */
-const INVITE_CODE = takeInviteCode();
+const INVITE_CODE = takeLinkCode('room', 5);
+const CHALLENGE_CODE = takeLinkCode('challenge', 6);
 
 const toRoomSettings = (s: GameSettings): RoomSettings => ({
   subject: s.subject,
@@ -75,7 +79,11 @@ function countCorrect(questions: Question[], results: AnswerResult[]): Record<Di
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>(() =>
-    INVITE_CODE ? { name: 'online', initialCode: INVITE_CODE } : { name: 'start', error: null },
+    CHALLENGE_CODE
+      ? { name: 'challenge', code: CHALLENGE_CODE }
+      : INVITE_CODE
+        ? { name: 'online', initialCode: INVITE_CODE }
+        : { name: 'start', error: null },
   );
   const [me, setMe] = useState<MeState>(supabase ? { status: 'loading' } : { status: 'offline' });
   const [xp, setXp] = useState<XpState>({ status: 'off' });
@@ -168,6 +176,16 @@ export default function App() {
       return;
     }
     const loadId = ++loadIdRef.current;
+    if (s.mode === 'challenge') {
+      setScreen({ name: 'loading', message: 'กำลังเตรียมชุดโจทย์คำท้า...' });
+      try {
+        const { code } = await createChallenge({ subject: s.subject, difficulty: s.difficulty, track: s.track, count: s.count });
+        if (loadId === loadIdRef.current) setScreen({ name: 'challenge', code, autoPlay: true });
+      } catch (e) {
+        if (loadId === loadIdRef.current) setScreen({ name: 'start', error: e instanceof Error ? e.message : String(e) });
+      }
+      return;
+    }
     setScreen({ name: 'loading', message: 'กำลังเตรียมโจทย์...' });
     try {
       const { questions } = await loadQuiz(
@@ -243,6 +261,18 @@ export default function App() {
       );
     case 'loading':
       return <LoadingScreen message={screen.message} onCancel={goHome} />;
+    case 'challenge':
+      return (
+        <ChallengeScreen
+          key={screen.code}
+          code={screen.code}
+          autoPlay={screen.autoPlay}
+          guest={guest}
+          onHome={goHome}
+          onRegister={openAccount}
+          onXpAwarded={refreshMe}
+        />
+      );
     case 'online':
       return (
         <OnlineMenuScreen

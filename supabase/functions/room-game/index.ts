@@ -14,7 +14,8 @@ import {
   type RoundAnswer,
   type RoundOutcome,
 } from '../_shared/battle.ts';
-import { calcPoints, checkFillAnswer, formatFillAnswer, getTimeLimitSec, type FillAnswer } from '../_shared/rules.ts';
+import { calcPoints, checkFillAnswer, formatFillAnswer } from '../_shared/rules.ts';
+import { limitMsOf, pickQuestions as pickFromBank, toPublic, type PublicQuestion, type StoredQuestion } from '../_shared/questions.ts';
 
 const COUNTDOWN_MS = 3000;
 const REVEAL_MS = 7000;
@@ -34,11 +35,9 @@ type ActiveCard = (typeof ACTIVE_CARDS)[number];
 const SLOW_MIN_MS = 5000;
 /** เพิ่มเวลาตัวเอง = สัดส่วนของเวลาเต็ม */
 const EXTRA_RATIO = 0.5;
-const GENERATE_BATCH = 10;
 /** ห้องสาธารณะ: เริ่มเมื่อครบ 8 คน หรือมี 2 คนขึ้นไปและผ่านไปเท่านี้นับจากคนแรกเข้าห้อง */
 const MATCH_FULL = 8;
 const MATCH_WAIT_MS = 30_000;
-const ALL_SUBJECTS = ['math', 'physics', 'chemistry', 'biology', 'english'];
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -52,31 +51,6 @@ class GameError extends Error {}
 class Conflict extends Error {}
 
 // ---------- ชนิดข้อมูล ----------
-
-interface StoredQuestion {
-  id: string;
-  subject: 'math' | 'physics' | 'chemistry' | 'biology' | 'english';
-  difficulty: 'easy' | 'medium' | 'hard';
-  track: string;
-  type: 'mcq' | 'fill';
-  prompt: string;
-  choices: string[] | null;
-  answer_index: number | null;
-  answer: FillAnswer | null;
-  explanation: string;
-  time_limit_sec: number | null;
-}
-
-/** โจทย์ที่ส่งให้ผู้เล่น (ไม่มีเฉลย) */
-interface PublicQuestion {
-  type: 'mcq' | 'fill';
-  subject: StoredQuestion['subject'];
-  difficulty: StoredQuestion['difficulty'];
-  prompt: string;
-  choices?: string[];
-  answerKind?: 'number' | 'text';
-  unit?: string;
-}
 
 interface Reveal {
   round: number;
@@ -171,58 +145,7 @@ async function getRoundQuestion(roomId: string, round: number, total: number): P
   return data.question as StoredQuestion;
 }
 
-const toPublic = (q: StoredQuestion): PublicQuestion => ({
-  type: q.type,
-  subject: q.subject,
-  difficulty: q.difficulty,
-  prompt: q.prompt,
-  ...(q.type === 'mcq'
-    ? { choices: q.choices ?? [] }
-    : { answerKind: q.answer?.kind, unit: q.answer?.kind === 'number' ? q.answer.unit : undefined }),
-});
-
-const limitMsOf = (q: StoredQuestion) =>
-  getTimeLimitSec({ type: q.type, difficulty: q.difficulty, subject: q.subject, timeLimitSec: q.time_limit_sec }) * 1000;
-
-// ---------- โหลดโจทย์ตอนเริ่มเกม ----------
-
-async function pickQuestions(settings: RoomRow['settings'], need: number): Promise<StoredQuestion[]> {
-  const subjects = settings.subject === 'all' ? ALL_SUBJECTS : [settings.subject];
-  const { data, error } = await admin.rpc('get_random_questions', {
-    p_subjects: subjects,
-    p_difficulty: settings.difficulty,
-    p_track: settings.track,
-    p_limit: need,
-  });
-  if (error) throw error;
-  const picked = (data ?? []) as StoredQuestion[];
-
-  // คลังไม่พอ -> ให้ AI สร้างเพิ่ม
-  const missing = need - picked.length;
-  if (missing > 0) {
-    const batches: number[] = [];
-    for (let left = missing; left > 0; left -= GENERATE_BATCH) batches.push(Math.min(left, GENERATE_BATCH));
-    const results = await Promise.allSettled(
-      batches.map((count) =>
-        fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/generate-questions`, {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ subjects, difficulty: settings.difficulty, track: settings.track, count }),
-        }).then((r) => r.json()),
-      ),
-    );
-    for (const r of results) if (r.status === 'fulfilled' && r.value.questions) picked.push(...r.value.questions);
-  }
-  // สุ่มลำดับ
-  for (let i = picked.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [picked[i], picked[j]] = [picked[j], picked[i]];
-  }
-  return picked;
-}
+const pickQuestions = (settings: RoomRow['settings'], need: number) => pickFromBank(admin, settings, need);
 
 // ---------- ลำดับเกม ----------
 

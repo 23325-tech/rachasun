@@ -6,7 +6,7 @@ import { heartsFor } from '../game/battle';
 
 export type SubjectFilter = Subject | 'all';
 
-export type GameMode = 'solo' | 'bots';
+export type GameMode = 'solo' | 'bots' | 'challenge';
 
 export interface GameSettings {
   mode: GameMode;
@@ -123,6 +123,17 @@ export function StartScreen({ initial, error, onStart, onPlaySample, profileSlot
           <span className="mode-tab__name">ดวลกับบอท</span>
           <span className="mode-tab__desc">ยิงหัวใจ เหลือรอดคนสุดท้าย</span>
         </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={s.mode === 'challenge'}
+          className={`mode-tab ${s.mode === 'challenge' ? 'is-active' : ''}`}
+          onClick={() => set('mode', 'challenge')}
+        >
+          <span className="mode-tab__icon">🔗</span>
+          <span className="mode-tab__name">ท้าเพื่อน</span>
+          <span className="mode-tab__desc">ทำชุดเดียวกัน ภายใน 24 ชม.</span>
+        </button>
         <button type="button" role="tab" aria-selected={false} className="mode-tab" onClick={onOnline}>
           <span className="mode-tab__icon">🌐</span>
           <span className="mode-tab__name">ออนไลน์</span>
@@ -221,10 +232,12 @@ export function StartScreen({ initial, error, onStart, onPlaySample, profileSlot
         <p className="cta-bar__summary">
           {s.mode === 'bots'
             ? `⚔️ ${s.botCount + 1} คน · ${s.count} ข้อ · หัวใจคนละ ${heartsFor(s.count)} ดวง`
-            : `${subjectName} · ${difficultyLabel} · ${s.count} ข้อ · ราว ${minutes} นาที`}
+            : s.mode === 'challenge'
+              ? `🔗 ${subjectName} · ${difficultyLabel} · ${s.count} ข้อ · ส่งลิงก์ให้เพื่อนเล่นต่อ`
+              : `${subjectName} · ${difficultyLabel} · ${s.count} ข้อ · ราว ${minutes} นาที`}
         </p>
         <button type="button" className="btn btn--primary btn--block btn--big cta-bar__btn" onClick={() => onStart(s)}>
-          {s.mode === 'bots' ? 'เริ่มดวลเลย! ⚔️' : 'เริ่มฝึกเลย! 🚀'}
+          {s.mode === 'bots' ? 'เริ่มดวลเลย! ⚔️' : s.mode === 'challenge' ? 'สร้างคำท้า 🔗' : 'เริ่มฝึกเลย! 🚀'}
         </button>
       </div>
     </div>

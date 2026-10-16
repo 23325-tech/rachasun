@@ -58,7 +58,8 @@ export interface GameCallResult {
 let clockOffset = 0;
 let offsetSamples = 0;
 
-function updateOffset(serverNow: number, sentAt: number, receivedAt: number) {
+/** บันทึกเวลาเซิร์ฟเวอร์จากคำตอบของ Edge Function (ใช้ร่วมกับ async-play) */
+export function noteServerTime(serverNow: number, sentAt: number, receivedAt: number) {
   const sample = serverNow - (sentAt + receivedAt) / 2;
   // ค่าเฉลี่ยสะสม ให้ค่าแรกๆ มีน้ำหนักมาก แล้วค่อยๆ นิ่ง
   offsetSamples = Math.min(offsetSamples + 1, 10);
@@ -99,7 +100,7 @@ export async function callGame(
     const ctx = (error as { context?: Response }).context;
     payload = ctx && typeof ctx.json === 'function' ? await ctx.json().catch(() => null) : null;
   }
-  if (payload?.serverNow) updateOffset(payload.serverNow, sentAt, receivedAt);
+  if (payload?.serverNow) noteServerTime(payload.serverNow, sentAt, receivedAt);
   if (payload?.error) throw new Error(GAME_ERRORS[payload.error] ?? payload.error);
   if (error && !payload) throw new Error(error.message);
   return payload ?? {};
