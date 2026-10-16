@@ -1,5 +1,5 @@
 import { lazy, Suspense, useMemo, type CSSProperties, type ReactNode } from 'react';
-import { ChartLineUp, Coin, Crown, Exam, FloppyDisk, GlobeHemisphereEast, Heart, type Icon, Key, LinkSimple, Robot, Sparkle, Storefront, Target, Trophy, TShirt, PawPrint, UsersThree, WifiSlash, CaretRight, BookBookmark, Camera } from '@phosphor-icons/react';
+import { ChartLineUp, Coin, Crown, Exam, FloppyDisk, GlobeHemisphereEast, Heart, type Icon, Key, LinkSimple, Robot, Sparkle, Storefront, Target, Trophy, TShirt, PawPrint, UsersThree, WifiSlash, CaretRight, BookBookmark, Camera, GraduationCap } from '@phosphor-icons/react';
 import type { Level, Subject } from '../types';
 import { LEVEL_KEYS, LEVELS, subjectInfo } from '../data/subjects';
 import { displayName, type Profile } from '../lib/profile';
@@ -47,6 +47,9 @@ interface Props {
   /** ฤดูกาลแรงค์ (ยังไม่โหลด = ไม่แสดงป้าย) */
   season?: { no: number; endsAt: string; rank: number | null };
   onSeason: () => void;
+  /** นับถอยหลังคณะในฝัน (null = ยังไม่ตั้งเป้า, undefined = ยังไม่โหลด) */
+  dream?: { faculty: string; days: number | null; subject: string } | null;
+  onDream: () => void;
   /** ป๊อปอัปทับหน้าแรก (เช่น ผลฤดูกาล) */
   modalSlot?: ReactNode;
 }
@@ -182,6 +185,32 @@ export function HomeScreen(p: Props) {
           </span>
           <CaretRight weight="bold" size={16} />
         </button>
+      )}
+
+      {p.dream ? (
+        <button type="button" className="dream-banner" onClick={p.onDream}>
+          <span className="dream-banner__days">
+            <b>{p.dream.days ?? '-'}</b>
+            <small>{t('วัน', 'days')}</small>
+          </span>
+          <span className="season-banner__text">
+            <strong>{p.dream.faculty}</strong>
+            <small>{p.dream.days === null ? t('ไม่มีวันสอบที่ใกล้ถึง', 'No upcoming exam') : t(`ถึงวันสอบ ${p.dream.subject}`, `until ${p.dream.subject}`)}</small>
+          </span>
+          <CaretRight weight="bold" size={16} />
+        </button>
+      ) : (
+        p.dream === null &&
+        p.level === 'upper' && (
+          <button type="button" className="dream-banner dream-banner--invite" onClick={p.onDream}>
+            <GraduationCap weight="fill" size={22} />
+            <span className="season-banner__text">
+              <strong>{t('ตั้งเป้าคณะในฝัน', 'Set your dream faculty')}</strong>
+              <small>{t('ดูว่าคะแนนห่างเป้าแค่ไหน + นับถอยหลังวันสอบ', 'See your gap to the target + exam countdown')}</small>
+            </span>
+            <CaretRight weight="bold" size={16} />
+          </button>
+        )
       )}
 
       {p.checkinSlot}

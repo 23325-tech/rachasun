@@ -5441,3 +5441,248 @@ html[lang="en"] .checkin__label {
   margin: 0;
   padding-left: 1.4em;
 }
+
+/* 25.1: คณะในฝัน */
+.dream-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 14px;
+  border: var(--border);
+  border-radius: 16px;
+  background: linear-gradient(135deg, #ff8a3d, #ffcf4a);
+  box-shadow: 0 4px 0 var(--ink);
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.dream-banner--invite {
+  background: #fff;
+}
+.dream-banner--invite > svg:first-child {
+  color: #ff7a2f;
+}
+.dream-banner__days {
+  display: grid;
+  justify-items: center;
+  min-width: 54px;
+  padding: 2px 6px;
+  border: 2.5px solid var(--ink);
+  border-radius: 12px;
+  background: #fff;
+  line-height: 1;
+}
+.dream-banner__days b {
+  font-size: 1.5rem;
+  color: #e2551b;
+}
+.dream-banner__days small {
+  font-size: 0.7rem;
+}
+.dream__empty {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  text-align: center;
+}
+.dream__empty svg {
+  color: #ff7a2f;
+}
+.dream-goal {
+  display: grid;
+  gap: 8px;
+}
+.dream-goal--top {
+  background: #fff8ec;
+}
+.dream-goal__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.dream-goal__rank {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border: 2.5px solid var(--ink);
+  border-radius: 50%;
+  background: var(--primary);
+  font-weight: 700;
+}
+.dream-goal__name {
+  flex: 1;
+  display: grid;
+  min-width: 0;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+.dream-goal__name small {
+  color: var(--ink-soft, #6b6290);
+}
+.dream-goal__days {
+  flex: none;
+  text-align: center;
+  line-height: 1;
+  font-size: 0.75rem;
+}
+.dream-goal__days b {
+  display: block;
+  font-size: 1.5rem;
+  color: #e2551b;
+}
+.dream-goal__next {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0;
+  font-size: 0.8rem;
+}
+.dream-goal__bar {
+  position: relative;
+  height: 16px;
+  border: 2.5px solid var(--ink);
+  border-radius: 999px;
+  background: #f1ecff;
+  overflow: hidden;
+}
+.dream-goal__fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: linear-gradient(90deg, #7c5cff, #2fd39a);
+}
+.dream-goal__target {
+  position: absolute;
+  top: -2px;
+  bottom: -2px;
+  width: 3px;
+  margin-left: -1.5px;
+  background: #e2551b;
+}
+.dream-goal__score {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: 0.9rem;
+}
+.dream-goal__gap {
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: #ffe8ec;
+  color: #c2304a;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+.dream-goal__gap--ok {
+  background: #dff8ea;
+  color: var(--good-dark);
+}
+.dream-goal__missing {
+  margin: 0;
+  color: #b07800;
+  font-size: 0.8rem;
+}
+.dream-goal__weights {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.dream-goal__weights li {
+  padding: 2px 8px;
+  border: 1.5px solid #d9cff5;
+  border-radius: 999px;
+  font-size: 0.75rem;
+}
+.dream-goal__tools {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+}
+.dream-goal__tools .btn {
+  padding: 6px 10px;
+  font-size: 0.8rem;
+}
+.dream__note {
+  margin: 0 0 8px;
+  font-size: 0.8rem;
+}
+.dream__scores {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.dream__score {
+  display: grid;
+  gap: 2px;
+  font-size: 0.8rem;
+}
+.dream__score input,
+.dream__date input,
+.dream-edit__row select,
+.dream-edit__row input {
+  min-width: 0;
+  padding: 8px 10px;
+  border: 2.5px solid var(--ink);
+  border-radius: 10px;
+  background: #fff;
+  font: inherit;
+  font-size: 0.9rem;
+}
+.dream__dates {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.dream__dates li {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 0;
+  border-top: 1.5px solid #eee8fb;
+  font-size: 0.85rem;
+}
+.dream__date {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.dream__saved {
+  margin: 0;
+  color: var(--good-dark);
+  font-weight: 700;
+  text-align: center;
+}
+.dream-edit {
+  display: grid;
+  gap: 12px;
+}
+.dream-edit__weights {
+  display: grid;
+  gap: 8px;
+}
+.dream-edit__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 72px auto;
+  gap: 6px;
+  align-items: center;
+}
+.dream-edit__sum {
+  margin: 0;
+  color: #c2304a;
+  font-weight: 700;
+  text-align: right;
+}
+.dream-edit__sum.is-ok {
+  color: var(--good-dark);
+}

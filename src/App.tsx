@@ -58,6 +58,9 @@ import { PetScreen } from './screens/PetScreen';
 import { GachaScreen } from './screens/GachaScreen';
 import { MistakeScreen } from './screens/MistakeScreen';
 import { PhotoTutorScreen } from './screens/PhotoTutorScreen';
+import { DreamScreen } from './screens/DreamScreen';
+import { fetchDream, nextExam, type DreamPlan } from './lib/dream';
+import { TCAS_BY_KEY } from './data/tcas';
 import { fetchMistakes, fetchReviewQuestions } from './lib/mistakes';
 import { SeasonScreen } from './screens/SeasonScreen';
 import { GemTopupScreen } from './screens/GemTopupScreen';
@@ -71,6 +74,7 @@ type Screen =
   | { name: 'quiz'; questions: Question[]; runId: number; review?: boolean }
   | { name: 'mistakes' }
   | { name: 'photo' }
+  | { name: 'dream' }
   | { name: 'result'; questions: Question[]; results: AnswerResult[]; review?: boolean }
   | { name: 'battle'; questions: Question[]; questionCount: number; players: BattlePlayer[]; bots: Bot[]; runId: number; intro?: boolean }
   | { name: 'battleResult'; players: BattlePlayer[] }
@@ -174,6 +178,7 @@ export default function App() {
   const [rewardBusy, setRewardBusy] = useState(false);
   const [petCare, setPetCare] = useState<PetCareState | null>(null);
   const [mistakesDue, setMistakesDue] = useState<number | undefined>(undefined);
+  const [dream, setDream] = useState<DreamPlan | null | undefined>(undefined);
   const onGemsPaid = useCallback(() => {
     loadShop().catch(() => {});
   }, [loadShop]);
@@ -228,6 +233,7 @@ export default function App() {
     if (profileId && (screen.name === 'start' || screen.name === 'season')) fetchSeason().then(setSeason).catch(() => {});
     if (profileId && screen.name === 'start') fetchPetCare().then(setPetCare).catch(() => {});
     if (profileId && screen.name === 'start') fetchMistakes().then((m) => setMistakesDue(m.due)).catch(() => {});
+    if (profileId && screen.name === 'start') fetchDream().then((d) => setDream(d.goals.length ? d : null)).catch(() => {});
   }, [profileId, screen.name, loadShop]);
 
   const changeLevel = (level: Level) => {
@@ -388,6 +394,17 @@ export default function App() {
           onShop={() => setScreen({ name: 'shop' })}
           season={season ? { no: season.no, endsAt: season.endsAt, rank: season.me.rank } : undefined}
           onSeason={() => setScreen({ name: 'season' })}
+          dream={
+            dream === undefined
+              ? undefined
+              : dream === null
+                ? null
+                : (() => {
+                    const next = nextExam(dream.goals[0], dream.examOverrides);
+                    return { faculty: dream.goals[0].faculty, days: next?.days ?? null, subject: next ? (TCAS_BY_KEY[next.key]?.name() ?? next.key) : '' };
+                  })()
+          }
+          onDream={() => setScreen({ name: 'dream' })}
           onPets={() => setScreen({ name: 'pets' })}
           onGacha={() => setScreen({ name: 'gacha' })}
           mistakesDue={mistakesDue}
@@ -562,6 +579,8 @@ export default function App() {
       ) : (
         <LoadingScreen message={t('กำลังโหลดฤดูกาล...', 'Loading season...')} onCancel={goHome} />
       );
+    case 'dream':
+      return <DreamScreen onBack={goHome} />;
     case 'photo':
       return <PhotoTutorScreen onBack={goHome} />;
     case 'mistakes':
