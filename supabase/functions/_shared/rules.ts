@@ -3,7 +3,7 @@
  * ต้องเป็นโค้ดล้วน ไม่ import อะไรเลย (Deno ต้องการนามสกุลไฟล์ใน import)
  */
 
-export type Subject = 'math' | 'physics' | 'chemistry' | 'biology' | 'english';
+export type Subject = 'math' | 'science' | 'physics' | 'chemistry' | 'biology' | 'english';
 export type Difficulty = 'easy' | 'medium' | 'hard';
 export type QuestionType = 'mcq' | 'fill';
 
@@ -61,6 +61,7 @@ const BASE_SECONDS: Record<QuestionType, Record<Difficulty, number>> = {
 /** ตัวคูณตามวิชา วิชาที่ต้องคำนวณได้เวลามากกว่า */
 const SUBJECT_MULTIPLIER: Record<Subject, number> = {
   math: 1.2,
+  science: 1.0,
   physics: 1.3,
   chemistry: 1.2,
   biology: 1.0,

@@ -1,4 +1,4 @@
-import type { Difficulty, Subject, Track } from '../types';
+import type { Difficulty, Subject, Level, Track } from '../types';
 import { ensureSession, PUBLIC_URL } from './supabase';
 import { noteServerTime } from './roomGame';
 
@@ -37,6 +37,8 @@ export interface ChallengeSettings {
   subject: Subject | 'all';
   difficulty: Difficulty;
   track: Track;
+  /** ไม่มี = ม.ปลาย (คำท้าที่สร้างก่อนมีระดับชั้น) */
+  level?: Level;
   count: number;
 }
 

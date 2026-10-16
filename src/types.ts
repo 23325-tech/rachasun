@@ -1,7 +1,9 @@
-export type Subject = 'math' | 'physics' | 'chemistry' | 'biology' | 'english';
+export type Subject = 'math' | 'science' | 'physics' | 'chemistry' | 'biology' | 'english';
 export type Difficulty = 'easy' | 'medium' | 'hard';
 /** entrance = แนวเตรียมสอบเข้า, school = แนวสอบปกติในโรงเรียน */
 export type Track = 'entrance' | 'school';
+/** ระดับชั้น: primary = ประถม, lower = ม.ต้น, upper = ม.ปลาย, uni = มหาลัย */
+export type Level = 'primary' | 'lower' | 'upper' | 'uni';
 
 interface QuestionBase {
   id: string;

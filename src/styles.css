@@ -366,6 +366,71 @@ button {
   box-shadow: 0 2px 0 var(--ink);
 }
 
+/* เลือกระดับชั้น */
+.level-picker {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+}
+.level-picker__opt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  min-width: 0;
+  padding: 8px 2px;
+  border: 2px solid var(--ink);
+  border-radius: 14px;
+  background: #efe9ff;
+  color: var(--ink);
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: background-color 0.15s, color 0.15s, transform 0.1s;
+}
+.level-picker__opt:active {
+  transform: translateY(2px);
+}
+.level-picker__opt.is-active {
+  background: var(--bg-1);
+  color: #fff;
+  box-shadow: 0 3px 0 var(--ink);
+}
+.level-picker__emoji {
+  font-size: 1.4rem;
+  line-height: 1.2;
+}
+.level-picker__name {
+  font-weight: 600;
+  font-size: 0.95rem;
+  white-space: nowrap;
+}
+.level-picker__short {
+  font-size: 0.72rem;
+  opacity: 0.75;
+  white-space: nowrap;
+}
+/* จอแคบ: 2x2 ให้ชื่อระดับไม่ล้น */
+@media (max-width: 400px) {
+  .level-picker {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .level-picker__opt {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    grid-template-rows: auto auto;
+    column-gap: 8px;
+    align-items: center;
+    justify-items: start;
+    padding: 8px 10px;
+  }
+  .level-picker__emoji {
+    grid-row: span 2;
+  }
+}
+.home-level {
+  margin-bottom: 4px;
+}
+
 /* แถบปุ่มเริ่ม ติดล่างจอ */
 .cta-bar {
   position: sticky;

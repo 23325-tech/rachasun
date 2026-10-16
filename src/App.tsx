@@ -1,13 +1,22 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { User } from '@supabase/supabase-js';
-import type { AnswerResult, Difficulty, Question, Subject } from './types';
-import { SUBJECTS } from './data/subjects';
+import type { AnswerResult, Difficulty, Level, Question, Subject } from './types';
+import { LEVELS } from './data/subjects';
 import { loadQuiz, sampleQuiz } from './lib/questionBank';
 import { supabase } from './lib/supabase';
-import { createProfile, displayName, isGuest, loadMe, recordGame, type GameRecord, type Profile } from './lib/profile';
+import {
+  createProfile,
+  displayName,
+  isGuest,
+  loadMe,
+  recordGame,
+  updateProfile,
+  type GameRecord,
+  type Profile,
+} from './lib/profile';
 import { createPlayers, type BattlePlayer } from './game/battle';
 import { createBots, type Bot } from './game/bots';
-import { StartScreen, type GameSettings } from './screens/StartScreen';
+import { StartScreen, withLevel, type GameSettings } from './screens/StartScreen';
 import { LoadingScreen } from './screens/LoadingScreen';
 import { QuizScreen } from './screens/QuizScreen';
 import { ResultScreen } from './screens/ResultScreen';
@@ -47,7 +56,6 @@ type MeState =
   | { status: 'offline'; error?: string }
   | { status: 'ready'; user: User; profile: Profile | null; needsPassword: boolean };
 
-const ALL_SUBJECTS = Object.keys(SUBJECTS) as Subject[];
 /** โจทย์สำรองสำหรับ Sudden Death (ถ้าใช้หมดจะวนกลับมาใช้ข้อเดิม) */
 const SUDDEN_DEATH_SPARE = 5;
 
@@ -73,7 +81,7 @@ const toRoomSettings = (s: GameSettings): RoomSettings => ({
   count: ([5, 10, 20] as const).includes(s.count as 5 | 10 | 20) ? (s.count as RoomSettings['count']) : 10,
 });
 
-const subjectsOf = (s: GameSettings): Subject[] => (s.subject === 'all' ? ALL_SUBJECTS : [s.subject]);
+const subjectsOf = (s: GameSettings): Subject[] => (s.subject === 'all' ? LEVELS[s.level].subjects : [s.subject]);
 
 function countCorrect(questions: Question[], results: AnswerResult[]): Record<Difficulty, number> {
   const out: Record<Difficulty, number> = { easy: 0, medium: 0, hard: 0 };
@@ -100,6 +108,7 @@ export default function App() {
     mode: 'solo',
     botCount: 3,
     botLevel: 'normal',
+    level: 'upper',
     subject: 'all',
     difficulty: 'medium',
     track: 'school',
@@ -146,6 +155,20 @@ export default function App() {
   const profile = me.status === 'ready' ? me.profile : null;
   const guest = me.status === 'ready' ? isGuest(me.user) : true;
   const needsPassword = me.status === 'ready' && me.needsPassword;
+
+  // ระดับชั้นในโปรไฟล์ = ค่าเริ่มต้นของหน้าแรก
+  const profileLevel = profile?.level;
+  useEffect(() => {
+    if (profileLevel) setSettings((prev) => (prev.level === profileLevel ? prev : withLevel(prev, profileLevel)));
+  }, [profileLevel]);
+
+  const changeLevel = (level: Level) => {
+    setSettings((prev) => withLevel(prev, level));
+    if (!profile || profile.level === level) return;
+    setMe((m) => (m.status === 'ready' && m.profile ? { ...m, profile: { ...m.profile, level } } : m));
+    // บันทึกเงียบๆ ถ้าไม่สำเร็จก็ยังเล่นระดับนี้ได้ในรอบนี้
+    updateProfile(profile.id, { level }).catch(() => {});
+  };
 
   /** บันทึกผลเกมแล้วอัปเดต XP บนการ์ดโปรไฟล์ */
   const saveGame = async (record: GameRecord) => {
@@ -205,7 +228,13 @@ export default function App() {
     if (s.mode === 'challenge') {
       setScreen({ name: 'loading', message: 'กำลังเตรียมชุดโจทย์คำท้า...' });
       try {
-        const { code } = await createChallenge({ subject: s.subject, difficulty: s.difficulty, track: s.track, count: s.count });
+        const { code } = await createChallenge({
+          subject: s.subject,
+          difficulty: s.difficulty,
+          track: s.track,
+          level: s.level,
+          count: s.count,
+        });
         if (loadId === loadIdRef.current) setScreen({ name: 'challenge', code, autoPlay: true });
       } catch (e) {
         if (loadId === loadIdRef.current) setScreen({ name: 'start', error: e instanceof Error ? e.message : String(e) });
@@ -215,7 +244,7 @@ export default function App() {
     setScreen({ name: 'loading', message: 'กำลังเตรียมโจทย์...' });
     try {
       const { questions } = await loadQuiz(
-        { subjects: subjectsOf(s), difficulty: s.difficulty, track: s.track, count: totalNeeded(s) },
+        { subjects: subjectsOf(s), difficulty: s.difficulty, track: s.track, level: s.level, count: totalNeeded(s) },
         (message) => loadId === loadIdRef.current && setScreen({ name: 'loading', message }),
       );
       if (loadId !== loadIdRef.current) return;
@@ -260,8 +289,8 @@ export default function App() {
   if (me.status === 'ready' && !me.profile) {
     return (
       <ProfileSetupScreen
-        onCreate={async (nickname, avatar) => {
-          const created = await createProfile(nickname, avatar);
+        onCreate={async (nickname, avatar, level) => {
+          const created = await createProfile(nickname, avatar, level);
           setMe({ ...me, profile: created });
         }}
         onLogin={openAccount}
@@ -278,6 +307,7 @@ export default function App() {
           error={screen.name === 'start' ? (screen.error ?? (me.status === 'offline' ? me.error ?? null : null)) : null}
           onStart={start}
           onPlaySample={playSample}
+          onLevelChange={changeLevel}
           offline={!online}
           installSlot={<InstallBanner />}
           onGroups={() =>

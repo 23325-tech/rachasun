@@ -3,7 +3,8 @@
 // ตั้ง GEMINI_MODEL เพิ่มได้ถ้าอยากเปลี่ยนโมเดลหลัก
 import { createClient } from 'npm:@supabase/supabase-js@2';
 
-const SUBJECTS = ['math', 'physics', 'chemistry', 'biology', 'english'] as const;
+const SUBJECTS = ['math', 'science', 'physics', 'chemistry', 'biology', 'english'] as const;
+const LEVELS = ['primary', 'lower', 'upper', 'uni'] as const;
 const DIFFICULTIES = ['easy', 'medium', 'hard'] as const;
 const TRACKS = ['entrance', 'school'] as const;
 const MAX_COUNT = 10;
@@ -13,6 +14,15 @@ const HOURLY_LIMIT = 40;
 type Subject = (typeof SUBJECTS)[number];
 type Difficulty = (typeof DIFFICULTIES)[number];
 type Track = (typeof TRACKS)[number];
+type Level = (typeof LEVELS)[number];
+
+/** วิชาที่มีในแต่ละระดับ (ตรงกับ public.level_has_subject) */
+const LEVEL_SUBJECTS: Record<Level, readonly Subject[]> = {
+  primary: ['math', 'science', 'english'],
+  lower: ['math', 'science', 'english'],
+  upper: ['math', 'physics', 'chemistry', 'biology', 'english'],
+  uni: ['math', 'physics', 'chemistry', 'biology', 'english'],
+};
 
 const MODELS = [Deno.env.get('GEMINI_MODEL') || 'gemini-3.8-flash', 'gemini-3.5-flash-lite'];
 
@@ -27,15 +37,34 @@ const json = (body: unknown, status = 200) =>
 
 const SUBJECT_TH: Record<Subject, string> = {
   math: 'คณิตศาสตร์',
+  science: 'วิทยาศาสตร์',
   physics: 'ฟิสิกส์',
   chemistry: 'เคมี',
   biology: 'ชีววิทยา',
   english: 'ภาษาอังกฤษ',
 };
 const DIFFICULTY_TH: Record<Difficulty, string> = { easy: 'ง่าย', medium: 'ปานกลาง', hard: 'ยาก' };
-const TRACK_TH: Record<Track, string> = {
-  school: 'แนวข้อสอบในโรงเรียน ระดับมัธยมปลาย ตามหลักสูตรแกนกลางของไทย',
-  entrance: 'แนวข้อสอบเข้ามหาวิทยาลัยของไทย (เช่น TGAT/TPAT/A-Level)',
+const LEVEL_TH: Record<Level, string> = {
+  primary: 'ประถมศึกษา (ป.1-ป.6) ใช้ภาษาง่าย ประโยคสั้น ตัวเลขไม่ซับซ้อน ไม่ใช้สูตรขั้นสูง',
+  lower: 'มัธยมศึกษาตอนต้น (ม.1-ม.3)',
+  upper: 'มัธยมศึกษาตอนปลาย (ม.4-ม.6)',
+  uni: 'มหาวิทยาลัยชั้นปีต้น (วิชาพื้นฐานปี 1-2) คณิตศาสตร์เน้นแคลคูลัสและพีชคณิตเชิงเส้น',
+};
+/** แนวข้อสอบตามระดับ (มหาลัยมีแค่ school = สอบในคณะ) */
+const TRACK_TH: Record<Level, Partial<Record<Track, string>>> = {
+  primary: {
+    school: 'แนวข้อสอบในโรงเรียน ตามหลักสูตรแกนกลางของไทย',
+    entrance: 'แนวข้อสอบเข้า ม.1 ของโรงเรียนชื่อดังในไทย',
+  },
+  lower: {
+    school: 'แนวข้อสอบในโรงเรียน ตามหลักสูตรแกนกลางของไทย',
+    entrance: 'แนวข้อสอบเข้า ม.4 ของโรงเรียนชื่อดังในไทย',
+  },
+  upper: {
+    school: 'แนวข้อสอบในโรงเรียน ตามหลักสูตรแกนกลางของไทย',
+    entrance: 'แนวข้อสอบเข้ามหาวิทยาลัยของไทย (เช่น TGAT/TPAT/A-Level)',
+  },
+  uni: { school: 'แนวข้อสอบกลางภาค/ปลายภาคของมหาวิทยาลัยไทย' },
 };
 
 // ลำดับ property: ให้เขียน explanation ก่อนเฉลย เพื่อให้โมเดลคิดก่อนตอบ
@@ -79,12 +108,13 @@ const RESPONSE_SCHEMA = {
   required: ['questions'],
 };
 
-function buildPrompt(subjects: Subject[], difficulty: Difficulty, track: Track, count: number) {
+function buildPrompt(subjects: Subject[], difficulty: Difficulty, track: Track, level: Level, count: number) {
   return `คุณคือครูผู้เชี่ยวชาญที่ออกข้อสอบสำหรับนักเรียนไทย
 สร้างโจทย์ ${count} ข้อ
+- ระดับชั้น: ${LEVEL_TH[level]}
 - วิชา: ${subjects.map((s) => `${SUBJECT_TH[s]} (${s})`).join(', ')}${subjects.length > 1 ? ' — กระจายวิชาให้ใกล้เคียงกัน' : ''}
-- ความยาก: ${DIFFICULTY_TH[difficulty]}
-- แนว: ${TRACK_TH[track]}
+- ความยาก: ${DIFFICULTY_TH[difficulty]} (เทียบกับระดับชั้นนี้)
+- แนว: ${TRACK_TH[level][track]}
 
 กติกา:
 1. ผสมรูปแบบ: ประมาณ 70% เป็นปรนัย (type "mcq") อีก 30% เป็นเติมคำตอบ (type "fill")
@@ -129,13 +159,13 @@ interface RawQuestion {
 }
 
 /** แปลงผลจาก AI เป็นแถวในตาราง ถ้ารูปแบบไม่ถูกต้องคืน null (ข้อนั้นจะถูกทิ้ง) */
-function toRow(q: RawQuestion, allowed: Subject[], difficulty: Difficulty, track: Track, model: string) {
+function toRow(q: RawQuestion, allowed: Subject[], difficulty: Difficulty, track: Track, level: Level, model: string) {
   const subject = q.subject as Subject;
   if (!allowed.includes(subject)) return null;
   const prompt = q.prompt && repairLatex(q.prompt).trim();
   const explanation = q.explanation && repairLatex(q.explanation).trim();
   if (!prompt || !explanation) return null;
-  const base = { subject, difficulty, track, prompt, explanation, model };
+  const base = { subject, difficulty, track, level, prompt, explanation, model };
 
   if (q.type === 'mcq') {
     const choices = q.choices?.map((c) => wrapBareLatex(repairLatex(String(c)).trim()));
@@ -233,10 +263,13 @@ Deno.serve(async (req) => {
     const difficulty = body.difficulty as Difficulty;
     const track = body.track as Track;
     const count = Math.floor(Number(body.count));
+    const level = (body.level ?? 'upper') as Level;
 
-    if (!subjects.length) return json({ error: 'invalid subjects' }, 400);
+    if (!LEVELS.includes(level)) return json({ error: 'invalid level' }, 400);
+    if (!subjects.length || subjects.some((s) => !LEVEL_SUBJECTS[level].includes(s)))
+      return json({ error: 'invalid subjects' }, 400);
     if (!DIFFICULTIES.includes(difficulty)) return json({ error: 'invalid difficulty' }, 400);
-    if (!TRACKS.includes(track)) return json({ error: 'invalid track' }, 400);
+    if (!TRACKS.includes(track) || !TRACK_TH[level][track]) return json({ error: 'invalid track' }, 400);
     if (!(count >= 1 && count <= MAX_COUNT)) return json({ error: `count must be 1-${MAX_COUNT}` }, 400);
 
     if (userId) {
@@ -250,9 +283,9 @@ Deno.serve(async (req) => {
       if (used + count > HOURLY_LIMIT) return json({ error: 'rate_limited', used, limit: HOURLY_LIMIT }, 429);
     }
 
-    const { data, model, fallbacks } = await callGemini(buildPrompt(subjects, difficulty, track, count), apiKey);
+    const { data, model, fallbacks } = await callGemini(buildPrompt(subjects, difficulty, track, level, count), apiKey);
     const rows = (data.questions ?? [])
-      .map((q) => toRow(q, subjects, difficulty, track, model))
+      .map((q) => toRow(q, subjects, difficulty, track, level, model))
       .filter((r): r is NonNullable<typeof r> => r !== null)
       .slice(0, count);
 

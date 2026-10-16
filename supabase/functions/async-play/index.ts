@@ -61,6 +61,7 @@ async function createChallenge(uid: string, settings: Record<string, unknown>) {
     subject: String(settings.subject ?? 'all'),
     difficulty: String(settings.difficulty ?? 'medium'),
     track: String(settings.track ?? 'school'),
+    level: String(settings.level ?? 'upper'),
     count: Number(settings.count ?? 10),
   };
   if (!COUNTS.includes(s.count)) throw new PlayError('invalid_settings');

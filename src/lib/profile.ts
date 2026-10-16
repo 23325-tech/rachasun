@@ -1,4 +1,5 @@
 import type { User } from '@supabase/supabase-js';
+import type { Level } from '../types';
 import { ensureSession, supabase } from './supabase';
 
 export interface Profile {
@@ -12,6 +13,8 @@ export interface Profile {
   wins: number;
   /** แต้มแรงค์จากห้องสุ่มจับคู่ */
   rp: number;
+  /** ระดับชั้นที่เลือกไว้ (ค่าเริ่มต้นตอนเปิดแอพ) */
+  level: Level;
 }
 
 export const AVATARS = ['😎', '🤓', '🦊', '🐼', '🐸', '🦄', '🐯', '🐙', '🦖', '🐧', '🤖', '👻', '🐱', '🐶', '🦉', '🐵'];
@@ -49,19 +52,19 @@ function friendlyDbError(message: string): string {
   return message;
 }
 
-export async function createProfile(nickname: string, avatar: string): Promise<Profile> {
+export async function createProfile(nickname: string, avatar: string, level: Level): Promise<Profile> {
   const sb = await ensureSession();
   const { data: u } = await sb.auth.getUser();
   const { data, error } = await sb
     .from('profiles')
-    .insert({ id: u.user!.id, nickname: nickname.trim(), avatar })
+    .insert({ id: u.user!.id, nickname: nickname.trim(), avatar, level })
     .select()
     .single();
   if (error) throw new Error(friendlyDbError(error.message));
   return data as Profile;
 }
 
-export async function updateProfile(id: string, changes: { nickname?: string; avatar?: string }): Promise<Profile> {
+export async function updateProfile(id: string, changes: { nickname?: string; avatar?: string; level?: Level }): Promise<Profile> {
   const { data, error } = await client()
     .from('profiles')
     .update({ ...changes, nickname: changes.nickname?.trim() })

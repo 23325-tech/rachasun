@@ -1,6 +1,7 @@
-import { useState, type CSSProperties, type ReactNode } from 'react';
-import type { Difficulty, Subject, Track } from '../types';
-import { SUBJECTS } from '../data/subjects';
+import { useEffect, useState, type CSSProperties, type ReactNode } from 'react';
+import type { Difficulty, Level, Subject, Track } from '../types';
+import { LEVELS, subjectInfo } from '../data/subjects';
+import { LevelPicker } from '../components/LevelPicker';
 import { BOT_LEVELS, type BotLevel } from '../game/bots';
 import { heartsFor } from '../game/battle';
 
@@ -13,22 +14,28 @@ export interface GameSettings {
   /** จำนวนบอท (โหมดดวลกับบอท) รวมเราเป็น 2-8 คน */
   botCount: number;
   botLevel: BotLevel;
+  level: Level;
   subject: SubjectFilter;
   difficulty: Difficulty;
   track: Track;
   count: number;
 }
 
-const SUBJECT_KEYS = Object.keys(SUBJECTS) as Subject[];
+/** เปลี่ยนระดับชั้น: วิชา/แนวข้อสอบที่ไม่มีในระดับใหม่จะกลับเป็นค่าเริ่มต้น */
+export function withLevel(s: GameSettings, level: Level): GameSettings {
+  const info = LEVELS[level];
+  return {
+    ...s,
+    level,
+    subject: s.subject === 'all' || info.subjects.includes(s.subject) ? s.subject : 'all',
+    track: info.tracks.some((t) => t.value === s.track) ? s.track : info.tracks[0].value,
+  };
+}
 
 const DIFFICULTIES: { value: Difficulty; label: string; icon: string }[] = [
   { value: 'easy', label: 'ง่าย', icon: '🌱' },
   { value: 'medium', label: 'กลาง', icon: '🔥' },
   { value: 'hard', label: 'ยาก', icon: '💀' },
-];
-const TRACKS: { value: Track; label: string; icon: string }[] = [
-  { value: 'school', label: 'สอบปกติ', icon: '🏫' },
-  { value: 'entrance', label: 'สอบเข้า', icon: '🎓' },
 ];
 const COUNTS = [5, 10, 20];
 const BOT_COUNTS = [1, 3, 5, 7];
@@ -41,6 +48,8 @@ interface Props {
   error: string | null;
   onStart: (settings: GameSettings) => void;
   onPlaySample: (settings: GameSettings) => void;
+  /** เปลี่ยนระดับชั้น (บันทึกเป็นค่าเริ่มต้นในโปรไฟล์) */
+  onLevelChange?: (level: Level) => void;
   /** การ์ดโปรไฟล์ (ถ้ามี) แสดงใต้ชื่อแอพ */
   profileSlot?: ReactNode;
   onOnline: () => void;
@@ -83,11 +92,31 @@ function Segmented<T extends string | number>({
   );
 }
 
-export function StartScreen({ initial, error, onStart, onPlaySample, profileSlot, onOnline, onGroups, offline, installSlot }: Props) {
+export function StartScreen({
+  initial,
+  error,
+  onStart,
+  onPlaySample,
+  onLevelChange,
+  profileSlot,
+  onOnline,
+  onGroups,
+  offline,
+  installSlot,
+}: Props) {
   const [s, setS] = useState<GameSettings>(initial);
   const set = <K extends keyof GameSettings>(key: K, value: GameSettings[K]) => setS((prev) => ({ ...prev, [key]: value }));
+  // ระดับในโปรไฟล์โหลดเสร็จทีหลัง -> ตามให้ตรง
+  useEffect(() => {
+    setS((prev) => (prev.level === initial.level ? prev : withLevel(prev, initial.level)));
+  }, [initial.level]);
+  const changeLevel = (level: Level) => {
+    setS((prev) => withLevel(prev, level));
+    onLevelChange?.(level);
+  };
 
-  const subjectName = s.subject === 'all' ? 'ทุกวิชา' : SUBJECTS[s.subject].name;
+  const levelInfo = LEVELS[s.level];
+  const subjectName = s.subject === 'all' ? 'ทุกวิชา' : subjectInfo(s.subject, s.level).name;
   const difficultyLabel = DIFFICULTIES.find((d) => d.value === s.difficulty)!.label;
   const minutes = Math.max(1, Math.round((s.count * AVG_SEC[s.difficulty]) / 60));
 
@@ -166,6 +195,10 @@ export function StartScreen({ initial, error, onStart, onPlaySample, profileSlot
         <span>AI สร้างโจทย์ใหม่ให้ทุกรอบ พร้อมเฉลยละเอียด</span>
       </div>
 
+      <section className="home-level" aria-label="ระดับชั้น">
+        <LevelPicker value={s.level} onChange={changeLevel} />
+      </section>
+
       <section aria-labelledby="pick-subject">
         <h2 id="pick-subject" className="section-title">
           วันนี้จะฝึกวิชาอะไรดี?
@@ -182,14 +215,14 @@ export function StartScreen({ initial, error, onStart, onPlaySample, profileSlot
             </span>
             <span className="subject-card__body">
               <span className="subject-card__name">ทุกวิชา</span>
-              <span className="subject-card__topics">คละ 5 วิชา ท้าทายสุด</span>
+              <span className="subject-card__topics">คละ {levelInfo.subjects.length} วิชา ท้าทายสุด</span>
             </span>
             <span className="subject-card__check" aria-hidden>
               ✓
             </span>
           </button>
-          {SUBJECT_KEYS.map((key) => {
-            const sub = SUBJECTS[key];
+          {levelInfo.subjects.map((key: Subject) => {
+            const sub = subjectInfo(key, s.level);
             return (
               <button
                 key={key}
@@ -217,7 +250,9 @@ export function StartScreen({ initial, error, onStart, onPlaySample, profileSlot
 
       <section className="settings-card" aria-label="ตั้งค่ารอบนี้">
         <Segmented label="ความยาก" options={DIFFICULTIES} value={s.difficulty} onChange={(v) => set('difficulty', v)} />
-        <Segmented label="แนวข้อสอบ" options={TRACKS} value={s.track} onChange={(v) => set('track', v)} />
+        {levelInfo.tracks.length > 1 && (
+          <Segmented<Track> label="แนวข้อสอบ" options={levelInfo.tracks} value={s.track} onChange={(v) => set('track', v)} />
+        )}
         {s.mode === 'bots' && (
           <>
             <Segmented
@@ -251,8 +286,8 @@ export function StartScreen({ initial, error, onStart, onPlaySample, profileSlot
           {s.mode === 'bots'
             ? `⚔️ ${s.botCount + 1} คน · ${s.count} ข้อ · หัวใจคนละ ${heartsFor(s.count)} ดวง`
             : s.mode === 'challenge'
-              ? `🔗 ${subjectName} · ${difficultyLabel} · ${s.count} ข้อ · ส่งลิงก์ให้เพื่อนเล่นต่อ`
-              : `${subjectName} · ${difficultyLabel} · ${s.count} ข้อ · ราว ${minutes} นาที`}
+              ? `🔗 ${levelInfo.name} · ${subjectName} · ${difficultyLabel} · ${s.count} ข้อ · ส่งลิงก์ให้เพื่อนเล่นต่อ`
+              : `${levelInfo.emoji} ${levelInfo.name} · ${subjectName} · ${difficultyLabel} · ${s.count} ข้อ · ราว ${minutes} นาที`}
         </p>
         <button type="button" className="btn btn--primary btn--block btn--big cta-bar__btn" onClick={() => onStart(s)}>
           {s.mode === 'bots' ? 'เริ่มดวลเลย! ⚔️' : s.mode === 'challenge' ? 'สร้างคำท้า 🔗' : 'เริ่มฝึกเลย! 🚀'}

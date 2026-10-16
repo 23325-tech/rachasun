@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { Difficulty, Subject, Track } from '../types';
-import { SUBJECTS } from '../data/subjects';
+import { LEVELS, SUBJECTS } from '../data/subjects';
 import { createGroup, joinGroup, myGroups, type MyGroup } from '../lib/groups';
 
 interface Props {
@@ -11,7 +11,7 @@ interface Props {
 
 const SUBJECT_OPTIONS: { value: Subject | 'all'; label: string }[] = [
   { value: 'all', label: '🌈 ทุกวิชา' },
-  ...(Object.keys(SUBJECTS) as Subject[]).map((s) => ({ value: s, label: `${SUBJECTS[s].emoji} ${SUBJECTS[s].name}` })),
+  ...LEVELS.upper.subjects.map((s) => ({ value: s, label: `${SUBJECTS[s].emoji} ${SUBJECTS[s].name}` })),
 ];
 const DIFFICULTIES: { value: Difficulty; label: string }[] = [
   { value: 'easy', label: '🌱 ง่าย' },

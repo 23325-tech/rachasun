@@ -1,4 +1,4 @@
-import type { Difficulty, FillAnswer, Question, Subject, Track } from '../types';
+import type { Difficulty, FillAnswer, Level, Question, Subject, Track } from '../types';
 import { SAMPLE_QUESTIONS } from '../data/sampleQuestions';
 import { ensureSession, supabase } from './supabase';
 import { shuffle } from './shuffle';
@@ -10,6 +10,7 @@ export interface QuizRequest {
   subjects: Subject[];
   difficulty: Difficulty;
   track: Track;
+  level: Level;
   count: number;
 }
 
@@ -70,6 +71,7 @@ export async function loadQuiz(req: QuizRequest, onStatus?: (msg: string) => voi
     p_difficulty: req.difficulty,
     p_track: req.track,
     p_limit: req.count,
+    p_level: req.level,
   });
   if (error) throw new Error(`ดึงโจทย์จากคลังไม่สำเร็จ: ${error.message}`);
   const fromBank = (data as QuestionRow[]).map(fromRow);
@@ -84,7 +86,7 @@ export async function loadQuiz(req: QuizRequest, onStatus?: (msg: string) => voi
   const results = await Promise.allSettled(
     batches.map((count) =>
       sb.functions.invoke<{ questions: QuestionRow[] }>('generate-questions', {
-        body: { subjects: req.subjects, difficulty: req.difficulty, track: req.track, count },
+        body: { subjects: req.subjects, difficulty: req.difficulty, track: req.track, level: req.level, count },
       }),
     ),
   );
@@ -120,7 +122,9 @@ async function describeFunctionError(err: unknown): Promise<string> {
 
 /** โจทย์ตัวอย่างในเครื่อง ใช้ตอนออฟไลน์หรือยังไม่ได้ตั้งค่า Supabase */
 export function sampleQuiz(subjects: Subject[], count: number): Question[] {
-  const pool = SAMPLE_QUESTIONS.filter((q) => subjects.includes(q.subject));
+  const matched = SAMPLE_QUESTIONS.filter((q) => subjects.includes(q.subject));
+  // ไม่มีโจทย์ตัวอย่างของวิชานี้ (เช่น วิทยาศาสตร์) ใช้ทุกวิชาแทน
+  const pool = matched.length ? matched : SAMPLE_QUESTIONS;
   return shuffle(pool)
     .slice(0, count)
     .map((q) => ({ ...q, source: 'sample' as const }));

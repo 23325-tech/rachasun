@@ -3,12 +3,19 @@ import type { SupabaseClient } from 'npm:@supabase/supabase-js@2';
 import { getTimeLimitSec, type FillAnswer } from './rules.ts';
 
 export const ALL_SUBJECTS = ['math', 'physics', 'chemistry', 'biology', 'english'];
+/** วิชาของแต่ละระดับ (ทุกวิชา = all) */
+export const LEVEL_SUBJECTS: Record<string, string[]> = {
+  primary: ['math', 'science', 'english'],
+  lower: ['math', 'science', 'english'],
+  upper: ALL_SUBJECTS,
+  uni: ALL_SUBJECTS,
+};
 const GENERATE_BATCH = 10;
 
 /** โจทย์เต็ม (มีเฉลย) เก็บฝั่งเซิร์ฟเวอร์เท่านั้น */
 export interface StoredQuestion {
   id: string;
-  subject: 'math' | 'physics' | 'chemistry' | 'biology' | 'english';
+  subject: 'math' | 'science' | 'physics' | 'chemistry' | 'biology' | 'english';
   difficulty: 'easy' | 'medium' | 'hard';
   track: string;
   type: 'mcq' | 'fill';
@@ -35,6 +42,8 @@ export interface QuestionSettings {
   subject: string;
   difficulty: string;
   track: string;
+  /** ไม่ใส่ = ม.ปลาย (ห้อง/กลุ่มที่สร้างก่อนมีระดับชั้น) */
+  level?: string;
 }
 
 export const toPublic = (q: StoredQuestion): PublicQuestion => ({
@@ -52,12 +61,14 @@ export const limitMsOf = (q: StoredQuestion) =>
 
 /** หยิบโจทย์จากคลังแบบสุ่ม ถ้าไม่พอให้ AI สร้างเพิ่ม แล้วสุ่มลำดับ */
 export async function pickQuestions(admin: SupabaseClient, settings: QuestionSettings, need: number): Promise<StoredQuestion[]> {
-  const subjects = settings.subject === 'all' ? ALL_SUBJECTS : [settings.subject];
+  const level = settings.level ?? 'upper';
+  const subjects = settings.subject === 'all' ? LEVEL_SUBJECTS[level] ?? ALL_SUBJECTS : [settings.subject];
   const { data, error } = await admin.rpc('get_random_questions', {
     p_subjects: subjects,
     p_difficulty: settings.difficulty,
     p_track: settings.track,
     p_limit: need,
+    p_level: level,
   });
   if (error) throw error;
   const picked = (data ?? []) as StoredQuestion[];
@@ -74,7 +85,7 @@ export async function pickQuestions(admin: SupabaseClient, settings: QuestionSet
             Authorization: `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ subjects, difficulty: settings.difficulty, track: settings.track, count }),
+          body: JSON.stringify({ subjects, difficulty: settings.difficulty, track: settings.track, level, count }),
         }).then((r) => r.json()),
       ),
     );

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { SUBJECTS } from '../data/subjects';
+import { LEVELS, subjectInfo } from '../data/subjects';
 import { challengeLink, fetchChallengeBoard, startChallenge, type ChallengeBoard } from '../lib/asyncPlay';
 import { AsyncPlayScreen } from './AsyncPlayScreen';
 import { XpBadge, type XpState } from '../components/XpBadge';
@@ -102,7 +102,9 @@ export function ChallengeScreen({ code, guest, autoPlay, onHome, onRegister, onX
   }
 
   const s = board.settings;
-  const subject = s.subject === 'all' ? '🌈 ทุกวิชา' : `${SUBJECTS[s.subject].emoji} ${SUBJECTS[s.subject].name}`;
+  const level = LEVELS[s.level ?? 'upper'];
+  const sub = s.subject === 'all' ? null : subjectInfo(s.subject, s.level);
+  const subject = `${level.emoji} ${level.name} · ${sub ? `${sub.emoji} ${sub.name}` : '🌈 ทุกวิชา'}`;
   const mine = board.rows.find((r) => r.isMe);
   const iAmCreator = !!mine?.isCreator;
   const canStart = !board.me && !board.expired;
