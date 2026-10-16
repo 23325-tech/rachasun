@@ -1,6 +1,7 @@
 // ตัวละคร chibi 3D สร้างจากรูปทรงพื้นฐาน (ต้นแบบ) — แยกเป็นชิ้นส่วนให้เปลี่ยนชุด/ผม/หมวก/ของในมือได้
 // ภายหลังเปลี่ยนเป็นโมเดล .glb จากนักปั้นได้ โดยคงรูปแบบ ChibiLook เดิม
 import * as THREE from 'three';
+import { createPet, type Pet, type PetKind } from './pets';
 
 export type Outfit = 'uniform' | 'labcoat' | 'hoodie' | 'sport' | 'skirt' | 'tee';
 export type HairStyle = 'short' | 'bob' | 'spiky' | 'bun' | 'long' | 'ponytail' | 'twintails' | 'curly';
@@ -18,6 +19,7 @@ export interface ChibiLook {
   hat: Hat;
   item: HandItem;
   face?: Face;
+  pet?: PetKind;
 }
 
 export const DEFAULT_LOOK: ChibiLook = {
@@ -45,11 +47,11 @@ function toonGradient() {
   return gradientMap;
 }
 
-const toon = (color: string, extra: THREE.MeshToonMaterialParameters = {}) =>
+export const toon = (color: string, extra: THREE.MeshToonMaterialParameters = {}) =>
   new THREE.MeshToonMaterial({ color, gradientMap: toonGradient(), ...extra });
 
 /** เมชพร้อมเส้นขอบการ์ตูน (เปลือกด้านหลังขยายเล็กน้อย) */
-function part(geo: THREE.BufferGeometry, mat: THREE.Material, outline = 0.035): THREE.Mesh {
+export function part(geo: THREE.BufferGeometry, mat: THREE.Material, outline = 0.035): THREE.Mesh {
   const mesh = new THREE.Mesh(geo, mat);
   mesh.castShadow = true;
   if (outline > 0) {
@@ -61,8 +63,8 @@ function part(geo: THREE.BufferGeometry, mat: THREE.Material, outline = 0.035): 
   return mesh;
 }
 
-const sphere = (r: number, ws = 32, hs = 24) => new THREE.SphereGeometry(r, ws, hs);
-const capsule = (r: number, len: number) => new THREE.CapsuleGeometry(r, len, 8, 20);
+export const sphere = (r: number, ws = 32, hs = 24) => new THREE.SphereGeometry(r, ws, hs);
+export const capsule = (r: number, len: number) => new THREE.CapsuleGeometry(r, len, 8, 20);
 
 const shade = (hex: string, k: number) => {
   const c = new THREE.Color(hex);
@@ -105,6 +107,16 @@ export function createChibi(initial: ChibiLook = DEFAULT_LOOK): Chibi {
   head.add(parts.hair, parts.hat, parts.face);
   armR.add(parts.item);
   let eyes: THREE.Object3D[] = [];
+  const petSlot = new THREE.Group();
+  petSlot.position.set(1.0, 1.28, 0.15);
+  petSlot.scale.setScalar(1.15);
+  root.add(petSlot);
+  let pet: Pet | null = null;
+  function buildPet() {
+    clear(petSlot);
+    pet = createPet(look.pet ?? 'none');
+    if (pet) petSlot.add(pet.root);
+  }
   let mouth: THREE.Object3D | null = null;
 
   const clear = (g: THREE.Object3D) => {
@@ -587,6 +599,7 @@ export function createChibi(initial: ChibiLook = DEFAULT_LOOK): Chibi {
     if (all || prev.hat !== next.hat) buildHat();
     if (all || prev.item !== next.item) buildItem();
     if (all || prev.face !== next.face) buildFace();
+    if (all || prev.pet !== next.pet) buildPet();
   }
 
   // เงาวงรีใต้เท้า
@@ -604,6 +617,7 @@ export function createChibi(initial: ChibiLook = DEFAULT_LOOK): Chibi {
   buildHat();
   buildItem();
   buildFace();
+  buildPet();
 
   let nextBlink = 2;
   /** cheer = 0..1 (กระโดดดีใจชั่วครู่) ทับท่าหลัก pose */
@@ -643,6 +657,7 @@ export function createChibi(initial: ChibiLook = DEFAULT_LOOK): Chibi {
     const blinking = t > nextBlink && t < nextBlink + 0.12;
     if (t > nextBlink + 0.12) nextBlink = t + 2 + Math.random() * 3;
     for (const e of eyes) e.scale.y = blinking ? 0.12 : sad ? 0.75 : 1;
+    pet?.update(t, cheer > 0.5 ? 'cheer' : pose);
   }
 
   return {

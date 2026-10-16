@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { frameOf, lookCode } from '../lib/look';
+import type { PetKind } from '../three/pets';
 
 interface Props {
   /** รหัสหน้าตา (คอลัมน์ avatar) หรือว่าง = ช่องว่างรอผู้เล่น */
@@ -32,6 +33,28 @@ export function PlayerAvatar({ code, size = 40, className = '', framing = 'bust'
 
   return (
     <span className={`player-avatar ${code ? '' : 'is-empty'} ${frame ? `has-frame frame--${frame.tier}` : ''} ${className}`} style={{ width: size, height: size }} aria-hidden>
+      {url && <img src={url} alt="" draggable={false} />}
+    </span>
+  );
+}
+
+/** รูปนิ่งสัตว์เลี้ยง (ป้ายในการ์ดผู้เล่น / รูปสินค้า) */
+export function PetImage({ kind, size = 24, className = '' }: { kind: PetKind; size?: number; className?: string }) {
+  const [url, setUrl] = useState<string | null>(null);
+  useEffect(() => {
+    if (kind === 'none') return;
+    let alive = true;
+    import('../three/portrait')
+      .then((m) => m.petPortraitOf(kind))
+      .then((u) => alive && setUrl(u))
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, [kind]);
+  if (kind === 'none') return null;
+  return (
+    <span className={`pet-image ${className}`} style={{ width: size, height: size }} aria-hidden>
       {url && <img src={url} alt="" draggable={false} />}
     </span>
   );

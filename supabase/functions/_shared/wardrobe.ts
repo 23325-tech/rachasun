@@ -104,6 +104,10 @@ export const WARDROBE: WardrobeItem[] = [
   free('face_star', 'face', 's', 'สติกเกอร์ดาว', 'Star sticker'),
   // ของพิเศษ (สเต็ป 22.2-22.5 จะเพิ่มชิ้นที่ซื้อได้)
   free('pet_none', 'pet', 'n', 'ไม่มีสัตว์เลี้ยง', 'No pet'),
+  { id: 'pet_cat', slot: 'pet', value: 'c', name: 'แมวส้มจอมซน', rarity: 'rare', coin: 2000, en: 'Ginger kitty' },
+  { id: 'pet_owl', slot: 'pet', value: 'o', name: 'นกฮูกนักปราชญ์', rarity: 'rare', coin: 2500, en: 'Wise owl' },
+  { id: 'pet_slime', slot: 'pet', value: 's', name: 'สไลม์เด้งดึ๋ง', rarity: 'epic', gem: 39, en: 'Bouncy slime' },
+  { id: 'pet_dragon', slot: 'pet', value: 'd', name: 'มังกรน้อย', rarity: 'legend', gem: 59, en: 'Baby dragon' },
   free('aura_none', 'aura', 'n', 'ไม่มีออร่า', 'No aura'),
   free('set_none', 'set', 'n', 'ตัวละครปกติ', 'Default character'),
   free('shot_none', 'shot', 'n', 'กระสุนปกติ', 'Default shot'),
@@ -130,6 +134,9 @@ export function parseLook(code: string | null | undefined): Look | null {
 export const encodeLook = (look: Look) => ['v2', ...SLOT_ORDER.map((s) => look[s] ?? 'n')].join('.');
 
 export const isFree = (it: WardrobeItem) => !it.coin && !it.gem;
+
+/** ช่องของพิเศษ: ขายตลอดในหมวด "พิเศษ" ไม่เข้ารอบหมุนเวียน */
+export const SPECIAL_SLOTS: Slot[] = ['pet', 'aura', 'set', 'shot'];
 
 /** สุ่มหน้าตาจากของที่ใช้ได้ (ค่าเริ่มต้น = ของฟรี) */
 export function randomLook(pool: WardrobeItem[] = WARDROBE.filter(isFree), rand: () => number = Math.random): Look {

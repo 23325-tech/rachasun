@@ -10,6 +10,7 @@ import {
 } from '../../supabase/functions/_shared/wardrobe';
 import { t } from './i18n';
 import type { ChibiLook, Face, HairStyle, HandItem, Hat, Outfit } from '../three/chibi';
+import type { PetKind } from '../three/pets';
 
 export { DEFAULT_LOOK_CODE, encodeLook, parseLook, randomLook, WARDROBE, type Look };
 
@@ -34,6 +35,7 @@ for (const it of WARDROBE) {
 const STYLE: Record<string, HairStyle> = { s: 'short', b: 'bob', p: 'spiky', u: 'bun', l: 'long', t: 'ponytail', w: 'twintails', c: 'curly' };
 const OUTFIT: Record<string, Outfit> = { u: 'uniform', l: 'labcoat', h: 'hoodie', s: 'sport', k: 'skirt', t: 'tee' };
 const HAT: Record<string, Hat> = { n: 'none', c: 'cap', b: 'beanie', h: 'headphones', g: 'grad', d: 'headband', r: 'ribbon', f: 'flower' };
+const PET: Record<string, PetKind> = { n: 'none', c: 'cat', o: 'owl', s: 'slime', d: 'dragon' };
 const FACE: Record<string, Face> = { n: 'none', g: 'glasses', o: 'round', f: 'freckles', s: 'star' };
 const ITEM: Record<string, HandItem> = { n: 'none', p: 'pencil', k: 'book', f: 'flask' };
 
@@ -54,6 +56,7 @@ export function toChibi(look: Look): ChibiLook {
     hat: HAT[look.hat] ?? 'none',
     item: ITEM[look.item] ?? 'none',
     face: FACE[look.face] ?? 'none',
+    pet: PET[look.pet] ?? 'none',
   };
 }
 
@@ -83,3 +86,8 @@ export const keepFrame = (newCode: string, oldCode: string | null | undefined) =
   const m = oldCode?.match(/\+\d{1,3}[bsgpdl]$/);
   return lookCode(newCode) + (m ? m[0] : '');
 };
+
+/** ชนิดสัตว์เลี้ยงจากรหัสหน้าตา */
+export const petOf = (code: string | null | undefined): PetKind => PET[lookOf(code).pet] ?? 'none';
+/** ค่าช่องสัตว์เลี้ยง (เช่น "c") -> ชนิด */
+export const petKind = (value: string): PetKind => PET[value] ?? 'none';

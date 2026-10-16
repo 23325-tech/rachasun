@@ -13,10 +13,11 @@ import {
   Storefront,
   TShirt,
   Sunglasses,
+  PawPrint,
   type Icon,
 } from '@phosphor-icons/react';
-import { PlayerAvatar } from '../components/PlayerAvatar';
-import { encodeLook, lookOf, toChibi, WARDROBE, type Look } from '../lib/look';
+import { PetImage, PlayerAvatar } from '../components/PlayerAvatar';
+import { encodeLook, lookOf, toChibi, WARDROBE, type Look, petKind } from '../lib/look';
 import { isFree, type Rarity, type Slot, type WardrobeItem } from '../../supabase/functions/_shared/wardrobe';
 import { t } from '../lib/i18n';
 
@@ -31,7 +32,7 @@ interface Props {
   onSave: (code: string) => Promise<void>;
 }
 
-const TABS: { slot: Slot; label: string; icon: Icon; thumb: 'swatch' | 'bust' | 'full' }[] = [
+const TABS: { slot: Slot; label: string; icon: Icon; thumb: 'swatch' | 'bust' | 'full' | 'pet' }[] = [
   { slot: 'outfit', get label() { return t('ชุด', 'Outfit'); }, icon: TShirt, thumb: 'full' },
   { slot: 'hat', get label() { return t('หมวก', 'Hat'); }, icon: BaseballCap, thumb: 'bust' },
   { slot: 'item', get label() { return t('ของในมือ', 'Held item'); }, icon: HandGrabbing, thumb: 'full' },
@@ -40,6 +41,7 @@ const TABS: { slot: Slot; label: string; icon: Icon; thumb: 'swatch' | 'bust' | 
   { slot: 'skin', get label() { return t('สีผิว', 'Skin'); }, icon: Smiley, thumb: 'swatch' },
   { slot: 'eyes', get label() { return t('สีตา', 'Eyes'); }, icon: Eye, thumb: 'swatch' },
   { slot: 'face', get label() { return t('ใบหน้า', 'Face'); }, icon: Sunglasses, thumb: 'bust' },
+  { slot: 'pet', get label() { return t('สัตว์เลี้ยง', 'Pet'); }, icon: PawPrint, thumb: 'pet' },
 ];
 
 const RARITY_TEXT: Record<Rarity, string> = {
@@ -152,6 +154,8 @@ export function DressingRoomScreen({ code, owned, onShop, onBack, onSave }: Prop
               <span className="ward-item__art">
                 {current.thumb === 'swatch' ? (
                   <span className="ward-item__swatch" style={{ '--sw': `#${it.value}` } as CSSProperties} />
+                ) : current.thumb === 'pet' ? (
+                  it.value === 'n' ? <span className="ward-item__none">—</span> : <PetImage kind={petKind(it.value)} size={64} />
                 ) : (
                   <PlayerAvatar code={thumbCode} size={64} framing={current.thumb} className="is-bare" />
                 )}

@@ -1,9 +1,9 @@
 import { lazy, Suspense, useMemo, useState, type CSSProperties } from 'react';
-import { CheckCircle, Clock, Coin, Diamond, Plus, Sparkle, Storefront, TShirt } from '@phosphor-icons/react';
-import { PlayerAvatar } from '../components/PlayerAvatar';
-import { encodeLook, lookOf, toChibi, WARDROBE, type Look } from '../lib/look';
+import { CheckCircle, Clock, Coin, Diamond, PawPrint, Plus, Sparkle, Storefront, TShirt } from '@phosphor-icons/react';
+import { PetImage, PlayerAvatar } from '../components/PlayerAvatar';
+import { encodeLook, lookOf, petKind, toChibi, WARDROBE, type Look } from '../lib/look';
 import { buyItem, timeLeft, type ShopState } from '../lib/shop';
-import { isFree, type Rarity, type Slot, type WardrobeItem } from '../../supabase/functions/_shared/wardrobe';
+import { isFree, SPECIAL_SLOTS, type Rarity, type Slot, type WardrobeItem } from '../../supabase/functions/_shared/wardrobe';
 import { t } from '../lib/i18n';
 
 const Avatar3D = lazy(() => import('../components/Avatar3D').then((m) => ({ default: m.Avatar3D })));
@@ -42,7 +42,8 @@ export function ShopScreen({ code, state, onBack, onBought, onWear, onTopup }: P
   const chibi = useMemo(() => toChibi(draft), [encodeLook(draft)]); // eslint-disable-line react-hooks/exhaustive-deps
   const owned = new Set(state.owned);
   const rotation = state.rotation.map((id) => WARDROBE.find((w) => w.id === id)).filter((w): w is WardrobeItem => !!w);
-  const regular = WARDROBE.filter((w) => w.rarity === 'common' && !isFree(w));
+  const regular = WARDROBE.filter((w) => w.rarity === 'common' && !isFree(w) && !SPECIAL_SLOTS.includes(w.slot));
+  const specials = WARDROBE.filter((w) => SPECIAL_SLOTS.includes(w.slot) && !isFree(w));
 
   const pick = (it: WardrobeItem) => {
     setPicked(it);
@@ -91,7 +92,9 @@ export function ShopScreen({ code, state, onBack, onBought, onWear, onTopup }: P
       >
         <span className="ward-item__rarity">{RARITY_TEXT[it.rarity]}</span>
         <span className="ward-item__art">
-          {SWATCH_SLOTS.includes(it.slot) ? (
+          {it.slot === 'pet' ? (
+            <PetImage kind={petKind(it.value)} size={64} />
+          ) : SWATCH_SLOTS.includes(it.slot) ? (
             <span className="ward-item__swatch" style={{ '--sw': `#${it.value}` } as CSSProperties} />
           ) : (
             <PlayerAvatar code={thumb} size={64} framing={FULL_SLOTS.includes(it.slot) ? 'full' : 'bust'} className="is-bare" />
@@ -143,6 +146,13 @@ export function ShopScreen({ code, state, onBack, onBought, onWear, onTopup }: P
         </Suspense>
         <div className="dressing__podium" />
         {picked && !has && <span className="shop__trying">{t('กำลังลองสวม:', 'Trying on:')} {picked.name}</span>}
+      </section>
+
+      <section>
+        <h2 className="section-title">
+          <PawPrint weight="fill" className="ico" /> {t('พิเศษ (ขายตลอด)', 'Specials (always on sale)')}
+        </h2>
+        <div className="dressing__items">{specials.map(card)}</div>
       </section>
 
       <section>

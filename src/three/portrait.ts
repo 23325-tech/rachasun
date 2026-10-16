@@ -2,6 +2,7 @@
 // ใช้ renderer ตัวเดียวทั้งแอพ + แคชตามรหัสหน้าตา จึงเบาแม้มีผู้เล่นหลายคน
 import * as THREE from 'three';
 import { createChibi } from './chibi';
+import { createPet, type PetKind } from './pets';
 import { chibiOf } from '../lib/look';
 
 const SIZE = 192;
@@ -50,6 +51,40 @@ export function portraitOf(code: string, framing: 'bust' | 'full' = 'bust'): Pro
     const url = renderer!.domElement.toDataURL('image/png');
     scene.remove(chibi.root);
     chibi.dispose();
+    cache.set(key, url);
+    pending.delete(key);
+    return url;
+  });
+  queue = job.catch(() => {});
+  pending.set(key, job);
+  return job;
+}
+
+let petCamera: THREE.PerspectiveCamera | null = null;
+/** ภาพนิ่งสัตว์เลี้ยงตัวเดียว */
+export function petPortraitOf(kind: PetKind): Promise<string> {
+  const key = `pet:${kind}`;
+  const hit = cache.get(key);
+  if (hit) return Promise.resolve(hit);
+  const p = pending.get(key);
+  if (p) return p;
+  const job = queue.then(() => {
+    if (!renderer) setup();
+    if (!petCamera) {
+      petCamera = new THREE.PerspectiveCamera(30, 1, 0.1, 10);
+      petCamera.position.set(0, 0.05, 1.45);
+      petCamera.lookAt(0, 0.02, 0);
+    }
+    const pet = createPet(kind);
+    if (!pet) return '';
+    pet.update(0.3, 'idle');
+    scene.add(pet.root);
+    renderer!.render(scene, petCamera);
+    const url = renderer!.domElement.toDataURL('image/png');
+    scene.remove(pet.root);
+    pet.root.traverse((o) => {
+      if (o instanceof THREE.Mesh) o.geometry.dispose();
+    });
     cache.set(key, url);
     pending.delete(key);
     return url;

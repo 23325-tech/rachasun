@@ -4526,3 +4526,26 @@ html[lang="en"] .checkin__label {
 .look-opt--art .player-avatar {
   pointer-events: none;
 }
+
+/* 22.2: สัตว์เลี้ยง */
+.pet-image {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+}
+.pet-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.pcard__pet {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  filter: drop-shadow(0 1px 0 rgba(43, 26, 74, 0.5));
+  animation: bob 1.6s ease-in-out infinite;
+}
+.ward-item__none {
+  font-size: 1.6rem;
+  color: #b9add9;
+}

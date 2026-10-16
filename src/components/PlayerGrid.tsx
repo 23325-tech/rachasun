@@ -1,9 +1,9 @@
 import type { BattlePlayer, DamageReason } from '../game/battle';
-import { PlayerAvatar } from './PlayerAvatar';
+import { PetImage, PlayerAvatar } from './PlayerAvatar';
 import { Alarm, ChatCircleDots, CheckCircle, Crosshair, Heart, Lightning, LockSimple, ShieldCheck, SkipForward, Skull, XCircle, type Icon } from '@phosphor-icons/react';
 import { createElement, lazy, Suspense, useMemo } from 'react';
 import type { Pose } from '../three/chibi';
-import { chibiOf } from '../lib/look';
+import { chibiOf, petOf } from '../lib/look';
 import { t } from '../lib/i18n';
 
 const Avatar3D = lazy(() => import('./Avatar3D').then((m) => ({ default: m.Avatar3D })));
@@ -79,6 +79,7 @@ export function PlayerGrid({ players, maxHearts, meId, status, hits, hitStage }:
                 </span>
               )}
             </div>
+            {petOf(p.avatar) !== 'none' && <PetImage kind={petOf(p.avatar)} size={26} className="pcard__pet" />}
             <div className="pcard__name">{p.id === meId ? t('คุณ', 'You') : p.name}</div>
             {(p.cards?.shield ?? 0) > 0 && (
               <span className="pcard__shield" aria-label={t(`มีโล่ ${p.cards?.shield} อัน`, `${p.cards?.shield} shield(s)`)}>
