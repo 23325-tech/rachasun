@@ -20,9 +20,9 @@ import { NicknameForm } from '../components/NicknameForm';
 import { PlayerAvatar } from '../components/PlayerAvatar';
 import { TierIcon } from '../components/icons';
 import { SeasonFrames } from '../components/SeasonFrames';
-import { Cube, DoorOpen, Key, UserCircle, WarningCircle } from '@phosphor-icons/react';
+import { Cube, DoorOpen, Key, UserCircle, WarningCircle, WifiLow } from '@phosphor-icons/react';
 import { setLeaderboardAnon } from '../lib/profile';
-import { isLowEnd, reduce3DSetting, setReduce3D } from '../lib/perf';
+import { dataSaver, isLowEnd, reduce3DSetting, setDataSaver, setReduce3D, slowNetwork } from '../lib/perf';
 import { t } from '../lib/i18n';
 
 interface Props {
@@ -287,6 +287,8 @@ export function AccountScreen({ user, profile, needsPassword, onBack, onChanged 
 
       {profile && <NotificationSettings />}
 
+      <DataSaverToggle />
+
       <section className="settings-card">
         <label className="toggle-row">
           <span className="toggle-row__icon">
@@ -337,5 +339,35 @@ export function AccountScreen({ user, profile, needsPassword, onBack, onChanged 
       {notice && <p className="form-notice">{notice}</p>}
       {error && <p className="form-error"><WarningCircle weight="fill" className="ico" /> {error}</p>}
     </div>
+  );
+}
+
+/** โหมดประหยัดเน็ต: ปิด 3D/เอฟเฟกต์ ใช้รูปตัวละคร 2D (เปิดเองอัตโนมัติเมื่อเน็ตช้า) */
+function DataSaverToggle() {
+  const [on, setOn] = useState(dataSaver);
+  return (
+    <section className="settings-card">
+      <label className="toggle-row">
+        <span className="toggle-row__icon">
+          <WifiLow weight="fill" />
+        </span>
+        <span className="toggle-row__text">
+          <b>{t('โหมดประหยัดเน็ต', 'Data saver')}</b>
+          <small>
+            {t('ไม่โหลดตัวละคร 3D และเอฟเฟกต์ ใช้รูป 2D แทน', 'Skips 3D characters and effects, uses 2D pictures')}
+            {slowNetwork() && t(' · ตอนนี้เน็ตช้า เปิดให้อัตโนมัติ', ' · slow connection detected, turned on automatically')}
+          </small>
+        </span>
+        <input
+          type="checkbox"
+          className="switch"
+          checked={on}
+          onChange={(e) => {
+            setOn(e.target.checked);
+            setDataSaver(e.target.checked);
+          }}
+        />
+      </label>
+    </section>
   );
 }

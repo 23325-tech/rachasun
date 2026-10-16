@@ -1,5 +1,5 @@
 import { lazy, Suspense, useMemo, type CSSProperties, type ReactNode } from 'react';
-import { ChartLineUp, Coin, Crown, Exam, FloppyDisk, GlobeHemisphereEast, Heart, type Icon, Key, LinkSimple, Robot, Sparkle, Storefront, Target, Trophy, TShirt, PawPrint, UsersThree, WifiSlash, CaretRight, BookBookmark, Camera, GraduationCap, ShieldStar, Chalkboard } from '@phosphor-icons/react';
+import { ChartLineUp, Coin, Crown, Exam, FloppyDisk, GlobeHemisphereEast, Heart, type Icon, Key, LinkSimple, Robot, Sparkle, Storefront, Target, Trophy, TShirt, PawPrint, UsersThree, WifiSlash, CaretRight, BookBookmark, Camera, GraduationCap, ShieldStar, Chalkboard, Package } from '@phosphor-icons/react';
 import type { Level, Subject } from '../types';
 import { LEVEL_KEYS, LEVELS, subjectInfo } from '../data/subjects';
 import { displayName, type Profile } from '../lib/profile';
@@ -11,10 +11,11 @@ import { IconTile, SUBJECT_ICON, TierIcon } from '../components/icons';
 import { PlayerAvatar } from '../components/PlayerAvatar';
 import type { GameMode } from './StartScreen';
 import { getLang, setLang, t } from '../lib/i18n';
+import { use3D } from '../lib/perf';
 
 const Avatar3D = lazy(() => import('../components/Avatar3D').then((m) => ({ default: m.Avatar3D })));
 
-export type HomeAction = GameMode | 'online' | 'groups' | 'analysis' | 'mock' | 'mistakes' | 'photo' | 'clan' | 'classroom';
+export type HomeAction = GameMode | 'online' | 'groups' | 'analysis' | 'mock' | 'mistakes' | 'photo' | 'clan' | 'classroom' | 'offline';
 
 interface Props {
   profile: Profile | null;
@@ -64,6 +65,7 @@ const modes = (): { key: HomeAction; title: string; desc: string; icon: Icon; gr
   { key: 'classroom', title: t('ห้องเรียน', 'Classroom'), desc: t('การบ้านจากครู · ครูสั่งงานได้', 'Homework from your teacher'), icon: Chalkboard, grad: 'linear-gradient(135deg,#22a06b,#7be08f)' },
   { key: 'photo', title: t('ถ่ายรูปโจทย์', 'Snap a problem'), desc: t('AI ใบ้ทีละขั้นจากรูปโจทย์', 'AI hints from a photo'), icon: Camera, grad: 'linear-gradient(135deg,#2bb3ff,#6be0c8)' },
   { key: 'mistakes', title: t('สมุดข้อผิด', 'Mistake notebook'), desc: t('ทบทวนข้อที่เคยผิดตามรอบ', 'Review past mistakes on schedule'), icon: BookBookmark, grad: 'linear-gradient(135deg,#ff7a59,#ffb36b)' },
+  { key: 'offline', title: t('ฝึกออฟไลน์', 'Offline packs'), desc: t('โหลดโจทย์ไว้ฝึกตอนไม่มีเน็ต', 'Save questions for no-signal times'), icon: Package, grad: 'linear-gradient(135deg,#64748b,#94a3b8)' },
   { key: 'analysis', title: t('วิเคราะห์ของฉัน', 'My analysis'), desc: t('แผนฝึก + AI โค้ช', 'Study plan + AI coach'), icon: ChartLineUp, grad: 'linear-gradient(135deg,#5a6bff,#8f9dff)' },
 ];
 
@@ -126,15 +128,25 @@ export function HomeScreen(p: Props) {
       {p.offline && (
         <div className="offline-banner" role="status">
           <WifiSlash weight="bold" size={16} /> {t('ออฟไลน์อยู่ — เล่นฝึกเดี่ยว/ดวลบอทด้วยโจทย์ตัวอย่างได้ (ไม่ได้ XP)', 'You\'re offline — play solo/bot battles with sample questions (no XP)')}
+          <button type="button" className="offline-banner__btn" onClick={() => p.onAction('offline')}>
+            {t('เปิดแพ็กออฟไลน์', 'Open offline packs')}
+          </button>
         </div>
       )}
       {p.installSlot}
 
       <section className="hm-hero">
         <div className="hm-hero__podium" />
-        <Suspense fallback={null}>
-          <Avatar3D look={chibi} interactive className="hm-hero__canvas" />
-        </Suspense>
+        {/* ปิด 3D / ประหยัดเน็ต: ไม่โหลด three.js เลย ใช้รูปนิ่งแทน */}
+        {use3D() ? (
+          <Suspense fallback={null}>
+            <Avatar3D look={chibi} interactive className="hm-hero__canvas" />
+          </Suspense>
+        ) : (
+          <div className="hm-hero__canvas avatar3d--static">
+            <PlayerAvatar code={code} size={150} framing="full" className="is-bare" />
+          </div>
+        )}
         <div className="hm-hero__info">
           <span className="hm-rank">
             <TierIcon tier={tier.key} size={22} />

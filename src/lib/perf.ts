@@ -40,4 +40,37 @@ export function isLowEnd(): boolean {
   return window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
 }
 
-export const use3D = () => !reduce3DSetting() && !isLowEnd();
+const SAVER_KEY = 'bg_data_saver';
+
+/** ผู้ใช้ตั้งโหมดประหยัดเน็ตเอง: '1' เปิด / '0' ปิด / ไม่มี = ตามเครือข่าย */
+export function dataSaverSetting(): '1' | '0' | null {
+  try {
+    const v = localStorage.getItem(SAVER_KEY);
+    return v === '1' || v === '0' ? v : null;
+  } catch {
+    return null;
+  }
+}
+
+export function setDataSaver(on: boolean | null) {
+  try {
+    if (on === null) localStorage.removeItem(SAVER_KEY);
+    else localStorage.setItem(SAVER_KEY, on ? '1' : '0');
+  } catch {
+    /* โหมดส่วนตัว */
+  }
+}
+
+/** เครือข่ายช้า หรือเครื่องเปิด Data Saver ไว้ */
+export function slowNetwork(): boolean {
+  const c = (navigator as Navigator & { connection?: { saveData?: boolean; effectiveType?: string } }).connection;
+  return !!c && (c.saveData === true || c.effectiveType === '2g' || c.effectiveType === 'slow-2g');
+}
+
+/** ประหยัดเน็ต: ไม่โหลด 3D/เอฟเฟกต์ ใช้รูปตัวละคร 2D */
+export const dataSaver = () => {
+  const s = dataSaverSetting();
+  return s === null ? slowNetwork() : s === '1';
+};
+
+export const use3D = () => !reduce3DSetting() && !isLowEnd() && !dataSaver();

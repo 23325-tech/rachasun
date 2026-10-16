@@ -61,6 +61,8 @@ import { PhotoTutorScreen } from './screens/PhotoTutorScreen';
 import { DreamScreen } from './screens/DreamScreen';
 import { ClanScreen } from './screens/ClanScreen';
 import { ClassroomScreen } from './screens/ClassroomScreen';
+import { OfflinePacksScreen } from './screens/OfflinePacksScreen';
+import { queueAnswers, syncPending } from './lib/offline';
 import { fetchDream, nextExam, type DreamPlan } from './lib/dream';
 import { TCAS_BY_KEY } from './data/tcas';
 import { fetchMistakes, fetchReviewQuestions } from './lib/mistakes';
@@ -73,13 +75,14 @@ type Screen =
   | { name: 'setup'; error: string | null }
   | { name: 'loading'; message: string }
   | { name: 'account' }
-  | { name: 'quiz'; questions: Question[]; runId: number; review?: boolean }
+  | { name: 'quiz'; questions: Question[]; runId: number; review?: boolean; offline?: boolean }
+  | { name: 'offlinePacks' }
   | { name: 'mistakes' }
   | { name: 'photo' }
   | { name: 'dream' }
   | { name: 'clan' }
   | { name: 'classroom' }
-  | { name: 'result'; questions: Question[]; results: AnswerResult[]; review?: boolean }
+  | { name: 'result'; questions: Question[]; results: AnswerResult[]; review?: boolean; offline?: boolean }
   | { name: 'battle'; questions: Question[]; questionCount: number; players: BattlePlayer[]; bots: Bot[]; runId: number; intro?: boolean }
   | { name: 'battleResult'; players: BattlePlayer[] }
   | { name: 'online'; initialCode?: string }
@@ -188,6 +191,10 @@ export default function App() {
     mode: 'classic',
   });
   const online = useOnline();
+  // กลับมาออนไลน์: ส่งผลฝึกออฟไลน์ที่ค้าง
+  useEffect(() => {
+    if (online && me.status === 'ready') syncPending().catch(() => {});
+  }, [online, me.status]);
   const [dressNew, setDressNew] = useState(() => !isDressingSeen());
   const [shop, setShop] = useState<ShopState | null>(null);
   const loadShop = useCallback(() => fetchShopState().then((s) => (setShop(s), s)), []);
@@ -495,6 +502,7 @@ export default function App() {
             else if (a === 'photo') setScreen({ name: 'photo' });
             else if (a === 'clan') setScreen({ name: 'clan' });
             else if (a === 'classroom') setScreen({ name: 'classroom' });
+            else if (a === 'offline') setScreen({ name: 'offlinePacks' });
             else setScreen({ name: 'mock' });
           }}
         />
@@ -597,6 +605,15 @@ export default function App() {
         <SeasonScreen season={season} meId={profile?.id ?? null} onBack={goHome} />
       ) : (
         <LoadingScreen message={t('กำลังโหลดฤดูกาล...', 'Loading season...')} onCancel={goHome} />
+      );
+    case 'offlinePacks':
+      return (
+        <OfflinePacksScreen
+          level={settings.level}
+          online={online}
+          onBack={goHome}
+          onPlay={(questions) => setScreen({ name: 'quiz', questions, runId: Date.now(), offline: true })}
+        />
       );
     case 'classroom':
       return <ClassroomScreen onBack={goHome} onXpAwarded={refreshMe} />;
@@ -757,6 +774,25 @@ export default function App() {
           level={settings.level}
           onQuit={goHome}
           onFinish={(results) => {
+            if (screen.offline) {
+              // ฝึกจากแพ็กออฟไลน์: เก็บผลไว้ซิงก์ (นับสถิติ + สมุดข้อผิด) ไม่ให้ XP
+              setXp({ status: 'off' });
+              setScreen({ name: 'result', questions: screen.questions, results, offline: true });
+              const at = new Date().toISOString();
+              queueAnswers(
+                results.map((r, i) => ({
+                  key: `${screen.runId}-${i}-${r.questionId.slice(0, 8)}`,
+                  questionId: r.questionId,
+                  given: r.given,
+                  correct: r.correct,
+                  timeMs: Math.round(r.timeUsedMs),
+                  at,
+                })),
+              )
+                .then(() => syncPending())
+                .catch(() => {});
+              return;
+            }
             setScreen({ name: 'result', questions: screen.questions, results, review: screen.review });
             if (planRunRef.current) {
               const { level, index } = planRunRef.current;
@@ -787,7 +823,7 @@ export default function App() {
           questions={screen.questions}
           results={screen.results}
           avatar={profile?.avatar ?? DEFAULT_LOOK_CODE}
-          onReplay={() => (screen.review ? setScreen({ name: 'mistakes' }) : start(settings))}
+          onReplay={() => (screen.offline ? setScreen({ name: 'offlinePacks' }) : screen.review ? setScreen({ name: 'mistakes' }) : start(settings))}
           onHome={goHome}
           xp={xp}
           guest={guest}

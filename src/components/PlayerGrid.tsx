@@ -2,6 +2,7 @@ import type { BattlePlayer, DamageReason } from '../game/battle';
 import { PetImage, PlayerAvatar } from './PlayerAvatar';
 import { Alarm, ChatCircleDots, CheckCircle, Crosshair, Heart, Lightning, LockSimple, ShieldCheck, SkipForward, Skull, XCircle, type Icon } from '@phosphor-icons/react';
 import { createElement, lazy, Suspense, useMemo } from 'react';
+import { use3D } from '../lib/perf';
 import type { Pose } from '../three/chibi';
 import { auraOf, chibiOf, petOf } from '../lib/look';
 import { t } from '../lib/i18n';
@@ -111,6 +112,8 @@ export function PlayerGrid({ players, maxHearts, meId, status, hits, hitStage }:
 /** ตัวละครของเราแบบ 3D ครึ่งตัว (หน้าตาคำนวณครั้งเดียวต่อรหัส) */
 function MeLive({ code, pose }: { code: string; pose: Pose }) {
   const look = useMemo(() => chibiOf(code), [code]);
+  // ปิด 3D / ประหยัดเน็ต: ไม่โหลดโมดูล 3D
+  if (!use3D()) return <PlayerAvatar code={code} size={42} />;
   return (
     <Suspense fallback={<PlayerAvatar code={code} size={42} />}>
       <Avatar3D look={look} code={code} framing="bust" pose={pose} className="pcard__live" />

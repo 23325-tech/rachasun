@@ -1,4 +1,5 @@
 import { createElement, lazy, Suspense, useMemo } from 'react';
+import { use3D } from '../lib/perf';
 import { chibiOf } from '../lib/look';
 import { PlayerAvatar } from '../components/PlayerAvatar';
 
@@ -42,10 +43,13 @@ export function ResultScreen({ questions, results, onReplay, onHome, xp, guest, 
   return (
     <div className="screen result">
       <header className="result__hero pop-in">
-        {avatar ? (
+        {avatar && use3D() ? (
           <Suspense fallback={<PlayerAvatar code={avatar} size={150} framing="full" className="is-bare" />}>
             <Avatar3D look={look} code={avatar} pose={pose} className="avatar3d result__me" />
           </Suspense>
+        ) : avatar ? (
+          // ปิด 3D / ประหยัดเน็ต: ไม่โหลดโมดูล 3D
+          <PlayerAvatar code={avatar} size={150} framing="full" className="is-bare" />
         ) : (
           <div className="result__emoji bounce">
             <rank.icon weight="fill" size={72} />
