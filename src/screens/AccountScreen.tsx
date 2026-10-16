@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { NotificationSettings } from '../components/NotificationSettings';
+import { ParentLineSettings } from '../components/ParentLineSettings';
 import {
   displayName,
   isGuest,
@@ -286,6 +287,8 @@ export function AccountScreen({ user, profile, needsPassword, onBack, onChanged 
       )}
 
       {profile && <NotificationSettings />}
+
+      {profile && <ParentLineSettings />}
 
       <DataSaverToggle />
 
