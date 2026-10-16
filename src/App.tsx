@@ -707,6 +707,7 @@ export default function App() {
           key={screen.runId}
           questions={screen.questions}
           avatar={profile?.avatar ?? DEFAULT_LOOK_CODE}
+          level={settings.level}
           onQuit={goHome}
           onFinish={(results) => {
             setScreen({ name: 'result', questions: screen.questions, results, review: screen.review });

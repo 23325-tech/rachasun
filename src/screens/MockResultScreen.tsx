@@ -2,8 +2,10 @@ import { useState } from 'react';
 import { MathText } from '../components/MathText';
 import { chapterName } from '../data/chapters';
 import { CHOICE5, type MockGiven, type MockReview, type MockReviewQuestion, paperTitle } from '../lib/mock';
-import { BookOpenText, ChartBar, CheckCircle, Confetti, Exam, XCircle, Trophy } from '@phosphor-icons/react';
+import { BookOpenText, ChalkboardTeacher, ChartBar, CheckCircle, Confetti, Exam, XCircle, Trophy } from '@phosphor-icons/react';
 import { t } from '../lib/i18n';
+import { TutorSheet } from '../components/TutorSheet';
+import type { TutorQuestion } from '../lib/tutor';
 
 interface Props {
   review: MockReview;
@@ -27,9 +29,28 @@ function answerText(q: MockReviewQuestion): string {
   return (q.truths ?? []).map((v, k) => `${k + 1}) ${v ? t('ถูก', 'T') : t('ผิด', 'F')}`).join('  ');
 }
 
+/** ข้อสอบจำลอง -> ข้อมูลสำหรับ AI ติวเตอร์ (ไม่อยู่ในคลังโจทย์ ส่งเฉลยไปเอง) */
+function tutorOf(q: MockReviewQuestion): TutorQuestion {
+  const choice = (k: number) => `${CHOICE5[k]}. ${q.choices?.[k] ?? ''}`;
+  return {
+    ctx: {
+      level: 'upper',
+      subject: q.chapter.split('.')[1] ?? '',
+      chapter: q.chapter,
+      prompt: q.prompt + (q.unit ? ` (${q.unit})` : ''),
+      choices: q.choices,
+      statements: q.statements,
+      answer: q.type === 'mcq5' ? choice(q.answerIndex ?? 0) : answerText(q),
+      explanation: q.explanation,
+      given: q.given === null || q.given === undefined || q.given === '' ? '' : q.type === 'mcq5' ? choice(q.given as number) : givenText(q, q.given),
+    },
+  };
+}
+
 /** ผลสอบจำลอง: คะแนน เทียบกับคนอื่น รายบท และเฉลยทุกข้อ */
 export function MockResultScreen({ review, onBack, onAnalysis, onBoard }: Props) {
   const [filter, setFilter] = useState<'wrong' | 'all'>('wrong');
+  const [tutorQ, setTutorQ] = useState<MockReviewQuestion | null>(null);
   const chapters = Object.entries(review.byChapter)
     .map(([id, v]) => ({ id, ...v, acc: v.ok / v.n }))
     .sort((a, b) => a.acc - b.acc);
@@ -137,11 +158,18 @@ export function MockResultScreen({ review, onBack, onAnalysis, onBoard }: Props)
                   {t('คำตอบของคุณ:', 'Your answer:')} <strong>{givenText(q, q.given)}</strong> · {t('เฉลย:', 'Answer:')} <strong>{answerText(q)}</strong>
                 </p>
                 <MathText className="mock-review__explain" text={q.explanation} />
+                <button type="button" className="tutor-open" onClick={() => setTutorQ(q)}>
+                  <ChalkboardTeacher weight="fill" size={22} />
+                  <span>
+                    <strong>{t('ยังไม่เข้าใจ?', 'Still confused?')}</strong> {t('ถาม AI ติวเตอร์', 'Ask the AI tutor')}
+                  </span>
+                </button>
               </details>
             </li>
           ))}
         </ol>
       </section>
+      {tutorQ && <TutorSheet question={tutorOf(tutorQ)} onClose={() => setTutorQ(null)} />}
     </div>
   );
 }

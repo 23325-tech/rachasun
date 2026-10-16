@@ -12,8 +12,10 @@ import { ChoiceList } from '../components/ChoiceList';
 import { FillAnswerInput } from '../components/FillAnswerInput';
 import { ReportPanel } from '../components/ReportPanel';
 import { PlayerAvatar } from '../components/PlayerAvatar';
-import { Alarm, BookOpenText, Confetti, Lightbulb, Star, XCircle } from '@phosphor-icons/react';
+import { Alarm, BookOpenText, ChalkboardTeacher, Confetti, Lightbulb, Star, XCircle } from '@phosphor-icons/react';
 import { t } from '../lib/i18n';
+import { TutorSheet } from '../components/TutorSheet';
+import { tutorFromQuestion } from '../lib/tutor';
 
 interface Props {
   questions: Question[];
@@ -21,9 +23,12 @@ interface Props {
   onQuit: () => void;
   /** รหัสหน้าตาตัวละคร แสดงท่าดีใจ/เสียใจตอนเฉลย */
   avatar?: string;
+  /** ระดับชั้น ส่งให้ AI ติวเตอร์ */
+  level?: string;
 }
 
-export function QuizScreen({ questions, onFinish, onQuit, avatar }: Props) {
+export function QuizScreen({ questions, onFinish, onQuit, avatar, level }: Props) {
+  const [tutorFor, setTutorFor] = useState<string | null>(null);
   const [index, setIndex] = useState(0);
   const [results, setResults] = useState<AnswerResult[]>([]);
   const [current, setCurrent] = useState<AnswerResult | null>(null);
@@ -159,6 +164,13 @@ export function QuizScreen({ questions, onFinish, onQuit, avatar }: Props) {
             <span className="reveal-sheet__label"><Lightbulb weight="fill" className="ico" /> {t('คำอธิบาย', 'Explanation')}</span>
             <MathText text={q.explanation} />
           </div>
+          <button type="button" className="tutor-open" onClick={() => setTutorFor(q.id)}>
+            <ChalkboardTeacher weight="fill" size={22} />
+            <span>
+              <strong>{t('ยังไม่เข้าใจ?', 'Still confused?')}</strong> {t('ถาม AI ติวเตอร์ ใบ้ทีละขั้น', 'Ask the AI tutor for step-by-step hints')}
+            </span>
+          </button>
+          {tutorFor === q.id && <TutorSheet question={tutorFromQuestion(q, current.given, level)} onClose={() => setTutorFor(null)} />}
           {q.source === 'bank' && <ReportPanel key={q.id} questionId={q.id} />}
           <button type="button" className="btn btn--primary btn--block btn--big" onClick={next}>
             {isLast ? t('ดูผลลัพธ์', 'See results') : t('ข้อต่อไป ➜', 'Next ➜')}
