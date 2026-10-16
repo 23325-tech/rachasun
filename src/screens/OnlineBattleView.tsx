@@ -19,6 +19,7 @@ interface Props {
 const AIM_AT = 500;
 const BANG_AT = 1100;
 const REASON_TEXT = { wrong: 'ตอบผิด', timeout: 'หมดเวลา', slowest: 'ตอบช้าสุด' } as const;
+const CARD_TEXT = { shield: '🛡️ โล่', fifty: '✂️ 50/50' } as const;
 
 /** อัปเดตทุก 100ms ให้ตัวจับเวลาเดิน */
 function useServerClock() {
@@ -34,6 +35,9 @@ export function OnlineBattleView({ roomId, state: s, myId, onLeave }: Props) {
   const now = useServerClock();
   const [myAnswer, setMyAnswer] = useState<{ round: number; given: number | string } | null>(null);
   const [answerError, setAnswerError] = useState('');
+  /** ผลการ์ด 50/50 ของเราในข้อนี้ (เซิร์ฟเวอร์บอกเฉพาะเรา) */
+  const [cardResult, setCardResult] = useState<{ round: number; removed?: number[]; skipped?: boolean } | null>(null);
+  const [usingCard, setUsingCard] = useState(false);
   const [hitStage, setHitStage] = useState<HitStage>('none');
   // หัวใจที่แสดง: ตอนเฉลยจะค้างค่าเดิมไว้จนถึงจังหวะยิง
   const [shownPlayers, setShownPlayers] = useState<BattlePlayer[]>(s.players);
@@ -85,6 +89,13 @@ export function OnlineBattleView({ roomId, state: s, myId, onLeave }: Props) {
     callGame('tick', { roomId }).catch(() => {});
   }, [now, s.phase, s.deadline, s.nextAt, roomId]);
 
+  useEffect(() => {
+    if (s.phase !== 'question' || !s.cardUsed?.[myId] || cardResult?.round === s.round) return;
+    callGame('use_card', { roomId, round: s.round, card: 'fifty' })
+      .then((r) => setCardResult({ round: s.round, removed: r.removed, skipped: r.skipped }))
+      .catch(() => {});
+  }, [s.phase, s.round, s.cardUsed, myId, roomId, cardResult]);
+
   // ล้างคำตอบเมื่อขึ้นข้อใหม่
   useEffect(() => {
     setAnswerError('');
@@ -93,11 +104,26 @@ export function OnlineBattleView({ roomId, state: s, myId, onLeave }: Props) {
   const me = s.players.find((p) => p.id === myId);
   const meAlive = !!me && isAlive(me);
   const q = s.question;
-  const answeredThisRound = myAnswer?.round === s.round ? myAnswer : null;
+  const myCard = cardResult?.round === s.round ? cardResult : null;
+  const answeredThisRound = myAnswer?.round === s.round ? myAnswer : myCard?.skipped ? { round: s.round, given: '' } : null;
   const reveal = s.reveal?.round === s.round ? s.reveal : undefined;
   const showingReveal = (s.phase === 'reveal' || s.phase === 'finished') && !!reveal;
   const beforeStart = s.phase === 'question' && s.startsAt && now < s.startsAt;
   const locked = !meAlive || !!answeredThisRound || showingReveal || !!beforeStart || s.phase !== 'question';
+
+  const useFifty = async () => {
+    if (locked || usingCard) return;
+    setUsingCard(true);
+    setAnswerError('');
+    try {
+      const r = await callGame('use_card', { roomId, round: s.round, card: 'fifty' });
+      setCardResult({ round: s.round, removed: r.removed, skipped: r.skipped });
+    } catch (e) {
+      setAnswerError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setUsingCard(false);
+    }
+  };
 
   const submit = async (given: number | string) => {
     if (locked) return;
@@ -148,20 +174,23 @@ export function OnlineBattleView({ roomId, state: s, myId, onLeave }: Props) {
   const status: Record<string, PlayerStatus> = {};
   for (const p of s.players) {
     const res = reveal?.results[p.id];
-    if (showingReveal && res) status[p.id] = res.correct ? 'correct' : res.timedOut ? 'timeout' : 'wrong';
+    if (showingReveal && res) status[p.id] = res.skipped ? 'skipped' : res.correct ? 'correct' : res.timedOut ? 'timeout' : 'wrong';
     else if (showingReveal && reveal?.disconnected.includes(p.id)) status[p.id] = 'timeout';
     else if (!isAlive(p)) status[p.id] = 'out';
     else status[p.id] = s.answered.includes(p.id) || answeredThisRound && p.id === myId ? 'locked' : 'thinking';
   }
-  const hits: Record<string, { lost: number; reason: 'wrong' | 'timeout' | 'slowest' }> = {};
+  const hits: Record<string, { lost: number; reason: 'wrong' | 'timeout' | 'slowest'; blocked?: boolean }> = {};
   if (showingReveal && reveal) {
-    for (const d of reveal.outcome.damages) hits[d.playerId] = { lost: d.heartsLost, reason: d.reason };
+    for (const d of reveal.outcome.damages) hits[d.playerId] = { lost: d.heartsLost, reason: d.reason, blocked: d.blocked };
     for (const id of reveal.disconnected) {
       const before = lastPlayersRef.current.find((p) => p.id === id)?.hearts ?? 1;
       hits[id] = { lost: Math.max(1, before), reason: 'timeout' };
     }
   }
-  const myHit = !!hits[myId];
+  const myHit = !!hits[myId] && !hits[myId].blocked;
+  const myCards = me?.cards;
+  const newCard = s.dealt?.round === s.round ? s.dealt.cards[myId] : undefined;
+  const showDealt = !!newCard && s.phase === 'question' && !!s.startsAt && now < s.startsAt + 3500;
   const nameOf = (id: string) => (id === myId ? 'คุณ' : s.players.find((p) => p.id === id)?.name ?? '?');
   const sudden = s.round >= s.questionCount;
   const subject = q ? SUBJECTS[q.subject] : null;
@@ -190,6 +219,12 @@ export function OnlineBattleView({ roomId, state: s, myId, onLeave }: Props) {
         hits={hits}
         hitStage={hitStage}
       />
+
+      {showDealt && newCard && (
+        <div className="card-toast pop-in" role="status">
+          🎁 ได้การ์ด <strong>{CARD_TEXT[newCard]}</strong>!
+        </div>
+      )}
 
       {beforeStart ? (
         <div className="countdown pop-in" key={`cd-${s.round}`}>
@@ -221,6 +256,7 @@ export function OnlineBattleView({ roomId, state: s, myId, onLeave }: Props) {
               revealed={locked}
               showAnswer={showingReveal}
               selected={typeof answeredThisRound?.given === 'number' ? answeredThisRound.given : null}
+              removed={myCard?.removed}
               onSelect={(i) => submit(i)}
             />
           )}
@@ -229,14 +265,36 @@ export function OnlineBattleView({ roomId, state: s, myId, onLeave }: Props) {
               key={`f-${s.round}`}
               question={fill}
               revealed={locked}
-              correct={showingReveal ? (reveal?.results[myId]?.correct ?? false) : null}
+              correct={showingReveal && !reveal?.results[myId]?.skipped ? (reveal?.results[myId]?.correct ?? false) : null}
               onSubmit={(v) => submit(v)}
             />
           )}
 
           {!meAlive && !showingReveal && <p className="waiting">👀 คุณตกรอบแล้ว กำลังดูเพื่อนแข่งต่อ...</p>}
           {s.phase === 'question' && answeredThisRound && !answerError && (
-            <p className="waiting">🔒 ล็อกคำตอบแล้ว รอคนอื่นอยู่...</p>
+            <p className="waiting">{myCard?.skipped ? '⏭️ ข้ามข้อนี้แล้ว รอคนอื่นอยู่...' : '🔒 ล็อกคำตอบแล้ว รอคนอื่นอยู่...'}</p>
+          )}
+
+          {s.items && myCards && meAlive && !showingReveal && (
+            <div className="card-bar">
+              <div className="power-card power-card--passive" title="ติดตัวไว้ กันการโดนยิงให้อัตโนมัติ">
+                <span className="power-card__icon">🛡️</span>
+                <span className="power-card__name">โล่</span>
+                <span className="power-card__count">x{myCards.shield}</span>
+                <span className="power-card__hint">กันอัตโนมัติ</span>
+              </div>
+              <button
+                type="button"
+                className="power-card"
+                disabled={locked || usingCard || myCards.fifty < 1 || !!myCard}
+                onClick={useFifty}
+              >
+                <span className="power-card__icon">{q?.type === 'fill' ? '⏭️' : '✂️'}</span>
+                <span className="power-card__name">{q?.type === 'fill' ? 'ข้ามข้อ' : '50/50'}</span>
+                <span className="power-card__count">x{myCards.fifty}</span>
+                <span className="power-card__hint">{myCard ? 'ใช้แล้ว' : 'กดใช้'}</span>
+              </button>
+            </div>
           )}
           {answerError && <p className="form-error">😵 {answerError}</p>}
         </>
@@ -254,12 +312,25 @@ export function OnlineBattleView({ roomId, state: s, myId, onLeave }: Props) {
               <p className="shot-list__none">😮 ไม่มีใครโดนยิงข้อนี้</p>
             ) : (
               <>
-                {reveal.outcome.damages.map((d) => (
+                {reveal.outcome.damages.map((d) =>
+                  d.blocked ? (
+                    <p key={d.playerId} className="shot-list__item shot-list__item--blocked">
+                      🛡️ <strong>{nameOf(d.playerId)}</strong> ใช้โล่กันกระสุนไว้ได้! ({REASON_TEXT[d.reason]})
+                    </p>
+                  ) : (
                   <p key={d.playerId} className={`shot-list__item ${d.playerId === myId ? 'is-me' : ''}`}>
                     💥 <strong>{nameOf(d.playerId)}</strong> โดนยิง ({REASON_TEXT[d.reason]})
                     {reveal.outcome.eliminated.includes(d.playerId) && <span className="shot-list__out"> ตกรอบ!</span>}
                   </p>
-                ))}
+                  ),
+                )}
+                {Object.entries(reveal.results)
+                  .filter(([, r]) => r.skipped)
+                  .map(([id]) => (
+                    <p key={`skip-${id}`} className="shot-list__item">
+                      ⏭️ <strong>{nameOf(id)}</strong> ใช้การ์ดข้ามข้อนี้
+                    </p>
+                  ))}
                 {reveal.disconnected.map((id) => (
                   <p key={id} className={`shot-list__item ${id === myId ? 'is-me' : ''}`}>
                     📵 <strong>{nameOf(id)}</strong> หลุดการเชื่อมต่อ <span className="shot-list__out">ตกรอบ!</span>

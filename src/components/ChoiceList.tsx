@@ -9,15 +9,20 @@ interface Props {
   /** แสดงเฉลยถูก/ผิด ค่าเริ่มต้น = revealed (โหมดแข่งจะล็อกก่อน แล้วค่อยเฉลยตอนทุกคนตอบครบ) */
   showAnswer?: boolean;
   selected: number | null;
+  /** ตัวเลือกที่ถูกตัดด้วยการ์ด 50/50 */
+  removed?: number[];
   onSelect: (index: number) => void;
 }
 
-export function ChoiceList({ question, revealed, showAnswer = revealed, selected, onSelect }: Props) {
+export function ChoiceList({ question, revealed, showAnswer = revealed, selected, removed = [], onSelect }: Props) {
   return (
     <div className="choices">
       {question.choices.map((choice, i) => {
         let state = '';
-        if (showAnswer) {
+        const cut = removed.includes(i);
+        if (cut && !showAnswer) {
+          state = 'is-removed';
+        } else if (showAnswer) {
           if (i === question.answerIndex) state = 'is-correct';
           else if (i === selected) state = 'is-wrong';
           else state = 'is-dim';
@@ -29,7 +34,7 @@ export function ChoiceList({ question, revealed, showAnswer = revealed, selected
             key={i}
             type="button"
             className={`choice choice--${i} ${state}`}
-            disabled={revealed}
+            disabled={revealed || cut}
             onClick={() => onSelect(i)}
           >
             <span className="choice__label">{CHOICE_LABELS[i]}</span>

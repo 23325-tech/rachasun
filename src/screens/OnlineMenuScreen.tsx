@@ -96,11 +96,19 @@ export function OnlineMenuScreen({ initialMatch, onFind, onCreate, onJoin, onBac
             ))}
           </div>
           <div className="segmented">
-            <button type="button" className="segmented__opt is-active">
+            <button
+              type="button"
+              className={`segmented__opt ${match.mode === 'classic' ? 'is-active' : ''}`}
+              onClick={() => setMatch({ ...match, mode: 'classic' })}
+            >
               ⚔️ ไม่มีไอเทม
             </button>
-            <button type="button" className="segmented__opt" disabled title="มาในสเต็ปถัดไป">
-              🃏 การ์ดพลัง (เร็วๆ นี้)
+            <button
+              type="button"
+              className={`segmented__opt ${match.mode === 'items' ? 'is-active' : ''}`}
+              onClick={() => setMatch({ ...match, mode: 'items' })}
+            >
+              🃏 การ์ดพลัง
             </button>
           </div>
         </div>

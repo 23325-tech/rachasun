@@ -7,6 +7,8 @@ import { createClient, type SupabaseClient } from 'npm:@supabase/supabase-js@2';
 import {
   alivePlayers,
   createPlayers,
+  isAlive,
+  type CardKind,
   resolveRound,
   type BattlePlayer,
   type RoundAnswer,
@@ -21,6 +23,10 @@ const ANSWER_GRACE_MS = 800;
 /** ไม่ส่งสัญญาณนานเกินนี้ = หลุด (หัวใจหมดตอนสรุปข้อ) */
 const DISCONNECT_MS = 15000;
 const SUDDEN_DEATH_SPARE = 5;
+/** การ์ดพลัง: แจกทุกกี่ข้อ (แจกตอนเริ่มข้อ 1, 4, 7, ...) และถือได้สูงสุดกี่ใบ */
+const DEAL_EVERY = 3;
+const HAND_LIMIT = 3;
+const CARD_KINDS: CardKind[] = ['shield', 'fifty'];
 const GENERATE_BATCH = 10;
 /** ห้องสาธารณะ: เริ่มเมื่อครบ 8 คน หรือมี 2 คนขึ้นไปและผ่านไปเท่านี้นับจากคนแรกเข้าห้อง */
 const MATCH_FULL = 8;
@@ -71,7 +77,7 @@ interface Reveal {
   answerText?: string;
   explanation: string;
   outcome: RoundOutcome;
-  results: Record<string, { correct: boolean; timedOut: boolean; timeMs: number }>;
+  results: Record<string, { correct: boolean; timedOut: boolean; timeMs: number; skipped?: boolean }>;
   disconnected: string[];
 }
 
@@ -91,12 +97,19 @@ interface GameState {
   nextAt?: number;
   xp?: Record<string, { gained: number; total: number }>;
   preparingSince?: number;
+  /** โหมดการ์ดพลัง */
+  items?: boolean;
+  /** การ์ดที่แจกตอนเริ่มข้อนี้ (ไว้แสดงแจ้งเตือน) */
+  dealt?: { round: number; cards: Record<string, CardKind> };
+  /** ใครใช้การ์ดอะไรในข้อนี้ (ไม่บอกผลของ 50/50) */
+  cardUsed?: Record<string, CardKind>;
 }
 
 interface RoomRow {
   id: string;
   host_id: string;
   kind: 'private' | 'public';
+  mode: 'classic' | 'items';
   created_at: string;
   status: 'lobby' | 'playing' | 'finished';
   settings: { subject: string; difficulty: string; track: string; count: number };
@@ -108,7 +121,7 @@ interface RoomRow {
 const admin: SupabaseClient = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
 
 async function loadRoom(roomId: string): Promise<RoomRow> {
-  const { data, error } = await admin.from('rooms').select('id,host_id,kind,created_at,status,settings,state').eq('id', roomId).maybeSingle();
+  const { data, error } = await admin.from('rooms').select('id,host_id,kind,mode,created_at,status,settings,state').eq('id', roomId).maybeSingle();
   if (error) throw error;
   if (!data) throw new GameError('room_not_found');
   return data as RoomRow;
@@ -205,8 +218,27 @@ async function pickQuestions(settings: RoomRow['settings'], need: number): Promi
 async function questionState(room: RoomRow, base: GameState, round: number, startsAt: number): Promise<GameState> {
   const q = await getRoundQuestion(room.id, round, base.totalQuestions);
   const limitMs = limitMsOf(q);
+
+  // แจกการ์ดสุ่มให้คนที่ยังอยู่ ทุก DEAL_EVERY ข้อ
+  let players = base.players;
+  let dealt = base.dealt;
+  if (base.items && round % DEAL_EVERY === 0) {
+    const cards: Record<string, CardKind> = {};
+    players = players.map((p) => {
+      const hand = p.cards ?? { shield: 0, fifty: 0 };
+      if (!isAlive(p) || hand.shield + hand.fifty >= HAND_LIMIT) return p;
+      const card = CARD_KINDS[Math.floor(Math.random() * CARD_KINDS.length)];
+      cards[p.id] = card;
+      return { ...p, cards: { ...hand, [card]: hand[card] + 1 } };
+    });
+    dealt = { round, cards };
+  }
+
   return {
     ...base,
+    players,
+    dealt,
+    cardUsed: {},
     seq: base.seq + 1,
     phase: 'question',
     round,
@@ -256,13 +288,14 @@ async function start(room: RoomRow, uid: string, auto = false) {
     if (error) throw error;
 
     const questionCount = Math.min(room.settings.count, questions.length);
+    const items = room.mode === 'items';
     const players = createPlayers(
       members.map((m) => ({ id: m.user_id, name: `${m.nickname}#${m.tag}`, avatar: m.avatar, isBot: false })),
       questionCount,
-    );
+    ).map((p) => (items ? { ...p, cards: { shield: 0, fifty: 0 } } : p));
     const next = await questionState(
       room,
-      { ...preparing, questionCount, totalQuestions: questions.length, players },
+      { ...preparing, questionCount, totalQuestions: questions.length, players, items, dealt: undefined },
       0,
       Date.now() + COUNTDOWN_MS,
     );
@@ -337,7 +370,7 @@ async function resolve(room: RoomRow) {
   const q = await getRoundQuestion(room.id, s.round, s.totalQuestions);
   const { data: rows } = await admin
     .from('room_answers')
-    .select('user_id,correct,time_ms')
+    .select('user_id,correct,time_ms,skipped')
     .eq('room_id', room.id)
     .eq('round', s.round);
   const byUser = new Map((rows ?? []).map((r) => [r.user_id as string, r]));
@@ -354,6 +387,7 @@ async function resolve(room: RoomRow) {
   const answers: RoundAnswer[] = alivePlayers(before).map((p) => {
     const r = byUser.get(p.id);
     if (!r) return { playerId: p.id, correct: false, timeMs: s.limitMs!, timedOut: true, points: 0 };
+    if (r.skipped) return { playerId: p.id, correct: false, timeMs: s.limitMs!, timedOut: false, points: 0, skipped: true };
     return {
       playerId: p.id,
       correct: r.correct,
@@ -369,7 +403,9 @@ async function resolve(room: RoomRow) {
     ...(q.type === 'mcq' ? { answerIndex: q.answer_index ?? undefined } : { answerText: q.answer ? formatFillAnswer(q.answer) : '' }),
     explanation: q.explanation,
     outcome: { ...outcome, eliminated: [...new Set([...outcome.eliminated, ...disconnected])] },
-    results: Object.fromEntries(answers.map((a) => [a.playerId, { correct: a.correct, timedOut: a.timedOut, timeMs: a.timeMs }])),
+    results: Object.fromEntries(
+      answers.map((a) => [a.playerId, { correct: a.correct, timedOut: a.timedOut, timeMs: a.timeMs, skipped: !!a.skipped }]),
+    ),
     disconnected,
   };
 
@@ -379,6 +415,79 @@ async function resolve(room: RoomRow) {
   } else {
     await saveState(room, next);
   }
+}
+
+/** ใช้การ์ด 50/50: ข้อปรนัย = ตัด 2 ตัวเลือกผิด (บอกเฉพาะเจ้าตัว), ข้อเติม = ข้ามข้อ */
+async function useCard(room: RoomRow, uid: string, round: number, card: string) {
+  const s = room.state;
+  if (card !== 'fifty') throw new GameError('unknown_card');
+  if (!s || !s.items) throw new GameError('no_items');
+  if (s.phase !== 'question' || s.round !== round) throw new GameError('round_closed');
+  const me = s.players.find((p) => p.id === uid);
+  if (!me || !isAlive(me)) throw new GameError('not_alive');
+  const now = Date.now();
+  if (now < s.startsAt! - 300 || now > s.deadline!) throw new GameError('round_closed');
+
+  // ใช้ไปแล้วในข้อนี้ -> ส่งผลเดิมกลับไป (เช่น รีเฟรชหน้า)
+  const { data: used } = await admin
+    .from('room_card_uses')
+    .select('payload')
+    .eq('room_id', room.id)
+    .eq('round', round)
+    .eq('user_id', uid)
+    .maybeSingle();
+  if (used) return used.payload as Record<string, unknown>;
+
+  if ((me.cards?.fifty ?? 0) < 1) throw new GameError('no_card');
+  if (s.answered.includes(uid)) throw new GameError('already_answered');
+
+  const q = await getRoundQuestion(room.id, round, s.totalQuestions);
+  let payload: Record<string, unknown>;
+  if (q.type === 'mcq') {
+    const wrong = [0, 1, 2, 3].filter((i) => i !== q.answer_index);
+    for (let i = wrong.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [wrong[i], wrong[j]] = [wrong[j], wrong[i]];
+    }
+    payload = { removed: wrong.slice(0, 2).sort() };
+  } else {
+    payload = { skipped: true };
+  }
+
+  const { error } = await admin
+    .from('room_card_uses')
+    .insert({ room_id: room.id, round, user_id: uid, card: 'fifty', payload });
+  if (error?.code === '23505') return useCard(await loadRoom(room.id), uid, round, card);
+  if (error) throw error;
+
+  if (payload.skipped) {
+    await admin.from('room_answers').insert({
+      room_id: room.id,
+      round,
+      user_id: uid,
+      given: null,
+      correct: false,
+      time_ms: s.limitMs,
+      skipped: true,
+    });
+  }
+
+  // หักการ์ดจากมือ (ลองใหม่ถ้ามีคนอัปเดต state พร้อมกัน)
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const fresh = await loadRoom(room.id);
+    const st = fresh.state!;
+    const players = st.players.map((p) =>
+      p.id === uid && p.cards ? { ...p, cards: { ...p.cards, fifty: Math.max(0, p.cards.fifty - 1) } } : p,
+    );
+    try {
+      await saveState(fresh, { ...st, seq: st.seq + 1, players, cardUsed: { ...(st.cardUsed ?? {}), [uid]: 'fifty' } });
+      break;
+    } catch (e) {
+      if (!(e instanceof Conflict)) throw e;
+    }
+  }
+  if (payload.skipped) await progress(room.id);
+  return payload;
 }
 
 async function awardXp(roomId: string, players: BattlePlayer[], roundsPlayed: number) {
@@ -456,6 +565,8 @@ Deno.serve(async (req) => {
       case 'rematch':
         await rematch(room, uid);
         break;
+      case 'use_card':
+        return json({ ok: true, serverNow: Date.now(), ...(await useCard(room, uid, Number(body.round), String(body.card))) });
       case 'ping':
         // ใช้วัดส่วนต่างนาฬิกา (คำตอบมี serverNow)
         break;

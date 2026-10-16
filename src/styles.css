@@ -1283,6 +1283,98 @@ button {
   font-size: 0.95rem;
 }
 
+/* ---------- การ์ดพลัง ---------- */
+.card-bar {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.power-card {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  grid-template-areas:
+    'icon name count'
+    'icon hint count';
+  align-items: center;
+  column-gap: 8px;
+  padding: 8px 12px;
+  text-align: left;
+  border: var(--border);
+  border-radius: 16px;
+  background: linear-gradient(150deg, #ffe066, #ff9f1c);
+  box-shadow: 0 4px 0 var(--ink);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.power-card:active:not(:disabled) {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 var(--ink);
+}
+.power-card:disabled {
+  opacity: 0.45;
+  cursor: default;
+  filter: grayscale(0.6);
+}
+.power-card--passive {
+  background: linear-gradient(150deg, #d6ecff, #8cc2ff);
+  cursor: default;
+}
+.power-card__icon {
+  grid-area: icon;
+  font-size: 1.7rem;
+}
+.power-card__name {
+  grid-area: name;
+  font-weight: 600;
+}
+.power-card__hint {
+  grid-area: hint;
+  font-size: 0.72rem;
+  color: var(--ink-soft);
+}
+.power-card__count {
+  grid-area: count;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+.card-toast {
+  position: fixed;
+  left: 50%;
+  top: calc(env(safe-area-inset-top, 0px) + 70px);
+  transform: translateX(-50%);
+  z-index: 15;
+  padding: 10px 18px;
+  border: var(--border);
+  border-radius: 999px;
+  background: var(--primary);
+  box-shadow: var(--shadow);
+  font-size: 1.05rem;
+  white-space: nowrap;
+}
+.pcard__shield {
+  position: absolute;
+  top: -8px;
+  left: -6px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.3));
+}
+.pcard.is-shielded {
+  border-color: #3d8bff;
+  background: #e3f0ff;
+  animation: pop 0.4s ease-out;
+}
+.choice.is-removed {
+  opacity: 0.25;
+  text-decoration: line-through;
+  transform: scale(0.97);
+  transition: opacity 0.3s, transform 0.3s;
+}
+.shot-list__item--blocked {
+  color: #1f5fbf;
+  font-weight: 600;
+}
+
 /* ---------- สุ่มหาคู่แข่ง ---------- */
 .online-card--match {
   background: linear-gradient(160deg, #fff, #f1ebff);

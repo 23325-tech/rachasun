@@ -1,4 +1,4 @@
-import type { BattlePlayer, RoundOutcome } from '../game/battle';
+import type { BattlePlayer, CardKind, RoundOutcome } from '../game/battle';
 import type { Difficulty, Subject } from '../types';
 import { ensureSession } from './supabase';
 
@@ -29,11 +29,23 @@ export interface OnlineGameState {
     answerText?: string;
     explanation: string;
     outcome: RoundOutcome;
-    results: Record<string, { correct: boolean; timedOut: boolean; timeMs: number }>;
+    results: Record<string, { correct: boolean; timedOut: boolean; timeMs: number; skipped?: boolean }>;
     disconnected: string[];
   };
   nextAt?: number;
   xp?: Record<string, { gained: number; total: number }>;
+  /** โหมดการ์ดพลัง */
+  items?: boolean;
+  dealt?: { round: number; cards: Record<string, CardKind> };
+  cardUsed?: Record<string, CardKind>;
+}
+
+export interface GameCallResult {
+  ok?: boolean;
+  /** 50/50 บนข้อปรนัย: ตัวเลือกที่ถูกตัด */
+  removed?: number[];
+  /** 50/50 บนข้อเติมคำตอบ: ข้ามข้อ */
+  skipped?: boolean;
 }
 
 // ---------- นาฬิกาเซิร์ฟเวอร์ ----------
@@ -60,12 +72,17 @@ const GAME_ERRORS: Record<string, string> = {
   not_alive: 'คุณตกรอบแล้ว',
   not_in_room: 'คุณไม่ได้อยู่ในห้องนี้',
   already_playing: 'เกมเริ่มไปแล้ว',
+  no_card: 'ไม่มีการ์ดใบนี้แล้ว',
+  already_answered: 'ตอบไปแล้ว ใช้การ์ดไม่ได้',
 };
 
-export async function callGame(action: 'start' | 'auto_start' | 'answer' | 'tick' | 'rematch' | 'ping', body: Record<string, unknown> = {}) {
+export async function callGame(
+  action: 'start' | 'auto_start' | 'answer' | 'tick' | 'rematch' | 'ping' | 'use_card',
+  body: Record<string, unknown> = {},
+): Promise<GameCallResult> {
   const sb = await ensureSession();
   const sentAt = Date.now();
-  const { data, error } = await sb.functions.invoke<{ ok?: boolean; error?: string; serverNow: number }>('room-game', {
+  const { data, error } = await sb.functions.invoke<GameCallResult & { error?: string; serverNow: number }>('room-game', {
     body: { action, ...body },
   });
   const receivedAt = Date.now();
@@ -78,6 +95,7 @@ export async function callGame(action: 'start' | 'auto_start' | 'answer' | 'tick
   if (payload?.serverNow) updateOffset(payload.serverNow, sentAt, receivedAt);
   if (payload?.error) throw new Error(GAME_ERRORS[payload.error] ?? payload.error);
   if (error && !payload) throw new Error(error.message);
+  return payload ?? {};
 }
 
 /** วัดส่วนต่างนาฬิกาตอนเข้าห้อง (เรียกแล้วได้ error unknown_action ไม่เป็นไร) */

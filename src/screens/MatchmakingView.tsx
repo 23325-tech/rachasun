@@ -69,6 +69,7 @@ export function MatchmakingView({ room, players, myId, onCancel }: Props) {
       </p>
       <p className="match-sub">
         {subjectLabel} · {DIFF_TEXT[s.difficulty]} · {TRACK_TEXT[s.track]} · 10 ข้อ
+        {room.mode === 'items' ? ' · 🃏 การ์ดพลัง' : ''}
         <br />
         ค้นหามาแล้ว {Math.floor(searching / 60)}:{String(searching % 60).padStart(2, '0')}
       </p>

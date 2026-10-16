@@ -68,6 +68,8 @@ export const findMatch = (m: MatchSettings) =>
 export const createRoom = (settings: RoomSettings) => rpc<Room>('create_room', { p_settings: settings });
 export const joinRoom = (code: string) => rpc<Room>('join_room', { p_code: code });
 export const leaveRoom = (roomId: string) => rpc<void>('leave_room', { p_room: roomId });
+export const updateRoomMode = (roomId: string, mode: Room['mode']) =>
+  rpc<Room>('update_room_mode', { p_room: roomId, p_mode: mode });
 export const updateRoomSettings = (roomId: string, settings: RoomSettings) =>
   rpc<Room>('update_room_settings', { p_room: roomId, p_settings: settings });
 

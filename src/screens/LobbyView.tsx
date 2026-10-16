@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type { Difficulty, Subject, Track } from '../types';
 import { SUBJECTS } from '../data/subjects';
 import { heartsFor } from '../game/battle';
-import { inviteLink, updateRoomSettings, type Room, type RoomPlayer, type RoomSettings } from '../lib/rooms';
+import { inviteLink, updateRoomMode, updateRoomSettings, type Room, type RoomPlayer, type RoomSettings } from '../lib/rooms';
 
 interface Props {
   room: Room;
@@ -168,7 +168,28 @@ export function LobbyView({ room, players, online, myId, onLeave, onRoomChange, 
             ))}
           </div>
         </fieldset>
-        <p className="lobby-summary">หัวใจคนละ {heartsFor(s.count)} ดวง · ตอบช้าสุดโดนยิง!</p>
+        <div className="segmented">
+          <button
+            type="button"
+            disabled={!isHost}
+            className={`segmented__opt ${room.mode === 'classic' ? 'is-active' : ''}`}
+            onClick={() => updateRoomMode(room.id, 'classic').then(onRoomChange).catch((e) => setError(String(e.message ?? e)))}
+          >
+            ⚔️ ไม่มีไอเทม
+          </button>
+          <button
+            type="button"
+            disabled={!isHost}
+            className={`segmented__opt ${room.mode === 'items' ? 'is-active' : ''}`}
+            onClick={() => updateRoomMode(room.id, 'items').then(onRoomChange).catch((e) => setError(String(e.message ?? e)))}
+          >
+            🃏 การ์ดพลัง
+          </button>
+        </div>
+        <p className="lobby-summary">
+          หัวใจคนละ {heartsFor(s.count)} ดวง · ตอบช้าสุดโดนยิง!
+          {room.mode === 'items' && <> · ได้การ์ดสุ่มทุก 3 ข้อ (🛡️ โล่ / ✂️ 50/50)</>}
+        </p>
       </section>
 
       {error && <p className="form-error">😵 {error}</p>}

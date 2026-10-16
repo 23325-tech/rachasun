@@ -109,7 +109,9 @@ export function RoomScreen({ roomId, myId, guest, onLeave, onGone, onRegister, o
         myId={myId}
         onLeave={onLeave}
         onRoomChange={setRoom}
-        onStart={() => callGame('start', { roomId })}
+        onStart={async () => {
+          await callGame('start', { roomId });
+        }}
       />
     );
   }

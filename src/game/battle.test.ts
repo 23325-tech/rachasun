@@ -100,6 +100,48 @@ describe('ข้อปกติ', () => {
   });
 });
 
+describe('การ์ดพลัง', () => {
+  const withCards = (ps: BattlePlayer[], id: string, shield: number, fifty = 0) =>
+    ps.map((p) => (p.id === id ? { ...p, cards: { shield, fifty } } : p));
+
+  it('โล่กันการตอบผิดได้ 1 ครั้ง แล้วโล่หายไป', () => {
+    const ps = withCards(make(2), 'p2', 1);
+    const r = resolveRound(ps, [ans('p1', true), ans('p2', false)], 0, 10);
+    expect(hearts(r.players)).toEqual({ p1: 3, p2: 3 });
+    expect(r.outcome.damages).toEqual([{ playerId: 'p2', reason: 'wrong', heartsLost: 0, blocked: true }]);
+    expect(r.players.find((p) => p.id === 'p2')!.cards).toEqual({ shield: 0, fifty: 0 });
+    // ครั้งที่สองไม่มีโล่แล้ว
+    const r2 = resolveRound(r.players, [ans('p1', true), ans('p2', false)], 1, 10);
+    expect(hearts(r2.players).p2).toBe(2);
+  });
+
+  it('โล่กันการโดนยิงเพราะช้าสุดได้', () => {
+    const ps = withCards(make(2), 'p1', 1);
+    const r = resolveRound(ps, [ans('p1', true, 5000), ans('p2', true, 1000)], 0, 10);
+    expect(r.outcome.damages[0]).toMatchObject({ playerId: 'p1', reason: 'slowest', blocked: true });
+    expect(hearts(r.players)).toEqual({ p1: 3, p2: 3 });
+  });
+
+  it('โล่ช่วยให้รอดใน Sudden Death 1 ครั้ง', () => {
+    const ps = withCards(make(2, 10), 'p2', 2);
+    const r = resolveRound(ps, [ans('p1', true), ans('p2', false)], 10, 10);
+    expect(r.outcome.eliminated).toEqual([]);
+    expect(r.players.find((p) => p.id === 'p2')!.cards!.shield).toBe(1);
+  });
+
+  it('ข้ามข้อ: ไม่เสียหัวใจ และไม่นับตอนหาคนช้าสุด', () => {
+    const skip = { ...ans('p3', false, 99999), skipped: true };
+    const r = resolveRound(make(3), [ans('p1', true, 1000), ans('p2', true, 3000), skip], 0, 10);
+    expect(hearts(r.players)).toEqual({ p1: 3, p2: 2, p3: 3 });
+  });
+
+  it('ข้ามข้อจนเหลือคนตอบคนเดียวที่ตอบถูก -> ไม่มีใครโดนยิง', () => {
+    const skip = { ...ans('p2', false), skipped: true };
+    const r = resolveRound(make(2), [ans('p1', true), skip], 0, 10);
+    expect(r.outcome.damages).toEqual([]);
+  });
+});
+
 describe('Sudden Death', () => {
   it('ผิด = ตกรอบทันทีแม้ยังมีหัวใจหลายดวง', () => {
     const r = resolveRound(make(3, 10), [ans('p1', true), ans('p2', false), ans('p3', true)], 10, 10);

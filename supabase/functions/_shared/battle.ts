@@ -8,7 +8,14 @@
  * - Sudden Death (หลังโจทย์หมดแต่ยังเหลือหลายคน): ผิด/หมดเวลา = ตกรอบทันที
  *   ถ้าทุกคนตอบถูก คนตอบช้าสุดตกรอบ
  * - คนที่ตกรอบในข้อเดียวกันได้อันดับร่วมกัน (รวมกรณีทุกคนที่เหลือตกพร้อมกัน = เสมออันดับ 1)
+ *
+ * การ์ดพลัง (โหมด items)
+ * - 🛡️ โล่ (ติดตัว): กันการโดนยิงครั้งแรกให้อัตโนมัติ รวมถึง Sudden Death แล้วโล่หายไป 1 อัน
+ * - ✂️ 50/50 บนข้อเติมคำตอบ = ข้ามข้อ: ไม่เสียหัวใจ ไม่ได้คะแนน และไม่นับในการหาคนช้าสุด
  */
+
+export type CardKind = 'shield' | 'fifty';
+export type CardCounts = Record<CardKind, number>;
 
 export interface BattlePlayer {
   id: string;
@@ -20,6 +27,8 @@ export interface BattlePlayer {
   score: number;
   /** อันดับสุดท้าย (1 = ชนะ) มีค่าเมื่อตกรอบแล้วหรือเกมจบ */
   rank: number | null;
+  /** การ์ดในมือ (มีเฉพาะโหมดการ์ดพลัง) */
+  cards?: CardCounts;
 }
 
 export interface RoundAnswer {
@@ -29,6 +38,8 @@ export interface RoundAnswer {
   timeMs: number;
   timedOut: boolean;
   points: number;
+  /** ใช้การ์ดข้ามข้อ */
+  skipped?: boolean;
 }
 
 export type DamageReason = 'wrong' | 'timeout' | 'slowest';
@@ -37,6 +48,8 @@ export interface Damage {
   playerId: string;
   reason: DamageReason;
   heartsLost: number;
+  /** โล่กันไว้ได้ (heartsLost = 0) */
+  blocked?: boolean;
 }
 
 export interface RoundOutcome {
@@ -89,25 +102,36 @@ export function resolveRound(
     byId.get(id) ?? { playerId: id, correct: false, timeMs: Infinity, timedOut: true, points: 0 };
 
   const damages: Damage[] = [];
-  const hit = (p: BattlePlayer, reason: DamageReason) =>
-    damages.push({ playerId: p.id, reason, heartsLost: suddenDeath ? p.hearts : 1 });
+  const shieldsUsed = new Set<string>();
+  const hit = (p: BattlePlayer, reason: DamageReason) => {
+    if ((p.cards?.shield ?? 0) > 0) {
+      shieldsUsed.add(p.id);
+      damages.push({ playerId: p.id, reason, heartsLost: 0, blocked: true });
+    } else {
+      damages.push({ playerId: p.id, reason, heartsLost: suddenDeath ? p.hearts : 1 });
+    }
+  };
 
-  const wrong = alive.filter((p) => !answerOf(p.id).correct);
+  // คนที่ข้ามข้อไม่นับทั้งตอนหาคนผิดและคนช้าสุด
+  const playing = alive.filter((p) => !answerOf(p.id).skipped);
+  const wrong = playing.filter((p) => !answerOf(p.id).correct);
   if (wrong.length > 0) {
     for (const p of wrong) hit(p, answerOf(p.id).timedOut ? 'timeout' : 'wrong');
-  } else if (alive.length > 1) {
+  } else if (playing.length > 1) {
     // ทุกคนตอบถูก -> คนช้าที่สุดโดนยิง (ถ้าช้าเท่ากันโดนทุกคนที่เท่ากัน)
-    const slowest = Math.max(...alive.map((p) => answerOf(p.id).timeMs));
-    for (const p of alive) if (answerOf(p.id).timeMs === slowest) hit(p, 'slowest');
+    const slowest = Math.max(...playing.map((p) => answerOf(p.id).timeMs));
+    for (const p of playing) if (answerOf(p.id).timeMs === slowest) hit(p, 'slowest');
   }
 
   const lost = new Map(damages.map((d) => [d.playerId, d.heartsLost]));
   let next = players.map((p) => {
     if (!isAlive(p)) return p;
+    const usedShield = shieldsUsed.has(p.id) && p.cards;
     return {
       ...p,
       hearts: Math.max(0, p.hearts - (lost.get(p.id) ?? 0)),
       score: p.score + answerOf(p.id).points,
+      ...(usedShield ? { cards: { ...p.cards!, shield: p.cards!.shield - 1 } } : {}),
     };
   });
 
