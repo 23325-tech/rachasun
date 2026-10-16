@@ -81,7 +81,10 @@ export async function subscribeRoom(
   const channel: RealtimeChannel = sb
     .channel(topic, { config: { presence: { key: myId } } })
     .on('postgres_changes', { event: '*', schema: 'public', table: 'rooms', filter: `id=eq.${roomId}` }, onChange)
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'room_players', filter: `room_id=eq.${roomId}` }, onChange)
+    // เฉพาะคนเข้า/ออก (ไม่ฟัง UPDATE เพราะทุกคนส่งสัญญาณ "ยังอยู่" ทุก 5 วินาที)
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'room_players', filter: `room_id=eq.${roomId}` }, onChange)
+    // Realtime กรอง DELETE ด้วย filter ไม่ได้ จึงรับทุก DELETE แล้วโหลดห้องตัวเองใหม่
+    .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'room_players' }, onChange)
     .on('presence', { event: 'sync' }, () => onPresence(Object.keys(channel.presenceState())))
     .subscribe((status, err) => {
       if (status === 'SUBSCRIBED') {

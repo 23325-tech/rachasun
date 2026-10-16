@@ -18,7 +18,7 @@ import { AccountScreen } from './screens/AccountScreen';
 import { ProfileCard } from './components/ProfileCard';
 import type { XpState } from './components/XpBadge';
 import { OnlineMenuScreen } from './screens/OnlineMenuScreen';
-import { LobbyScreen } from './screens/LobbyScreen';
+import { RoomScreen } from './screens/RoomScreen';
 import { createRoom, joinRoom, leaveRoom, type RoomSettings } from './lib/rooms';
 
 type Screen =
@@ -249,9 +249,12 @@ export default function App() {
       );
     case 'lobby':
       return (
-        <LobbyScreen
+        <RoomScreen
           roomId={screen.roomId}
           myId={myId}
+          guest={guest}
+          onRegister={openAccount}
+          onXpAwarded={refreshMe}
           onGone={roomGone}
           onLeave={() => {
             leaveRoom(screen.roomId).catch(() => {});

@@ -28,9 +28,9 @@ export interface McqQuestion extends QuestionBase {
   answerIndex: 0 | 1 | 2 | 3;
 }
 
-export type FillAnswer =
-  | { kind: 'number'; value: number; tolerance?: number; unit?: string }
-  | { kind: 'text'; accepted: string[] };
+// ประเภทคำตอบแบบเติม ใช้ร่วมกับเซิร์ฟเวอร์
+import type { FillAnswer } from '../supabase/functions/_shared/rules';
+export type { FillAnswer };
 
 export interface FillQuestion extends QuestionBase {
   type: 'fill';

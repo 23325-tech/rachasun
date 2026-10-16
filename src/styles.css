@@ -1244,6 +1244,45 @@ button {
   text-align: center;
 }
 
+/* ---------- ดวลออนไลน์ ---------- */
+.countdown {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  padding: 28px 0;
+  color: #fff;
+  text-shadow: 0 3px 0 var(--ink);
+}
+.countdown__num {
+  font-size: 5rem;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--primary);
+  -webkit-text-stroke: 3px var(--ink);
+  paint-order: stroke fill;
+  animation: pulse 1s ease-in-out infinite;
+}
+.countdown__label {
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+.next-in {
+  margin: 0;
+  text-align: center;
+  color: var(--ink-soft);
+  font-weight: 500;
+}
+.loading__sub {
+  margin: 0;
+  font-size: 0.9rem;
+  opacity: 0.85;
+}
+.waiting--grow {
+  flex: 1;
+  align-self: center;
+  font-size: 0.95rem;
+}
+
 /* ---------- เลือกโหมด (หน้าแรก) ---------- */
 .mode-switch {
   display: grid;

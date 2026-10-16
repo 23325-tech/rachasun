@@ -6,8 +6,12 @@ const MEDAL: Record<number, string> = { 1: '🥇', 2: '🥈', 3: '🥉' };
 interface Props {
   players: BattlePlayer[];
   meId: string;
-  onReplay: () => void;
+  /** ไม่ส่งมา = กดเล่นอีกรอบไม่ได้ (เช่น ไม่ใช่เจ้าของห้อง) จะแสดง waitingLabel แทน */
+  onReplay?: () => void;
+  replayLabel?: string;
+  waitingLabel?: string;
   onHome: () => void;
+  homeLabel?: string;
   xp: XpState;
   guest: boolean;
   onRegister: () => void;
@@ -20,7 +24,18 @@ function headline(rank: number, total: number, sharedFirst: boolean) {
   return { emoji: '💪', title: 'แก้มือรอบหน้า!' };
 }
 
-export function BattleResultScreen({ players, meId, onReplay, onHome, xp, guest, onRegister }: Props) {
+export function BattleResultScreen({
+  players,
+  meId,
+  onReplay,
+  replayLabel = 'ดวลอีกรอบ ⚔️',
+  waitingLabel,
+  onHome,
+  homeLabel = '🏠 หน้าแรก',
+  xp,
+  guest,
+  onRegister,
+}: Props) {
   const sorted = [...players].sort((a, b) => (a.rank ?? 99) - (b.rank ?? 99) || b.score - a.score);
   const me = players.find((p) => p.id === meId)!;
   const myRank = me.rank ?? players.length;
@@ -57,11 +72,15 @@ export function BattleResultScreen({ players, meId, onReplay, onHome, xp, guest,
 
       <div className="bottom-bar bottom-bar--row">
         <button type="button" className="btn btn--ghost" onClick={onHome}>
-          🏠 หน้าแรก
+          {homeLabel}
         </button>
-        <button type="button" className="btn btn--primary btn--grow" onClick={onReplay}>
-          ดวลอีกรอบ ⚔️
-        </button>
+        {onReplay ? (
+          <button type="button" className="btn btn--primary btn--grow" onClick={onReplay}>
+            {replayLabel}
+          </button>
+        ) : (
+          <p className="waiting waiting--grow">{waitingLabel}</p>
+        )}
       </div>
     </div>
   );

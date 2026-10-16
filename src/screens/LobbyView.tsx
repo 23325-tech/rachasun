@@ -1,23 +1,18 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import type { Difficulty, Subject, Track } from '../types';
 import { SUBJECTS } from '../data/subjects';
 import { heartsFor } from '../game/battle';
-import {
-  fetchRoom,
-  inviteLink,
-  subscribeRoom,
-  updateRoomSettings,
-  type Room,
-  type RoomPlayer,
-  type RoomSettings,
-} from '../lib/rooms';
+import { inviteLink, updateRoomSettings, type Room, type RoomPlayer, type RoomSettings } from '../lib/rooms';
 
 interface Props {
-  roomId: string;
+  room: Room;
+  players: RoomPlayer[];
+  /** user_id ที่เปิดแอพอยู่ตอนนี้ (Realtime presence) */
+  online: string[];
   myId: string;
   onLeave: () => void;
-  /** ห้องถูกลบ / เราถูกเอาออกจากห้อง */
-  onGone: (reason: string) => void;
+  onRoomChange: (room: Room) => void;
+  onStart: () => Promise<void>;
 }
 
 const SUBJECT_OPTIONS: { value: Subject | 'all'; label: string }[] = [
@@ -35,59 +30,18 @@ const TRACKS: { value: Track; label: string }[] = [
 ];
 const COUNTS: RoomSettings['count'][] = [5, 10, 20];
 
-export function LobbyScreen({ roomId, myId, onLeave, onGone }: Props) {
-  const [room, setRoom] = useState<Room | null>(null);
-  const [players, setPlayers] = useState<RoomPlayer[]>([]);
-  const [online, setOnline] = useState<string[]>([]);
+/** หน้าล็อบบี้ (แสดงผลอย่างเดียว ข้อมูลห้องมาจาก RoomScreen) */
+export function LobbyView({ room, players, online, myId, onLeave, onRoomChange, onStart }: Props) {
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState('');
-
-  useEffect(() => {
-    let alive = true;
-    let unsubscribe: (() => void) | undefined;
-    const reload = async () => {
-      const r = await fetchRoom(roomId);
-      if (!alive) return;
-      if (!r.room) {
-        onGone('ห้องนี้ถูกปิดแล้ว');
-        return;
-      }
-      if (!r.players.some((p) => p.user_id === myId)) {
-        onGone('คุณไม่ได้อยู่ในห้องนี้แล้ว');
-        return;
-      }
-      setRoom(r.room);
-      setPlayers(r.players);
-    };
-    // โหลดทันที ไม่ต้องรอ Realtime เชื่อมต่อเสร็จ
-    reload().catch((e) => setError(e instanceof Error ? e.message : String(e)));
-    subscribeRoom(roomId, myId, () => void reload(), setOnline)
-      .then((unsub) => {
-        if (alive) unsubscribe = unsub;
-        else unsub();
-      })
-      .catch((e) => console.warn('subscribe room failed', e));
-    return () => {
-      alive = false;
-      unsubscribe?.();
-    };
-  }, [roomId, myId, onGone]);
-
-  if (!room) {
-    return (
-      <div className="screen loading">
-        <div className="loading__brain">🚪</div>
-        <p className="loading__msg">กำลังเข้าห้อง...</p>
-      </div>
-    );
-  }
+  const [starting, setStarting] = useState(false);
 
   const isHost = room.host_id === myId;
   const s = room.settings;
   const change = async (patch: Partial<RoomSettings>) => {
     setError('');
     try {
-      setRoom(await updateRoomSettings(room.id, { ...s, ...patch }));
+      onRoomChange(await updateRoomSettings(room.id, { ...s, ...patch }));
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     }
@@ -221,8 +175,23 @@ export function LobbyScreen({ roomId, myId, onLeave, onGone }: Props) {
 
       <div className="cta-bar">
         {isHost ? (
-          <button type="button" className="btn btn--primary btn--block btn--big" disabled>
-            {players.length < 2 ? 'รอเพื่อนอย่างน้อย 1 คน' : 'เริ่มเกม (เปิดในขั้น 5.2) 🔒'}
+          <button
+            type="button"
+            className="btn btn--primary btn--block btn--big"
+            disabled={players.length < 2 || starting}
+            onClick={async () => {
+              setStarting(true);
+              setError('');
+              try {
+                await onStart();
+              } catch (e) {
+                setError(e instanceof Error ? e.message : String(e));
+              } finally {
+                setStarting(false);
+              }
+            }}
+          >
+            {players.length < 2 ? 'รอเพื่อนอย่างน้อย 1 คน' : starting ? 'กำลังเริ่ม...' : 'เริ่มเกม! ⚔️'}
           </button>
         ) : (
           <p className="cta-bar__summary">⏳ รอเจ้าของห้องกดเริ่มเกม...</p>
