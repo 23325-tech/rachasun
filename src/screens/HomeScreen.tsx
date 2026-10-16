@@ -1,5 +1,5 @@
 import { lazy, Suspense, useMemo, type CSSProperties, type ReactNode } from 'react';
-import { ChartLineUp, Coin, Crown, Exam, FloppyDisk, GlobeHemisphereEast, Heart, type Icon, Key, LinkSimple, Robot, Sparkle, Storefront, Target, Trophy, TShirt, PawPrint, UsersThree, WifiSlash, CaretRight, BookBookmark, Camera, GraduationCap, ShieldStar } from '@phosphor-icons/react';
+import { ChartLineUp, Coin, Crown, Exam, FloppyDisk, GlobeHemisphereEast, Heart, type Icon, Key, LinkSimple, Robot, Sparkle, Storefront, Target, Trophy, TShirt, PawPrint, UsersThree, WifiSlash, CaretRight, BookBookmark, Camera, GraduationCap, ShieldStar, Chalkboard } from '@phosphor-icons/react';
 import type { Level, Subject } from '../types';
 import { LEVEL_KEYS, LEVELS, subjectInfo } from '../data/subjects';
 import { displayName, type Profile } from '../lib/profile';
@@ -14,7 +14,7 @@ import { getLang, setLang, t } from '../lib/i18n';
 
 const Avatar3D = lazy(() => import('../components/Avatar3D').then((m) => ({ default: m.Avatar3D })));
 
-export type HomeAction = GameMode | 'online' | 'groups' | 'analysis' | 'mock' | 'mistakes' | 'photo' | 'clan';
+export type HomeAction = GameMode | 'online' | 'groups' | 'analysis' | 'mock' | 'mistakes' | 'photo' | 'clan' | 'classroom';
 
 interface Props {
   profile: Profile | null;
@@ -61,6 +61,7 @@ const modes = (): { key: HomeAction; title: string; desc: string; icon: Icon; gr
   { key: 'challenge', title: t('ท้าเพื่อน', 'Challenge a friend'), desc: t('ส่งลิงก์ ทำชุดเดียวกัน', 'Share a link, same question set'), icon: LinkSimple, grad: 'linear-gradient(135deg,#ffb020,#ffd65c)' },
   { key: 'groups', title: t('กลุ่มเพื่อน', 'Friend groups'), desc: t('โจทย์ประจำวัน + อันดับ', 'Daily questions + leaderboard'), icon: UsersThree, grad: 'linear-gradient(135deg,#22c58b,#7be08f)' },
   { key: 'clan', title: t('แคลน', 'Clan'), desc: t('รวมทีมแข่งลีกรายสัปดาห์', 'Team up for the weekly league'), icon: ShieldStar, grad: 'linear-gradient(135deg,#5a3df0,#2fa8ff)' },
+  { key: 'classroom', title: t('ห้องเรียน', 'Classroom'), desc: t('การบ้านจากครู · ครูสั่งงานได้', 'Homework from your teacher'), icon: Chalkboard, grad: 'linear-gradient(135deg,#22a06b,#7be08f)' },
   { key: 'photo', title: t('ถ่ายรูปโจทย์', 'Snap a problem'), desc: t('AI ใบ้ทีละขั้นจากรูปโจทย์', 'AI hints from a photo'), icon: Camera, grad: 'linear-gradient(135deg,#2bb3ff,#6be0c8)' },
   { key: 'mistakes', title: t('สมุดข้อผิด', 'Mistake notebook'), desc: t('ทบทวนข้อที่เคยผิดตามรอบ', 'Review past mistakes on schedule'), icon: BookBookmark, grad: 'linear-gradient(135deg,#ff7a59,#ffb36b)' },
   { key: 'analysis', title: t('วิเคราะห์ของฉัน', 'My analysis'), desc: t('แผนฝึก + AI โค้ช', 'Study plan + AI coach'), icon: ChartLineUp, grad: 'linear-gradient(135deg,#5a6bff,#8f9dff)' },

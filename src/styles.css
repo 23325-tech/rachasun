@@ -6070,3 +6070,210 @@ html[lang="en"] .checkin__label {
 .clan-members__kick {
   color: #c2304a;
 }
+
+/* 26.2: ห้องเรียนครู */
+.class-list,
+.hw-list,
+.class-stats,
+.class-students {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.class-list li button,
+.class-students li button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 0;
+  border: 0;
+  border-top: 1.5px solid #eee8fb;
+  background: none;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.class-list li button > span,
+.class-students__name {
+  flex: 1;
+  display: grid;
+  min-width: 0;
+  line-height: 1.25;
+}
+.class-list small,
+.class-students__name > small {
+  color: var(--ink-soft, #6b6290);
+}
+.class-students__name strong small {
+  margin-left: 2px;
+  color: var(--ink-soft, #6b6290);
+  font-weight: 500;
+}
+.class-list__badge {
+  padding: 2px 8px;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: #ff5d73;
+  color: #fff;
+  font-size: 0.75rem;
+}
+.class-join,
+.hw-form,
+.class-ann-edit {
+  display: grid;
+  gap: 8px;
+}
+.class-join__consent {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 2px solid #b9e8cf;
+  border-radius: 12px;
+  background: #effbf4;
+  font-size: 0.8rem;
+}
+.class-join__consent input {
+  margin-top: 3px;
+}
+.class-create {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+.class-create .field__input {
+  flex: 1;
+  min-width: 0;
+}
+.class-sub {
+  margin: -4px 0 0;
+  text-align: center;
+}
+.class-ann {
+  display: flex;
+  gap: 10px;
+  background: #fff8e1;
+}
+.class-ann svg {
+  flex: none;
+  color: #e09a00;
+}
+.class-ann p {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.class-ann-edit textarea {
+  padding: 8px 10px;
+  border: 2.5px solid var(--ink);
+  border-radius: 12px;
+  font: inherit;
+  font-size: 0.9rem;
+  resize: vertical;
+}
+.hw-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 0;
+  border-top: 1.5px solid #eee8fb;
+}
+.hw-list li.is-done {
+  opacity: 0.85;
+}
+.hw-list li.is-late .hw-list__text small:last-child {
+  color: #c2304a;
+}
+.hw-list__text {
+  flex: 1;
+  display: grid;
+  min-width: 0;
+  line-height: 1.3;
+}
+.hw-list__text small {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--ink-soft, #6b6290);
+  font-size: 0.75rem;
+}
+.hw-list__score {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--good-dark);
+}
+.hw-list__stat {
+  display: grid;
+  justify-items: end;
+  line-height: 1.1;
+}
+.hw-list__stat small {
+  font-size: 0.7rem;
+  color: var(--ink-soft, #6b6290);
+}
+.hw-form {
+  margin-bottom: 8px;
+  padding: 10px;
+  border: 2px dashed #b9a8ff;
+  border-radius: 12px;
+}
+.hw-form__row {
+  display: flex;
+  gap: 6px;
+}
+.hw-form__row > * {
+  flex: 1;
+  min-width: 0;
+}
+.hw-form select,
+.hw-form__due input {
+  min-width: 0;
+  padding: 8px;
+  border: 2.5px solid var(--ink);
+  border-radius: 10px;
+  background: #fff;
+  font: inherit;
+  font-size: 0.85rem;
+}
+.hw-form__due {
+  display: grid;
+  gap: 2px;
+  font-size: 0.8rem;
+}
+.class-stats li {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 0;
+  border-top: 1.5px solid #eee8fb;
+  font-size: 0.85rem;
+}
+.class-stats__acc {
+  flex: none;
+  font-weight: 700;
+}
+.class-stats__acc small {
+  color: var(--ink-soft, #6b6290);
+  font-weight: 500;
+}
+.class-stats__acc.is-low {
+  color: #c2304a;
+}
+.class-stats__acc.is-high {
+  color: var(--good-dark);
+}
+.class-consent {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0;
+  font-size: 0.75rem;
+}
+.class-remove {
+  color: #c2304a;
+}
+.class-code {
+  margin: 0;
+}

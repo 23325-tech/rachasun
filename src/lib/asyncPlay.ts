@@ -72,6 +72,11 @@ const ERRORS: Record<string, string> = {
   get invalid_settings() { return t('ค่าที่เลือกไม่ถูกต้อง', 'Invalid settings'); },
   get profile_required() { return t('ตั้งชื่อเล่นก่อนนะ', 'Set a nickname first'); },
   get not_member() { return t('คุณไม่ได้อยู่ในกลุ่มนี้', 'You\'re not in this group'); },
+  get homework_closed() { return t('เลยกำหนดส่งการบ้านนี้แล้ว', 'This homework is past its due date'); },
+  get homework_not_found() { return t('ไม่พบการบ้านนี้', 'Homework not found'); },
+  get not_allowed() { return t('คุณไม่มีสิทธิ์ทำแบบนี้', 'You\'re not allowed to do that'); },
+  get bad_title() { return t('ชื่อการบ้านใช้ไม่ได้ (1-60 ตัวอักษร และต้องเหมาะสม)', 'Invalid homework title (1-60 characters, appropriate)'); },
+  get bad_due() { return t('กำหนดส่งต้องอยู่ระหว่าง 30 นาทีถึง 30 วันจากนี้', 'Due date must be between 30 minutes and 30 days from now'); },
 };
 
 async function call<T>(action: string, body: Record<string, unknown>): Promise<T> {
@@ -95,6 +100,9 @@ async function call<T>(action: string, body: Record<string, unknown>): Promise<T
 export const createChallenge = (settings: ChallengeSettings) => call<{ code: string }>('create_challenge', { settings });
 /** โจทย์ประจำวันของกลุ่ม (เล่นได้วันละครั้ง) */
 export const startDaily = (groupId: string) => call<{ playId: string; total: number }>('start_daily', { groupId });
+export const createHomework = (classroomId: string, title: string, settings: ChallengeSettings, dueAt: string) =>
+  call<{ homeworkId: string }>('create_homework', { classroomId, title, settings, dueAt });
+export const startHomework = (homeworkId: string) => call<{ playId: string; total: number }>('start_homework', { homeworkId });
 export const startChallenge = (code: string) => call<{ playId: string; total: number }>('start', { code });
 export const nextQuestion = (playId: string) => call<AsyncQuestion | { done: true; score: number }>('next', { playId });
 export const answerQuestion = (playId: string, index: number, given: number | string | null) =>

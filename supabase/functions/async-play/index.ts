@@ -1,6 +1,6 @@
 // Edge Function: เล่นชุดโจทย์ล็อกแบบแยกเวลา (ลิงก์ท้าเพื่อน / โจทย์ประจำวันของกลุ่ม)
 // เซิร์ฟเวอร์ส่งโจทย์ทีละข้อ จับเวลาเอง ตรวจคำตอบเอง และเฉลยหลังตอบเท่านั้น
-// action: create_challenge | start | start_daily | next | answer
+// action: create_challenge | start | start_daily | create_homework | start_homework | next | answer
 import { createClient, type SupabaseClient } from 'npm:@supabase/supabase-js@2';
 import { calcPoints, checkFillAnswer, formatFillAnswer } from '../_shared/rules.ts';
 import { limitMsOf, logAnswers, pickQuestions, toPublic, type StoredQuestion } from '../_shared/questions.ts';
@@ -158,6 +158,70 @@ async function startChallenge(uid: string, code: string) {
   return startPlay(uid, ch.set_id, new Date(ch.expires_at).getTime() < Date.now());
 }
 
+// ---------- การบ้านในห้องเรียน ----------
+
+const HOMEWORK_MAX_DAYS = 30;
+
+async function createHomework(uid: string, classroomId: string, title: string, settings: Record<string, unknown>, dueAt: string) {
+  const { data: cls } = await admin.from('classrooms').select('teacher_id').eq('id', classroomId).maybeSingle();
+  if (!cls || cls.teacher_id !== uid) throw new PlayError('not_allowed');
+  const name = title.trim().slice(0, 60);
+  if (!name) throw new PlayError('bad_title');
+  const due = Date.parse(dueAt);
+  if (!Number.isFinite(due) || due < Date.now() + 30 * 60_000 || due > Date.now() + HOMEWORK_MAX_DAYS * 86_400_000) {
+    throw new PlayError('bad_due');
+  }
+  const s = {
+    subject: String(settings.subject ?? 'all'),
+    difficulty: String(settings.difficulty ?? 'medium'),
+    track: String(settings.track ?? 'school'),
+    level: String(settings.level ?? 'upper'),
+    count: Number(settings.count ?? 10),
+  };
+  if (!COUNTS.includes(s.count)) throw new PlayError('invalid_settings');
+  const { data: valid } = await admin.rpc('valid_room_settings', { s });
+  if (!valid) throw new PlayError('invalid_settings');
+  const questions = (await pickQuestions(admin, s, s.count)).slice(0, s.count);
+  if (questions.length < Math.min(5, s.count)) throw new PlayError('no_questions');
+
+  const { data: set, error } = await admin
+    .from('quiz_sets')
+    .insert({ kind: 'homework', settings: { ...s, count: questions.length }, questions, created_by: uid })
+    .select('id')
+    .single();
+  if (error) throw error;
+  const { data: hw, error: e2 } = await admin
+    .from('homework')
+    .insert({ classroom_id: classroomId, set_id: set.id, title: name, due_at: new Date(due).toISOString() })
+    .select('id')
+    .single();
+  if (e2) {
+    await admin.from('quiz_sets').delete().eq('id', set.id);
+    if (e2.code === '23514') throw new PlayError('bad_title');
+    throw e2;
+  }
+  return { homeworkId: hw.id };
+}
+
+async function startHomework(uid: string, homeworkId: string) {
+  const { data: hw } = await admin.from('homework').select('set_id,classroom_id,due_at').eq('id', homeworkId).maybeSingle();
+  if (!hw) throw new PlayError('homework_not_found');
+  const { data: member } = await admin
+    .from('classroom_members')
+    .select('user_id')
+    .eq('classroom_id', hw.classroom_id)
+    .eq('user_id', uid)
+    .maybeSingle();
+  if (!member) throw new PlayError('not_member');
+  // เลยกำหนดส่ง: เริ่มใหม่ไม่ได้ (ที่ทำค้างไว้ทำต่อได้)
+  try {
+    return await startPlay(uid, hw.set_id, new Date(hw.due_at).getTime() < Date.now());
+  } catch (e) {
+    if (e instanceof PlayError && e.message === 'challenge_expired') throw new PlayError('homework_closed');
+    throw e;
+  }
+}
+
 // ---------- ส่งโจทย์ทีละข้อ ----------
 
 /** บันทึกคำตอบ (หรือหมดเวลา) แล้วเลื่อนไปข้อถัดไป; คืน false ถ้ามีคำขออื่นบันทึกข้อนี้ไปแล้ว */
@@ -292,6 +356,12 @@ Deno.serve(async (req) => {
         return json(await startChallenge(uid, String(body.code ?? '')));
       case 'start_daily':
         return json(await startDaily(uid, String(body.groupId ?? '')));
+      case 'create_homework':
+        return json(
+          await createHomework(uid, String(body.classroomId ?? ''), String(body.title ?? ''), body.settings ?? {}, String(body.dueAt ?? '')),
+        );
+      case 'start_homework':
+        return json(await startHomework(uid, String(body.homeworkId ?? '')));
       case 'next':
         return json(await next(uid, String(body.playId ?? '')));
       case 'answer':
