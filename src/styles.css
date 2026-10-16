@@ -4592,3 +4592,188 @@ html[lang="en"] .checkin__label {
   font-weight: 600;
   color: #8a3dd6;
 }
+
+/* 22.2c: สัตว์เลี้ยงของฉัน */
+.hm-pets {
+  position: absolute;
+  z-index: 2;
+  left: 12px;
+  bottom: 56px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 14px;
+  border: var(--border);
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 3px 0 var(--ink);
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.88rem;
+  cursor: pointer;
+}
+.hm-pets.is-hungry {
+  animation: bob 1.2s ease-in-out infinite;
+}
+.hm-pets__dot {
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: #ff5d73;
+  color: #fff;
+  font-size: 0.7rem;
+}
+.pets__stage {
+  height: 280px;
+}
+.pets__toast {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 6px 14px;
+  border: var(--border);
+  border-radius: 999px;
+  background: var(--primary);
+  font-weight: 700;
+  white-space: nowrap;
+}
+.pets__info {
+  display: grid;
+  gap: 6px;
+}
+.pets__title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 1.15rem;
+}
+.pets__lv {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 10px;
+  border: 2.5px solid var(--ink);
+  border-radius: 999px;
+  background: #e8f4ff;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+.pets__lv.is-max {
+  background: linear-gradient(90deg, #ffe066, #ffb020);
+}
+.pets__bar {
+  height: 12px;
+}
+.pets__max {
+  color: #b57a00;
+  font-weight: 700;
+}
+.pets__hungry {
+  margin: 0;
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: #ffe8ec;
+  color: #c2304a;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+.pets__foods {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.food {
+  display: grid;
+  gap: 6px;
+}
+.food__feed {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  padding: 10px 4px 8px;
+  border: var(--border);
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 3px 0 var(--ink);
+  font: inherit;
+  cursor: pointer;
+}
+.food__feed:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.food__feed:not(:disabled):active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 var(--ink);
+}
+.food--biscuit .food__feed svg { color: #c98a3a; }
+.food--fish .food__feed svg { color: #3d8bff; }
+.food--cake .food__feed svg { color: #e9a800; }
+.food__feed strong {
+  font-size: 0.82rem;
+}
+.food__feed small {
+  color: var(--good-dark);
+  font-weight: 700;
+}
+.food__qty {
+  position: absolute;
+  top: -8px;
+  right: -6px;
+  min-width: 24px;
+  padding: 1px 6px;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: var(--primary);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+.food__buy {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  gap: 2px;
+  padding: 4px;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: #fff6c7;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.food__buy:disabled {
+  opacity: 0.5;
+}
+.pets__free {
+  margin: 8px 0 0;
+  font-size: 0.8rem;
+}
+.pets__list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+  gap: 8px;
+}
+.pets__chip {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  padding: 6px 4px;
+  border: 2.5px solid #d9cff5;
+  border-radius: 14px;
+  background: #fff;
+  font: inherit;
+  cursor: pointer;
+}
+.pets__chip.is-active {
+  border-color: var(--ink);
+  background: #fff6c7;
+  box-shadow: 0 3px 0 var(--ink);
+}
+.pets__empty {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  text-align: center;
+}

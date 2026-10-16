@@ -51,7 +51,9 @@ import { createRoom, findMatch, joinRoom, leaveRoom, type MatchSettings, type Ro
 import { t, useLang } from './lib/i18n';
 import { fetchSeason, markSeasonRewardsSeen, setFrame, type SeasonState } from './lib/season';
 import { SeasonRewardModal } from './components/SeasonRewardModal';
-import { keepFrame } from './lib/look';
+import { keepFrame, lookOf, WARDROBE } from './lib/look';
+import { fetchPetCare, isHungry, type PetCareState } from './lib/petCare';
+import { PetScreen } from './screens/PetScreen';
 import { SeasonScreen } from './screens/SeasonScreen';
 import { GemTopupScreen } from './screens/GemTopupScreen';
 import { VersusIntro } from './components/VersusIntro';
@@ -75,6 +77,7 @@ type Screen =
   | { name: 'shop' }
   | { name: 'season' }
   | { name: 'gems' }
+  | { name: 'pets' }
   | { name: 'mock' }
   | { name: 'mockExam'; session: MockSession }
   | { name: 'mockResult'; review: MockReview };
@@ -160,6 +163,7 @@ export default function App() {
   const loadShop = useCallback(() => fetchShopState().then((s) => (setShop(s), s)), []);
   const [season, setSeason] = useState<SeasonState | null>(null);
   const [rewardBusy, setRewardBusy] = useState(false);
+  const [petCare, setPetCare] = useState<PetCareState | null>(null);
   const onGemsPaid = useCallback(() => {
     loadShop().catch(() => {});
   }, [loadShop]);
@@ -212,6 +216,7 @@ export default function App() {
   useEffect(() => {
     if (profileId && (screen.name === 'start' || screen.name === 'shop' || screen.name === 'dressing' || screen.name === 'gems')) loadShop().catch(() => {});
     if (profileId && (screen.name === 'start' || screen.name === 'season')) fetchSeason().then(setSeason).catch(() => {});
+    if (profileId && screen.name === 'start') fetchPetCare().then(setPetCare).catch(() => {});
   }, [profileId, screen.name, loadShop]);
 
   const changeLevel = (level: Level) => {
@@ -372,6 +377,12 @@ export default function App() {
           onShop={() => setScreen({ name: 'shop' })}
           season={season ? { no: season.no, endsAt: season.endsAt, rank: season.me.rank } : undefined}
           onSeason={() => setScreen({ name: 'season' })}
+          onPets={() => setScreen({ name: 'pets' })}
+          pet={(() => {
+            const it = profile ? WARDROBE.find((w) => w.slot === 'pet' && w.value === lookOf(profile.avatar).pet && w.value !== 'n') : undefined;
+            const st = it && petCare?.pets.find((x) => x.id === it.id);
+            return st ? { level: st.level, hungry: isHungry(st) } : undefined;
+          })()}
           modalSlot={
             season && profile && season.unseen.length > 0 && screen.name === 'start' ? (
               <SeasonRewardModal
@@ -532,6 +543,18 @@ export default function App() {
       ) : (
         <LoadingScreen message={t('กำลังโหลดฤดูกาล...', 'Loading season...')} onCancel={goHome} />
       );
+    case 'pets':
+      return profile ? (
+        <PetScreen
+          code={profile.avatar}
+          onBack={goHome}
+          onShop={() => setScreen({ name: 'shop' })}
+          onEquip={async (avatar) => {
+            const updated = await updateProfile(profile.id, { avatar: keepFrame(avatar, profile.avatar) });
+            setMe((m) => (m.status === 'ready' ? { ...m, profile: updated } : m));
+          }}
+        />
+      ) : null;
     case 'gems':
       return shop ? (
         <GemTopupScreen

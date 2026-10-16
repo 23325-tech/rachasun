@@ -1,5 +1,5 @@
 import { lazy, Suspense, useMemo, type CSSProperties, type ReactNode } from 'react';
-import { ChartLineUp, Coin, Crown, Exam, FloppyDisk, GlobeHemisphereEast, Heart, type Icon, Key, LinkSimple, Robot, Sparkle, Storefront, Target, Trophy, TShirt, UsersThree, WifiSlash, CaretRight } from '@phosphor-icons/react';
+import { ChartLineUp, Coin, Crown, Exam, FloppyDisk, GlobeHemisphereEast, Heart, type Icon, Key, LinkSimple, Robot, Sparkle, Storefront, Target, Trophy, TShirt, PawPrint, UsersThree, WifiSlash, CaretRight } from '@phosphor-icons/react';
 import type { Level, Subject } from '../types';
 import { LEVEL_KEYS, LEVELS, subjectInfo } from '../data/subjects';
 import { displayName, type Profile } from '../lib/profile';
@@ -36,6 +36,9 @@ interface Props {
   /** ยอดเหรียญ (ยังไม่โหลด = ไม่แสดง) */
   coins?: number;
   onShop: () => void;
+  onPets: () => void;
+  /** สัตว์เลี้ยงที่พาอยู่: เลเวล + หิวไหม (ยังไม่โหลด = ไม่มี) */
+  pet?: { level: number; hungry: boolean };
   /** การ์ดเช็กอินรายวัน */
   checkinSlot?: ReactNode;
   /** ฤดูกาลแรงค์ (ยังไม่โหลด = ไม่แสดงป้าย) */
@@ -67,7 +70,7 @@ const SUBJECT_GRAD: Record<Subject, string> = {
 export function HomeScreen(p: Props) {
   const { profile } = p;
   const code = profile?.avatar ?? DEFAULT_LOOK_CODE;
-  const chibi = useMemo(() => chibiOf(code), [code]);
+  const chibi = useMemo(() => ({ ...chibiOf(code), petLevel: p.pet?.level, petHungry: p.pet?.hungry }), [code, p.pet?.level, p.pet?.hungry]);
   const lv = levelFromXp(profile?.xp ?? 0);
   const tier = tierOf(profile?.rp ?? 0);
 
@@ -143,6 +146,12 @@ export function HomeScreen(p: Props) {
           <button type="button" className={`hm-dress ${p.dressNew ? 'is-new' : ''}`} onClick={p.onDress}>
             <TShirt weight="fill" size={18} />
             {p.dressNew ? t('แต่งตัวละครของคุณ!', 'Dress up your character!') : t('แต่งตัว', 'Dress up')}
+          </button>
+        )}
+        {profile && (
+          <button type="button" className={`hm-pets ${p.pet?.hungry ? 'is-hungry' : ''}`} onClick={p.onPets}>
+            <PawPrint weight="fill" size={18} /> {t('สัตว์เลี้ยง', 'Pets')}
+            {p.pet?.hungry && <span className="hm-pets__dot">{t('หิว!', 'Hungry!')}</span>}
           </button>
         )}
         {profile && (

@@ -21,6 +21,10 @@ export interface ChibiLook {
   item: HandItem;
   face?: Face;
   pet?: PetKind;
+  /** เลเวลสัตว์เลี้ยง (เฉพาะตัวเราเอง) */
+  petLevel?: number;
+  /** สัตว์เลี้ยงหิว (งอน) */
+  petHungry?: boolean;
   aura?: AuraKind;
 }
 
@@ -127,7 +131,7 @@ export function createChibi(initial: ChibiLook = DEFAULT_LOOK): Chibi {
   }
   function buildPet() {
     clear(petSlot);
-    pet = createPet(look.pet ?? 'none');
+    pet = createPet(look.pet ?? 'none', look.petLevel ?? 1, !!look.petHungry);
     if (pet) petSlot.add(pet.root);
   }
   let mouth: THREE.Object3D | null = null;
@@ -612,7 +616,7 @@ export function createChibi(initial: ChibiLook = DEFAULT_LOOK): Chibi {
     if (all || prev.hat !== next.hat) buildHat();
     if (all || prev.item !== next.item) buildItem();
     if (all || prev.face !== next.face) buildFace();
-    if (all || prev.pet !== next.pet) buildPet();
+    if (all || prev.pet !== next.pet || prev.petLevel !== next.petLevel || prev.petHungry !== next.petHungry) buildPet();
     if (all || prev.aura !== next.aura) buildAura();
   }
 

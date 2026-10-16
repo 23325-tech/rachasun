@@ -39,19 +39,19 @@ export function PlayerAvatar({ code, size = 40, className = '', framing = 'bust'
 }
 
 /** รูปนิ่งสัตว์เลี้ยง (ป้ายในการ์ดผู้เล่น / รูปสินค้า) */
-export function PetImage({ kind, size = 24, className = '' }: { kind: PetKind; size?: number; className?: string }) {
+export function PetImage({ kind, size = 24, className = '', level = 1 }: { kind: PetKind; size?: number; className?: string; level?: number }) {
   const [url, setUrl] = useState<string | null>(null);
   useEffect(() => {
     if (kind === 'none') return;
     let alive = true;
     import('../three/portrait')
-      .then((m) => m.petPortraitOf(kind))
+      .then((m) => m.petPortraitOf(kind, level))
       .then((u) => alive && setUrl(u))
       .catch(() => {});
     return () => {
       alive = false;
     };
-  }, [kind]);
+  }, [kind, level]);
   if (kind === 'none') return null;
   return (
     <span className={`pet-image ${className}`} style={{ width: size, height: size }} aria-hidden>

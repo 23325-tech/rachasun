@@ -62,8 +62,8 @@ export function portraitOf(code: string, framing: 'bust' | 'full' = 'bust'): Pro
 
 let petCamera: THREE.PerspectiveCamera | null = null;
 /** ภาพนิ่งสัตว์เลี้ยงตัวเดียว */
-export function petPortraitOf(kind: PetKind): Promise<string> {
-  const key = `pet:${kind}`;
+export function petPortraitOf(kind: PetKind, level = 1): Promise<string> {
+  const key = `pet:${kind}:${level}`;
   const hit = cache.get(key);
   if (hit) return Promise.resolve(hit);
   const p = pending.get(key);
@@ -75,7 +75,7 @@ export function petPortraitOf(kind: PetKind): Promise<string> {
       petCamera.position.set(0, 0.05, 1.45);
       petCamera.lookAt(0, 0.02, 0);
     }
-    const pet = createPet(kind);
+    const pet = createPet(kind, level);
     if (!pet) return '';
     pet.update(0.3, 'idle');
     scene.add(pet.root);

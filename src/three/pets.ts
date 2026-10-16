@@ -185,11 +185,42 @@ function buildDragon(g: THREE.Group, moving: THREE.Object3D[]) {
 }
 
 /** สร้างสัตว์เลี้ยง (none = null) */
-export function createPet(kind: PetKind): Pet | null {
+/** level 1-10: ตัวโตขึ้น / Lv5+ มีประกายวน / Lv10 มีมงกุฎ  hungry = งอน (ห้อยต่ำ ตาเศร้า) */
+export function createPet(kind: PetKind, level = 1, hungry = false): Pet | null {
   if (kind === 'none') return null;
   const root = new THREE.Group();
   const g = new THREE.Group();
   root.add(g);
+  const lv = Math.max(1, Math.min(10, level));
+  root.scale.setScalar(1 + (lv - 1) * 0.045);
+  const sparkles: THREE.Mesh[] = [];
+  if (lv >= 5) {
+    const geo = new THREE.OctahedronGeometry(0.03);
+    const count = lv >= 10 ? 6 : lv >= 8 ? 4 : 2;
+    for (let i = 0; i < count; i++) {
+      const m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: lv >= 10 ? 0xffd84d : 0xbfefff, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
+      root.add(m);
+      sparkles.push(m);
+    }
+  }
+  if (lv >= 10) {
+    const crown = new THREE.Group();
+    const gold = toon('#ffc93c', { emissive: 0x4a3000 });
+    const band = part(new THREE.CylinderGeometry(0.09, 0.1, 0.05, 16, 1, true), gold, 0.08);
+    crown.add(band);
+    for (let i = 0; i < 5; i++) {
+      const a = (i / 5) * Math.PI * 2;
+      const spike = part(new THREE.ConeGeometry(0.025, 0.07, 6), gold, 0.1);
+      spike.position.set(Math.cos(a) * 0.09, 0.05, Math.sin(a) * 0.09);
+      crown.add(spike);
+    }
+    const jewel = new THREE.Mesh(sphere(0.02, 8, 6), toon('#ff5d73'));
+    jewel.position.set(0, 0.01, 0.1);
+    crown.add(jewel);
+    crown.position.y = 0.38;
+    crown.rotation.z = 0.15;
+    g.add(crown);
+  }
   const moving: THREE.Object3D[] = [];
   if (kind === 'cat') buildCat(g, moving);
   else if (kind === 'owl') buildOwl(g, moving);
@@ -200,9 +231,16 @@ export function createPet(kind: PetKind): Pet | null {
 
   return {
     root,
-    update(t, pose) {
+    update(t, ownerPose) {
+      const pose = hungry && ownerPose !== 'cheer' ? 'sad' : ownerPose;
       const happy = pose === 'cheer' || pose === 'clap';
       const sad = pose === 'sad';
+      sparkles.forEach((m, i) => {
+        const a = t * 2.2 + (i / sparkles.length) * Math.PI * 2;
+        m.position.set(Math.cos(a) * 0.3, 0.05 + Math.sin(a * 2) * 0.08, Math.sin(a) * 0.3);
+        m.rotation.y = t * 4;
+        (m.material as THREE.MeshBasicMaterial).opacity = 0.6 + Math.abs(Math.sin(t * 5 + i)) * 0.4;
+      });
       // ลอยขึ้นลง: ดีใจเด้งสูงและหมุน / เสียใจห้อยต่ำ ช้า
       const speed = happy ? 7 : sad ? 1.5 : 2.4;
       const amp = happy ? 0.16 : sad ? 0.03 : 0.07;
