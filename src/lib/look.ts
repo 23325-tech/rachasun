@@ -9,7 +9,7 @@ import {
   type Look,
 } from '../../supabase/functions/_shared/wardrobe';
 import { t } from './i18n';
-import type { ChibiLook, HairStyle, HandItem, Hat, Outfit } from '../three/chibi';
+import type { ChibiLook, Face, HairStyle, HandItem, Hat, Outfit } from '../three/chibi';
 
 export { DEFAULT_LOOK_CODE, encodeLook, parseLook, randomLook, WARDROBE, type Look };
 
@@ -27,13 +27,14 @@ const ITEM_EN: Record<string, string> = {
 };
 for (const it of WARDROBE) {
   const th = it.name;
-  const en = ITEM_EN[it.id] ?? th;
+  const en = ITEM_EN[it.id] ?? it.en ?? th;
   Object.defineProperty(it, 'name', { get: () => t(th, en), enumerable: true });
 }
 
-const STYLE: Record<string, HairStyle> = { s: 'short', b: 'bob', p: 'spiky', u: 'bun' };
-const OUTFIT: Record<string, Outfit> = { u: 'uniform', l: 'labcoat', h: 'hoodie', s: 'sport' };
-const HAT: Record<string, Hat> = { n: 'none', c: 'cap', b: 'beanie', h: 'headphones', g: 'grad' };
+const STYLE: Record<string, HairStyle> = { s: 'short', b: 'bob', p: 'spiky', u: 'bun', l: 'long', t: 'ponytail', w: 'twintails', c: 'curly' };
+const OUTFIT: Record<string, Outfit> = { u: 'uniform', l: 'labcoat', h: 'hoodie', s: 'sport', k: 'skirt', t: 'tee' };
+const HAT: Record<string, Hat> = { n: 'none', c: 'cap', b: 'beanie', h: 'headphones', g: 'grad', d: 'headband', r: 'ribbon', f: 'flower' };
+const FACE: Record<string, Face> = { n: 'none', g: 'glasses', o: 'round', f: 'freckles', s: 'star' };
 const ITEM: Record<string, HandItem> = { n: 'none', p: 'pencil', k: 'book', f: 'flask' };
 
 /** รหัสหน้าตา -> หน้าตาที่ใช้ได้เสมอ (รหัสเก่า/อิโมจิ = สุ่มแบบคงที่จากข้อความนั้น) */
@@ -52,6 +53,7 @@ export function toChibi(look: Look): ChibiLook {
     outfitColor: `#${color ?? '2b3a8c'}`,
     hat: HAT[look.hat] ?? 'none',
     item: ITEM[look.item] ?? 'none',
+    face: FACE[look.face] ?? 'none',
   };
 }
 

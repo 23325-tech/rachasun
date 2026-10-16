@@ -12,6 +12,7 @@ import {
   Smiley,
   Storefront,
   TShirt,
+  Sunglasses,
   type Icon,
 } from '@phosphor-icons/react';
 import { PlayerAvatar } from '../components/PlayerAvatar';
@@ -38,6 +39,7 @@ const TABS: { slot: Slot; label: string; icon: Icon; thumb: 'swatch' | 'bust' | 
   { slot: 'hair', get label() { return t('สีผม', 'Hair color'); }, icon: PaintBrush, thumb: 'swatch' },
   { slot: 'skin', get label() { return t('สีผิว', 'Skin'); }, icon: Smiley, thumb: 'swatch' },
   { slot: 'eyes', get label() { return t('สีตา', 'Eyes'); }, icon: Eye, thumb: 'swatch' },
+  { slot: 'face', get label() { return t('ใบหน้า', 'Face'); }, icon: Sunglasses, thumb: 'bust' },
 ];
 
 const RARITY_TEXT: Record<Rarity, string> = {

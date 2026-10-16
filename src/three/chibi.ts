@@ -2,9 +2,10 @@
 // ภายหลังเปลี่ยนเป็นโมเดล .glb จากนักปั้นได้ โดยคงรูปแบบ ChibiLook เดิม
 import * as THREE from 'three';
 
-export type Outfit = 'uniform' | 'labcoat' | 'hoodie' | 'sport';
-export type HairStyle = 'short' | 'bob' | 'spiky' | 'bun';
-export type Hat = 'none' | 'cap' | 'grad' | 'headphones' | 'beanie';
+export type Outfit = 'uniform' | 'labcoat' | 'hoodie' | 'sport' | 'skirt' | 'tee';
+export type HairStyle = 'short' | 'bob' | 'spiky' | 'bun' | 'long' | 'ponytail' | 'twintails' | 'curly';
+export type Hat = 'none' | 'cap' | 'grad' | 'headphones' | 'beanie' | 'headband' | 'ribbon' | 'flower';
+export type Face = 'none' | 'glasses' | 'round' | 'freckles' | 'star';
 export type HandItem = 'none' | 'book' | 'flask' | 'pencil';
 
 export interface ChibiLook {
@@ -16,6 +17,7 @@ export interface ChibiLook {
   outfitColor: string;
   hat: Hat;
   item: HandItem;
+  face?: Face;
 }
 
 export const DEFAULT_LOOK: ChibiLook = {
@@ -91,6 +93,7 @@ export function createChibi(initial: ChibiLook = DEFAULT_LOOK): Chibi {
     hair: new THREE.Group(),
     hat: new THREE.Group(),
     item: new THREE.Group(),
+    face: new THREE.Group(),
   };
   const head = new THREE.Group();
   head.position.y = 1.55;
@@ -99,7 +102,7 @@ export function createChibi(initial: ChibiLook = DEFAULT_LOOK): Chibi {
   armL.position.set(0.33, 0.98, 0);
   armR.position.set(-0.33, 0.98, 0);
   body.add(parts.base, parts.outfit, head, armL, armR);
-  head.add(parts.hair, parts.hat);
+  head.add(parts.hair, parts.hat, parts.face);
   armR.add(parts.item);
   let eyes: THREE.Object3D[] = [];
   let mouth: THREE.Object3D | null = null;
@@ -118,7 +121,7 @@ export function createChibi(initial: ChibiLook = DEFAULT_LOOK): Chibi {
 
   function buildBase() {
     clear(parts.base);
-    for (const c of [...head.children]) if (c !== parts.hair && c !== parts.hat) head.remove(c);
+    for (const c of [...head.children]) if (c !== parts.hair && c !== parts.hat && c !== parts.face) head.remove(c);
     for (const arm of [armL, armR]) for (const c of [...arm.children]) if (c !== parts.item) arm.remove(c);
     const skin = toon(look.skin);
 
@@ -261,6 +264,38 @@ export function createChibi(initial: ChibiLook = DEFAULT_LOOK): Chibi {
       const pocket = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.12, 0.02), toon(shade(main, -0.08)));
       pocket.position.set(0, 0.72, 0.25);
       add(pocket);
+    } else if (look.outfit === 'skirt') {
+      torso('#fbfaff');
+      sleeve('#fbfaff');
+      const skirt = part(new THREE.ConeGeometry(0.44, 0.34, 28, 1, true), toon(main, { side: THREE.DoubleSide }), 0.04);
+      skirt.position.y = 0.55;
+      skirt.scale.z = 0.88;
+      add(skirt);
+      const waist = part(new THREE.TorusGeometry(0.29, 0.035, 10, 32), toon(shade(main, -0.1)), 0.06);
+      waist.position.y = 0.7;
+      waist.rotation.x = Math.PI / 2;
+      waist.scale.y = 0.88;
+      add(waist);
+      const bow = part(sphere(0.07, 12, 10), toon('#e2435c'), 0.08);
+      bow.position.set(0, 1.0, 0.26);
+      bow.scale.set(1.6, 0.8, 0.6);
+      add(bow);
+      const collar = part(new THREE.TorusGeometry(0.17, 0.045, 10, 24), toon(main), 0.06);
+      collar.position.y = 1.08;
+      collar.rotation.x = Math.PI / 2;
+      add(collar);
+    } else if (look.outfit === 'tee') {
+      torso(main);
+      shorts('#3b5c9a');
+      for (const arm of [armL, armR]) {
+        const sl = part(capsule(0.105, 0.08), toon(main), 0.05);
+        sl.position.y = -0.06;
+        sl.userData.sleeve = true;
+        arm.add(sl);
+      }
+      const print = new THREE.Mesh(new THREE.CircleGeometry(0.09, 5), toon('#fbfaff'));
+      print.position.set(0, 0.93, 0.255);
+      add(print);
     } else {
       torso(main);
       shorts('#fbfaff');
@@ -312,6 +347,60 @@ export function createChibi(initial: ChibiLook = DEFAULT_LOOK): Chibi {
       back.position.set(0, -0.08, -0.2);
       back.scale.set(1.05, 0.95, 0.8);
       add(back);
+    }
+    if (look.hairStyle === 'long' || look.hairStyle === 'ponytail' || look.hairStyle === 'twintails') {
+      const back = part(sphere(0.6, 32, 20), hairMat, 0.025);
+      back.position.set(0, -0.08, -0.2);
+      back.scale.set(1.05, 0.95, 0.8);
+      add(back);
+    }
+    if (look.hairStyle === 'long') {
+      // ผมยาวคลุมไหล่ด้านหลัง + ปอยข้างแก้ม
+      const curtain = part(capsule(0.42, 0.55), hairMat, 0.03);
+      curtain.position.set(0, -0.55, -0.32);
+      curtain.scale.set(1.15, 1, 0.55);
+      add(curtain);
+      for (const s of [1, -1]) {
+        const lock = part(capsule(0.12, 0.5), hairMat, 0.05);
+        lock.position.set(0.5 * s, -0.42, 0.05);
+        lock.rotation.z = 0.08 * s;
+        add(lock);
+      }
+    }
+    if (look.hairStyle === 'ponytail') {
+      const tie = part(sphere(0.09, 16, 12), toon('#ff5d73'), 0.06);
+      tie.position.set(0, 0.3, -0.62);
+      add(tie);
+      const tail = part(capsule(0.15, 0.5), hairMat, 0.04);
+      tail.position.set(0, -0.08, -0.78);
+      tail.rotation.x = 0.35;
+      add(tail);
+    }
+    if (look.hairStyle === 'twintails') {
+      for (const s of [1, -1]) {
+        const tie = part(sphere(0.08, 16, 12), toon('#ff8fc0'), 0.06);
+        tie.position.set(0.58 * s, 0.22, -0.2);
+        add(tie);
+        const tail = part(capsule(0.14, 0.48), hairMat, 0.04);
+        tail.position.set(0.72 * s, -0.22, -0.22);
+        tail.rotation.z = -0.28 * s;
+        add(tail);
+      }
+    }
+    if (look.hairStyle === 'curly') {
+      // ลอนกลมรอบศีรษะ
+      for (let i = 0; i < 14; i++) {
+        const a = (i / 14) * Math.PI * 2;
+        const curl = part(sphere(0.17, 16, 12), hairMat, 0.05);
+        curl.position.set(Math.sin(a) * 0.6, 0.22 + Math.cos(a * 2) * 0.06, Math.cos(a) * 0.52 - 0.08);
+        add(curl);
+      }
+      for (let i = 0; i < 6; i++) {
+        const a = (i / 6) * Math.PI * 2;
+        const top = part(sphere(0.18, 16, 12), hairMat, 0.05);
+        top.position.set(Math.sin(a) * 0.3, 0.58, Math.cos(a) * 0.28 - 0.08);
+        add(top);
+      }
     }
     if (look.hairStyle === 'bun') {
       const bun = part(sphere(0.2, 24, 16), hairMat, 0.05);
@@ -368,6 +457,32 @@ export function createChibi(initial: ChibiLook = DEFAULT_LOOK): Chibi {
         cup.position.set(0.66 * s, 0, 0);
         add(cup);
       }
+    } else if (look.hat === 'headband') {
+      const band = part(new THREE.TorusGeometry(0.66, 0.05, 12, 40, Math.PI * 1.2), toon('#ffb020'), 0.06);
+      band.position.set(0, 0.2, 0.02);
+      band.rotation.set(-0.35, 0, -Math.PI * 0.1);
+      add(band);
+    } else if (look.hat === 'ribbon') {
+      const c = toon('#ff5d8f');
+      const knot = part(sphere(0.08, 14, 10), c, 0.07);
+      knot.position.set(0.32, 0.6, 0.12);
+      add(knot);
+      for (const s of [1, -1]) {
+        const loop = part(new THREE.ConeGeometry(0.14, 0.26, 16), c, 0.06);
+        loop.position.set(0.32 + 0.16 * s, 0.6, 0.12);
+        loop.rotation.z = (Math.PI / 2) * s;
+        add(loop);
+      }
+    } else if (look.hat === 'flower') {
+      const center = part(sphere(0.06, 12, 10), toon('#ffcc00'), 0.08);
+      center.position.set(-0.42, 0.46, 0.3);
+      add(center);
+      for (let i = 0; i < 5; i++) {
+        const a = (i / 5) * Math.PI * 2;
+        const petal = part(sphere(0.07, 12, 10), toon('#fbfaff'), 0.07);
+        petal.position.set(-0.42 + Math.cos(a) * 0.1, 0.46 + Math.sin(a) * 0.1, 0.28);
+        add(petal);
+      }
     } else if (look.hat === 'beanie') {
       const c = toon('#22c58b');
       const dome = part(new THREE.SphereGeometry(0.7, 36, 18, 0, Math.PI * 2, 0, Math.PI * 0.45), c, 0.03);
@@ -380,6 +495,50 @@ export function createChibi(initial: ChibiLook = DEFAULT_LOOK): Chibi {
       const pom = part(sphere(0.13, 16, 12), toon('#ffffff'), 0.06);
       pom.position.y = 0.8;
       add(pom);
+    }
+  }
+
+  function buildFace() {
+    clear(parts.face);
+    const add = (m: THREE.Mesh) => parts.face.add(m);
+    const face = look.face ?? 'none';
+    if (face === 'glasses' || face === 'round') {
+      const frame = new THREE.MeshBasicMaterial({ color: face === 'round' ? 0xb07a2a : 0x2b1a4a });
+      for (const s of [1, -1]) {
+        const lens = new THREE.Mesh(
+          face === 'round' ? new THREE.TorusGeometry(0.13, 0.018, 8, 28) : new THREE.TorusGeometry(0.13, 0.02, 4, 4),
+          frame,
+        );
+        lens.position.set(0.21 * s, -0.04, 0.6);
+        if (face !== 'round') lens.rotation.z = Math.PI / 4;
+        if (face !== 'round') lens.scale.set(1.15, 0.85, 1);
+        add(lens);
+      }
+      const bridge = new THREE.Mesh(capsule(0.012, 0.08), frame);
+      bridge.rotation.z = Math.PI / 2;
+      bridge.position.set(0, -0.02, 0.62);
+      add(bridge);
+    } else if (face === 'freckles') {
+      const dot = new THREE.MeshBasicMaterial({ color: 0xb4744a });
+      for (const s of [1, -1]) {
+        for (let i = 0; i < 3; i++) {
+          const f = new THREE.Mesh(sphere(0.014, 8, 6), dot);
+          f.position.set((0.3 + i * 0.05) * s, -0.13 - (i % 2) * 0.04, 0.53 - i * 0.02);
+          add(f);
+        }
+      }
+    } else if (face === 'star') {
+      const shape = new THREE.Shape();
+      for (let i = 0; i <= 10; i++) {
+        const a = (i / 10) * Math.PI * 2 + Math.PI / 2;
+        const r = i % 2 === 0 ? 0.07 : 0.03;
+        if (i === 0) shape.moveTo(Math.cos(a) * r, Math.sin(a) * r);
+        else shape.lineTo(Math.cos(a) * r, Math.sin(a) * r);
+      }
+      const star = new THREE.Mesh(new THREE.ShapeGeometry(shape), new THREE.MeshBasicMaterial({ color: 0xffcc00 }));
+      star.position.set(0.37, -0.12, 0.5);
+      star.lookAt(new THREE.Vector3(0.74, -0.12, 3));
+      add(star);
     }
   }
 
@@ -427,6 +586,7 @@ export function createChibi(initial: ChibiLook = DEFAULT_LOOK): Chibi {
     if (all || prev.hair !== next.hair || prev.hairStyle !== next.hairStyle) buildHair();
     if (all || prev.hat !== next.hat) buildHat();
     if (all || prev.item !== next.item) buildItem();
+    if (all || prev.face !== next.face) buildFace();
   }
 
   // เงาวงรีใต้เท้า
@@ -443,6 +603,7 @@ export function createChibi(initial: ChibiLook = DEFAULT_LOOK): Chibi {
   buildHair();
   buildHat();
   buildItem();
+  buildFace();
 
   let nextBlink = 2;
   /** cheer = 0..1 (กระโดดดีใจชั่วครู่) ทับท่าหลัก pose */

@@ -1,7 +1,8 @@
-import { lazy, Suspense, type ReactNode } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import { Shuffle } from '@phosphor-icons/react';
 import { encodeLook, lookOf, randomLook, toChibi, WARDROBE, type Look } from '../lib/look';
-import type { Slot, WardrobeItem } from '../../supabase/functions/_shared/wardrobe';
+import type { Slot } from '../../supabase/functions/_shared/wardrobe';
+import { PlayerAvatar } from './PlayerAvatar';
 import { t } from '../lib/i18n';
 
 // โหลด three.js แยกไฟล์ หน้าอื่นไม่ต้องโหลด
@@ -14,32 +15,23 @@ interface Props {
 
 const freeOf = (slot: Slot) => WARDROBE.filter((i) => i.slot === slot && !i.coin && !i.gem);
 
+/** หมวดของฟรีตอนสร้างตัวละคร (swatch = จุดสี / bust,full = รูปตัวอย่าง) */
+const TABS: { slot: Slot; label: () => string; view: 'swatch' | 'bust' | 'full' }[] = [
+  { slot: 'skin', label: () => t('ผิว', 'Skin'), view: 'swatch' },
+  { slot: 'hair', label: () => t('สีผม', 'Hair'), view: 'swatch' },
+  { slot: 'style', label: () => t('ทรงผม', 'Style'), view: 'bust' },
+  { slot: 'eyes', label: () => t('ตา', 'Eyes'), view: 'swatch' },
+  { slot: 'face', label: () => t('ใบหน้า', 'Face'), view: 'bust' },
+  { slot: 'outfit', label: () => t('ชุด', 'Outfit'), view: 'full' },
+  { slot: 'hat', label: () => t('หมวก', 'Hat'), view: 'bust' },
+];
+
 /** ออกแบบตัวละครด้วยของฟรี (ตอนสร้างโปรไฟล์) */
 export function LookPicker({ code, onChange }: Props) {
   const look = lookOf(code);
+  const [tab, setTab] = useState<Slot>('skin');
+  const current = TABS.find((x) => x.slot === tab)!;
   const set = (slot: Slot, value: string) => onChange(encodeLook({ ...look, [slot]: value } as Look));
-
-  const row = (label: string, slot: Slot, render: (it: WardrobeItem) => ReactNode) => (
-    <div className="look-row">
-      <span className="look-row__label">{label}</span>
-      <div className="look-row__opts">
-        {freeOf(slot).map((it) => (
-          <button
-            key={it.id}
-            type="button"
-            title={it.name}
-            aria-label={it.name}
-            aria-pressed={look[slot] === it.value}
-            className={`look-opt ${look[slot] === it.value ? 'is-active' : ''}`}
-            onClick={() => set(slot, it.value)}
-          >
-            {render(it)}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-  const swatch = (hex: string) => <span className="look-opt__swatch" style={{ background: `#${hex}` }} />;
 
   return (
     <div className="look-picker">
@@ -52,11 +44,38 @@ export function LookPicker({ code, onChange }: Props) {
           {t('สุ่ม', 'Shuffle')}
         </button>
       </div>
-      {row(t('สีผิว', 'Skin'), 'skin', (it) => swatch(it.value))}
-      {row(t('สีผม', 'Hair color'), 'hair', (it) => swatch(it.value))}
-      {row(t('ทรงผม', 'Hairstyle'), 'style', (it) => <span className="look-opt__text">{it.name.replace('ผม', '')}</span>)}
-      {row(t('ชุด', 'Outfit'), 'outfit', (it) => swatch(it.value.split('-')[1]))}
-      <p className="muted look-picker__note">{t('แต่งตัวเพิ่มได้ทีหลังในห้องแต่งตัว', 'More outfits later in the dressing room')}</p>
+
+      <div className="look-tabs" role="tablist">
+        {TABS.map((x) => (
+          <button key={x.slot} type="button" role="tab" aria-selected={x.slot === tab} className={x.slot === tab ? 'is-active' : ''} onClick={() => setTab(x.slot)}>
+            {x.label()}
+          </button>
+        ))}
+      </div>
+
+      <div className={`look-grid look-grid--${current.view}`}>
+        {freeOf(tab).map((it) => {
+          const on = look[tab] === it.value;
+          return (
+            <button
+              key={it.id}
+              type="button"
+              title={it.name}
+              aria-label={it.name}
+              aria-pressed={on}
+              className={`look-opt ${current.view !== 'swatch' ? 'look-opt--art' : ''} ${on ? 'is-active' : ''}`}
+              onClick={() => set(tab, it.value)}
+            >
+              {current.view === 'swatch' ? (
+                <span className="look-opt__swatch" style={{ background: `#${it.value}` }} />
+              ) : (
+                <PlayerAvatar code={encodeLook({ ...look, [tab]: it.value } as Look)} size={54} framing={current.view} className="is-bare" />
+              )}
+            </button>
+          );
+        })}
+      </div>
+      <p className="muted look-picker__note">{t('ของพิเศษ สัตว์เลี้ยง และออร่า ซื้อได้ในร้านค้า', 'Special items, pets and auras are in the shop')}</p>
     </div>
   );
 }
