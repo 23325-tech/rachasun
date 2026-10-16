@@ -3143,8 +3143,10 @@ button {
 }
 .dressing__tabs {
   display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 6px;
-  overflow-x: auto;
+  overflow-x: visible;
   padding: 2px 2px 6px;
   scrollbar-width: none;
 }

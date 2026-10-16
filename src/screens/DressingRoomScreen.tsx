@@ -36,14 +36,14 @@ interface Props {
 const TABS: { slot: Slot; label: string; icon: Icon; thumb: 'swatch' | 'bust' | 'full' | 'pet' }[] = [
   { slot: 'outfit', get label() { return t('ชุด', 'Outfit'); }, icon: TShirt, thumb: 'full' },
   { slot: 'hat', get label() { return t('หมวก', 'Hat'); }, icon: BaseballCap, thumb: 'bust' },
+  { slot: 'pet', get label() { return t('สัตว์เลี้ยง', 'Pet'); }, icon: PawPrint, thumb: 'pet' },
+  { slot: 'aura', get label() { return t('ออร่า', 'Aura'); }, icon: Sparkle, thumb: 'full' },
   { slot: 'item', get label() { return t('ของในมือ', 'Held item'); }, icon: HandGrabbing, thumb: 'full' },
+  { slot: 'face', get label() { return t('ใบหน้า', 'Face'); }, icon: Sunglasses, thumb: 'bust' },
   { slot: 'style', get label() { return t('ทรงผม', 'Hairstyle'); }, icon: Scissors, thumb: 'bust' },
   { slot: 'hair', get label() { return t('สีผม', 'Hair color'); }, icon: PaintBrush, thumb: 'swatch' },
   { slot: 'skin', get label() { return t('สีผิว', 'Skin'); }, icon: Smiley, thumb: 'swatch' },
   { slot: 'eyes', get label() { return t('สีตา', 'Eyes'); }, icon: Eye, thumb: 'swatch' },
-  { slot: 'face', get label() { return t('ใบหน้า', 'Face'); }, icon: Sunglasses, thumb: 'bust' },
-  { slot: 'pet', get label() { return t('สัตว์เลี้ยง', 'Pet'); }, icon: PawPrint, thumb: 'pet' },
-  { slot: 'aura', get label() { return t('ออร่า', 'Aura'); }, icon: Sparkle, thumb: 'full' },
 ];
 
 const RARITY_TEXT: Record<Rarity, string> = {
