@@ -68,11 +68,13 @@ const shade = (hex: string, k: number) => {
   return `#${c.getHexString()}`;
 };
 
+export type Pose = 'idle' | 'cheer' | 'clap' | 'sad' | 'wave';
+
 export interface Chibi {
   root: THREE.Group;
   setLook: (look: ChibiLook) => void;
   /** t = วินาที, cheer = 0..1 (ท่าดีใจ) */
-  update: (t: number, cheer?: number) => void;
+  update: (t: number, cheer?: number, pose?: Pose) => void;
   dispose: () => void;
 }
 
@@ -100,6 +102,7 @@ export function createChibi(initial: ChibiLook = DEFAULT_LOOK): Chibi {
   head.add(parts.hair, parts.hat);
   armR.add(parts.item);
   let eyes: THREE.Object3D[] = [];
+  let mouth: THREE.Object3D | null = null;
 
   const clear = (g: THREE.Object3D) => {
     for (const c of [...g.children]) {
@@ -163,6 +166,7 @@ export function createChibi(initial: ChibiLook = DEFAULT_LOOK): Chibi {
     smile.position.set(0, -0.2, 0.58);
     smile.rotation.z = Math.PI;
     head.add(smile);
+    mouth = smile;
 
     // ขา + รองเท้า
     for (const s of [1, -1]) {
@@ -441,20 +445,43 @@ export function createChibi(initial: ChibiLook = DEFAULT_LOOK): Chibi {
   buildItem();
 
   let nextBlink = 2;
-  function update(t: number, cheer = 0) {
-    const bob = Math.sin(t * 2.2) * 0.025;
-    const hop = cheer * Math.abs(Math.sin(t * 7)) * 0.25;
-    body.position.y = bob + hop;
+  /** cheer = 0..1 (กระโดดดีใจชั่วครู่) ทับท่าหลัก pose */
+  function update(t: number, cheer = 0, pose: Pose = 'idle') {
+    const k = pose === 'cheer' ? 1 : cheer;
+    const sad = pose === 'sad';
+    const bob = Math.sin(t * (sad ? 1.2 : 2.2)) * (sad ? 0.012 : 0.025);
+    const hop = k * Math.abs(Math.sin(t * 7)) * 0.25;
+    body.position.y = bob + hop - (sad ? 0.04 : 0);
     shadow.scale.setScalar(1 - (bob + hop) * 0.8);
     head.rotation.z = Math.sin(t * 1.1) * 0.05;
-    head.rotation.x = Math.sin(t * 0.7) * 0.03;
-    const wave = cheer ? -2.3 + Math.sin(t * 9) * 0.3 : 0;
-    armL.rotation.z = 0.22 + Math.sin(t * 2.2) * 0.04 + (cheer ? 2.4 : 0) * cheer;
-    armR.rotation.z = -0.22 - Math.sin(t * 2.2) * 0.04 + wave * cheer;
+    head.rotation.x = sad ? 0.32 : Math.sin(t * 0.7) * 0.03;
+    if (mouth) mouth.rotation.z = sad ? 0 : Math.PI;
+    let l = 0.22 + Math.sin(t * 2.2) * 0.04;
+    let r = -0.22 - Math.sin(t * 2.2) * 0.04;
+    armL.rotation.x = 0;
+    armR.rotation.x = 0;
+    if (k > 0) {
+      l += 2.4 * k;
+      r += (-2.3 + Math.sin(t * 9) * 0.3) * k;
+    } else if (pose === 'clap') {
+      // แขนยื่นมาข้างหน้า ตบมือเข้าหากัน
+      const c = Math.abs(Math.sin(t * 8));
+      armL.rotation.x = -1.2;
+      armR.rotation.x = -1.2;
+      l = 0.05 + c * 0.45;
+      r = -0.05 - c * 0.45;
+    } else if (pose === 'wave') {
+      r = -2.5 + Math.sin(t * 8) * 0.35;
+    } else if (sad) {
+      l = 0.08;
+      r = -0.08;
+    }
+    armL.rotation.z = l;
+    armR.rotation.z = r;
     // กะพริบตา
     const blinking = t > nextBlink && t < nextBlink + 0.12;
     if (t > nextBlink + 0.12) nextBlink = t + 2 + Math.random() * 3;
-    for (const e of eyes) e.scale.y = blinking ? 0.12 : 1;
+    for (const e of eyes) e.scale.y = blinking ? 0.12 : sad ? 0.75 : 1;
   }
 
   return {

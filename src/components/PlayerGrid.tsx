@@ -1,7 +1,11 @@
 import type { BattlePlayer, DamageReason } from '../game/battle';
 import { PlayerAvatar } from './PlayerAvatar';
 import { Alarm, ChatCircleDots, CheckCircle, Crosshair, Heart, Lightning, LockSimple, ShieldCheck, SkipForward, Skull, XCircle, type Icon } from '@phosphor-icons/react';
-import { createElement } from 'react';
+import { createElement, lazy, Suspense, useMemo } from 'react';
+import type { Pose } from '../three/chibi';
+import { chibiOf } from '../lib/look';
+
+const Avatar3D = lazy(() => import('./Avatar3D').then((m) => ({ default: m.Avatar3D })));
 
 export type PlayerStatus = 'thinking' | 'locked' | 'correct' | 'wrong' | 'timeout' | 'out' | 'skipped';
 
@@ -38,6 +42,9 @@ export function PlayerGrid({ players, maxHearts, meId, status, hits, hitStage }:
         // ตอน bang หัวใจลดแล้ว ให้ดวงที่เพิ่งเสียเล่นแอนิเมชันแตก
         const blocked = !!hit?.blocked;
         const breakingFrom = hit && !blocked && hitStage === 'bang' ? p.hearts : -1;
+        const sad = (hit && !blocked && hitStage === 'bang') || st === 'wrong' || st === 'timeout';
+        const happy = st === 'correct' && !sad;
+        const pose: Pose = happy ? 'cheer' : sad ? 'sad' : 'idle';
         const breakingTo = hit && !blocked && hitStage === 'bang' ? p.hearts + hit.lost : -1;
         return (
           <div
@@ -53,8 +60,12 @@ export function PlayerGrid({ players, maxHearts, meId, status, hits, hitStage }:
               .filter(Boolean)
               .join(' ')}
           >
-            <div className="pcard__avatar" aria-hidden>
-              <PlayerAvatar code={p.avatar} size={42} />
+            <div className={`pcard__avatar ${happy ? 'react-happy' : ''} ${sad ? 'react-sad' : ''}`} aria-hidden>
+              {p.id === meId ? (
+                <MeLive code={p.avatar} pose={pose} />
+              ) : (
+                <PlayerAvatar code={p.avatar} size={42} />
+              )}
               {hit && hitStage === 'aim' && (
                 <span className="pcard__crosshair">
                   <Crosshair weight="bold" size={30} />
@@ -91,5 +102,15 @@ export function PlayerGrid({ players, maxHearts, meId, status, hits, hitStage }:
         );
       })}
     </div>
+  );
+}
+
+/** ตัวละครของเราแบบ 3D ครึ่งตัว (หน้าตาคำนวณครั้งเดียวต่อรหัส) */
+function MeLive({ code, pose }: { code: string; pose: Pose }) {
+  const look = useMemo(() => chibiOf(code), [code]);
+  return (
+    <Suspense fallback={<PlayerAvatar code={code} size={42} />}>
+      <Avatar3D look={look} code={code} framing="bust" pose={pose} className="pcard__live" />
+    </Suspense>
   );
 }

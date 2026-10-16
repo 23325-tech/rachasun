@@ -11,15 +11,18 @@ import { TimerBar } from '../components/TimerBar';
 import { ChoiceList } from '../components/ChoiceList';
 import { FillAnswerInput } from '../components/FillAnswerInput';
 import { ReportPanel } from '../components/ReportPanel';
+import { PlayerAvatar } from '../components/PlayerAvatar';
 import { Alarm, BookOpenText, Confetti, Lightbulb, Star, XCircle } from '@phosphor-icons/react';
 
 interface Props {
   questions: Question[];
   onFinish: (results: AnswerResult[]) => void;
   onQuit: () => void;
+  /** รหัสหน้าตาตัวละคร แสดงท่าดีใจ/เสียใจตอนเฉลย */
+  avatar?: string;
 }
 
-export function QuizScreen({ questions, onFinish, onQuit }: Props) {
+export function QuizScreen({ questions, onFinish, onQuit, avatar }: Props) {
   const [index, setIndex] = useState(0);
   const [results, setResults] = useState<AnswerResult[]>([]);
   const [current, setCurrent] = useState<AnswerResult | null>(null);
@@ -124,6 +127,11 @@ export function QuizScreen({ questions, onFinish, onQuit }: Props) {
       {current && (
         <div ref={revealRef} className="reveal-sheet slide-up">
           <div className={`verdict ${current.correct ? 'verdict--good' : 'verdict--bad'}`}>
+            {avatar && (
+              <span className={`verdict__me ${current.correct ? 'react-happy' : 'react-sad'}`} aria-hidden>
+                <PlayerAvatar code={avatar} size={46} />
+              </span>
+            )}
             {current.correct ? (
               <>
                 <span className="verdict__emoji bounce">

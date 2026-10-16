@@ -1,4 +1,8 @@
-import { createElement } from 'react';
+import { createElement, lazy, Suspense, useMemo } from 'react';
+import { chibiOf } from '../lib/look';
+import { PlayerAvatar } from '../components/PlayerAvatar';
+
+const Avatar3D = lazy(() => import('../components/Avatar3D').then((m) => ({ default: m.Avatar3D })));
 import type { AnswerResult, Question } from '../types';
 import { SUBJECTS } from '../data/subjects';
 import { MathText } from '../components/MathText';
@@ -13,6 +17,8 @@ interface Props {
   xp: XpState;
   guest: boolean;
   onRegister: () => void;
+  /** รหัสหน้าตาตัวละคร (ท่าตามผลคะแนน) */
+  avatar?: string;
 }
 
 function rankFor(accuracy: number) {
@@ -22,21 +28,31 @@ function rankFor(accuracy: number) {
   return { icon: Plant, title: 'ฝึกอีกนิดนะ!' };
 }
 
-export function ResultScreen({ questions, results, onReplay, onHome, xp, guest, onRegister }: Props) {
+export function ResultScreen({ questions, results, onReplay, onHome, xp, guest, onRegister, avatar }: Props) {
   const total = results.reduce((s, r) => s + r.points, 0);
   const correct = results.filter((r) => r.correct).length;
   const accuracy = results.length ? correct / results.length : 0;
   const answered = results.filter((r) => !r.timedOut);
   const avgSec = answered.length ? answered.reduce((s, r) => s + r.timeUsedMs, 0) / answered.length / 1000 : 0;
   const rank = rankFor(accuracy);
+  const pose = accuracy >= 0.7 ? 'cheer' : accuracy >= 0.5 ? 'clap' : 'sad';
+  const look = useMemo(() => chibiOf(avatar), [avatar]);
 
   return (
     <div className="screen result">
       <header className="result__hero pop-in">
-        <div className="result__emoji bounce">
-          <rank.icon weight="fill" size={72} />
-        </div>
-        <h1 className="result__title">{rank.title}</h1>
+        {avatar ? (
+          <Suspense fallback={<PlayerAvatar code={avatar} size={150} framing="full" className="is-bare" />}>
+            <Avatar3D look={look} code={avatar} pose={pose} className="avatar3d result__me" />
+          </Suspense>
+        ) : (
+          <div className="result__emoji bounce">
+            <rank.icon weight="fill" size={72} />
+          </div>
+        )}
+        <h1 className="result__title">
+          {avatar && <rank.icon weight="fill" className="ico" />} {rank.title}
+        </h1>
         <div className="result__score">{total.toLocaleString()} คะแนน</div>
       </header>
 

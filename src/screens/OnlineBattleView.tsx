@@ -11,6 +11,7 @@ import { PlayerGrid, type HitStage, type PlayerStatus } from '../components/Play
 import { CardBar, type ActiveCard } from '../components/CardBar';
 import type { CardKind } from '../game/battle';
 import { Crosshair, Eye, FlagCheckered, Gift, Hourglass, Lightbulb, Lightning, ShieldCheck, SkipForward, SmileyMeh, Users, WifiSlash } from '@phosphor-icons/react';
+import { VersusIntro } from '../components/VersusIntro';
 
 interface Props {
   roomId: string;
@@ -254,6 +255,14 @@ export function OnlineBattleView({ roomId, state: s, myId, onLeave }: Props) {
         <div className="card-toast pop-in" role="status">
           <Gift weight="fill" className="ico" /> ได้การ์ด <strong>{CARD_TEXT[newCard]}</strong>!
         </div>
+      )}
+
+      {beforeStart && s.round === 0 && (
+        <VersusIntro
+          players={s.players}
+          meId={myId}
+          subtitle={`เริ่มใน ${Math.ceil((s.startsAt! - now) / 1000)} วินาที`}
+        />
       )}
 
       {beforeStart ? (

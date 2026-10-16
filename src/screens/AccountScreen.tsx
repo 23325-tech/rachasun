@@ -18,7 +18,8 @@ import { nextTier, tierOf } from '../lib/rank';
 import { NicknameForm } from '../components/NicknameForm';
 import { PlayerAvatar } from '../components/PlayerAvatar';
 import { TierIcon } from '../components/icons';
-import { DoorOpen, Key, WarningCircle } from '@phosphor-icons/react';
+import { Cube, DoorOpen, Key, WarningCircle } from '@phosphor-icons/react';
+import { isLowEnd, reduce3DSetting, setReduce3D } from '../lib/perf';
 
 interface Props {
   user: User | null;
@@ -40,6 +41,8 @@ export function AccountScreen({ user, profile, needsPassword, onBack, onChanged 
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [editing, setEditing] = useState(false);
+  const [reduce3D, setReduce] = useState(reduce3DSetting);
+  const lowEnd = isLowEnd();
 
   const run = async (fn: () => Promise<unknown>, success?: string) => {
     setBusy(true);
@@ -277,6 +280,28 @@ export function AccountScreen({ user, profile, needsPassword, onBack, onChanged 
           </button>
         </section>
       )}
+
+      <section className="settings-card">
+        <label className="toggle-row">
+          <span className="toggle-row__icon">
+            <Cube weight="fill" />
+          </span>
+          <span className="toggle-row__text">
+            <b>ลดเอฟเฟกต์ 3D</b>
+            <small>{lowEnd ? 'เครื่องนี้ใช้ภาพนิ่งอัตโนมัติอยู่แล้ว' : 'ใช้ภาพนิ่งแทนตัวละครเคลื่อนไหว ช่วยประหยัดแบต'}</small>
+          </span>
+          <input
+            type="checkbox"
+            className="switch"
+            checked={reduce3D || lowEnd}
+            disabled={lowEnd}
+            onChange={(e) => {
+              setReduce3D(e.target.checked);
+              setReduce(e.target.checked);
+            }}
+          />
+        </label>
+      </section>
 
       {notice && <p className="form-notice">{notice}</p>}
       {error && <p className="form-error"><WarningCircle weight="fill" className="ico" /> {error}</p>}

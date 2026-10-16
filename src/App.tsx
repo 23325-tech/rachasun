@@ -48,6 +48,7 @@ import { logAnswers } from './lib/analysis';
 import { markPlanDone } from './lib/studyPlan';
 import { DEFAULT_LOOK_CODE } from './lib/look';
 import { createRoom, findMatch, joinRoom, leaveRoom, type MatchSettings, type RoomSettings } from './lib/rooms';
+import { VersusIntro } from './components/VersusIntro';
 
 type Screen =
   | { name: 'start'; error: string | null }
@@ -56,7 +57,7 @@ type Screen =
   | { name: 'account' }
   | { name: 'quiz'; questions: Question[]; runId: number }
   | { name: 'result'; questions: Question[]; results: AnswerResult[] }
-  | { name: 'battle'; questions: Question[]; questionCount: number; players: BattlePlayer[]; bots: Bot[]; runId: number }
+  | { name: 'battle'; questions: Question[]; questionCount: number; players: BattlePlayer[]; bots: Bot[]; runId: number; intro?: boolean }
   | { name: 'battleResult'; players: BattlePlayer[] }
   | { name: 'online'; initialCode?: string }
   | { name: 'lobby'; roomId: string }
@@ -240,7 +241,7 @@ export default function App() {
       ],
       s.count,
     );
-    setScreen({ name: 'battle', questions, questionCount: s.count, players, bots, runId: Date.now() });
+    setScreen({ name: 'battle', questions, questionCount: s.count, players, bots, runId: Date.now(), intro: true });
   };
 
   const totalNeeded = (s: GameSettings) => s.count + (s.mode === 'bots' ? SUDDEN_DEATH_SPARE : 0);
@@ -588,6 +589,7 @@ export default function App() {
         <QuizScreen
           key={screen.runId}
           questions={screen.questions}
+          avatar={profile?.avatar ?? DEFAULT_LOOK_CODE}
           onQuit={goHome}
           onFinish={(results) => {
             setScreen({ name: 'result', questions: screen.questions, results });
@@ -619,6 +621,7 @@ export default function App() {
         <ResultScreen
           questions={screen.questions}
           results={screen.results}
+          avatar={profile?.avatar ?? DEFAULT_LOOK_CODE}
           onReplay={() => start(settings)}
           onHome={goHome}
           xp={xp}
@@ -627,6 +630,10 @@ export default function App() {
         />
       );
     case 'battle':
+      if (screen.intro) {
+        const done = () => setScreen({ ...screen, intro: false });
+        return <VersusIntro players={screen.players} meId={ME_ID} autoCloseMs={3000} onDone={done} />;
+      }
       return (
         <BattleScreen
           key={screen.runId}

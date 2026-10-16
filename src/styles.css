@@ -3795,3 +3795,277 @@ button.coin-pill {
 .hm-me__text small {
   white-space: nowrap;
 }
+
+/* ภาพนิ่งแทน 3D (เครื่องสเปกต่ำ) */
+.avatar3d--static {
+  display: grid;
+  place-items: end center;
+  padding-bottom: 18%;
+}
+.avatar3d--static .player-avatar {
+  border-radius: 0;
+}
+.stage-scene {
+  position: relative;
+  width: 100%;
+}
+
+.stage-label {
+  position: absolute;
+  z-index: 2;
+  transform: translate(-50%, 2px);
+  pointer-events: none;
+  white-space: nowrap;
+}
+.stage-scene canvas {
+  position: absolute;
+  inset: 0;
+}
+
+/* ---------- หน้า VS (16.3) ---------- */
+.vs-intro {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  padding: calc(env(safe-area-inset-top, 0px) + 24px) 12px calc(env(safe-area-inset-bottom, 0px) + 20px);
+  background:
+    radial-gradient(circle at 50% 30%, rgba(255, 255, 255, 0.25), transparent 60%),
+    linear-gradient(160deg, var(--bg-1), var(--bg-2));
+  animation: vs-in 0.35s ease-out;
+  cursor: pointer;
+}
+@keyframes vs-in {
+  from {
+    opacity: 0;
+    transform: scale(1.04);
+  }
+}
+.vs-intro__badge {
+  justify-self: center;
+  display: grid;
+  place-items: center;
+  width: 92px;
+  height: 92px;
+  border: var(--border);
+  border-radius: 50%;
+  background: var(--primary);
+  box-shadow: 0 6px 0 var(--ink);
+  animation: vs-pop 0.6s cubic-bezier(0.2, 1.6, 0.4, 1) 0.15s both;
+}
+.vs-intro__badge span {
+  font-size: 2.4rem;
+  font-weight: 700;
+  color: #fff;
+  -webkit-text-stroke: 2px var(--ink);
+  paint-order: stroke fill;
+}
+@keyframes vs-pop {
+  from {
+    transform: scale(0) rotate(-20deg);
+  }
+}
+.vs-intro__stage {
+  align-self: stretch;
+  min-height: 260px;
+}
+.vs-name {
+  display: inline-block;
+  color: var(--ink);
+  max-width: 84px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 2px 8px;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: #fff;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+.vs-name.is-me {
+  background: var(--primary);
+}
+.vs-intro__static {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+.vs-intro__card {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+}
+.vs-intro__sub {
+  margin: 0;
+  text-align: center;
+  color: #fff;
+  font-weight: 600;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.2);
+}
+.vs-intro__skip {
+  margin: 0;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 0.8rem;
+}
+
+/* 16.3: ตัวละครของเราแบบ 3D เล็กในการ์ด + ท่าทางคู่แข่ง */
+.pcard__live {
+  position: relative;
+  inset: auto;
+  width: 46px;
+  height: 46px;
+  margin: -2px auto 0;
+}
+.pcard__live.avatar3d--static {
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+.pcard__live.avatar3d--static img,
+.pcard__live.avatar3d--static canvas {
+  width: 46px !important;
+  height: 46px !important;
+}
+.pcard__avatar.react-happy {
+  animation: bounce 0.7s ease-out;
+}
+.pcard__avatar.react-sad > :first-child {
+  animation: shake 0.45s;
+  filter: saturate(0.6) brightness(0.92);
+  transform: rotate(-6deg) translateY(2px);
+}
+
+/* 16.3: แท่นรางวัลหน้าผลดวล */
+.podium-3d {
+  position: relative;
+  width: 100%;
+  max-width: 360px;
+  height: 230px;
+  margin: 0 auto;
+}
+.podium-static {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 8px;
+  margin: 4px auto 8px;
+}
+.podium-static__col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  width: 92px;
+}
+.podium-static__block {
+  width: 100%;
+  border: 3px solid var(--ink);
+  border-radius: 10px 10px 0 0;
+  font-weight: 700;
+  font-size: 1.3rem;
+  text-align: center;
+  color: var(--ink);
+}
+.podium-static__col--1 .podium-static__block { height: 64px; background: #ffcc00; }
+.podium-static__col--2 .podium-static__block { height: 44px; background: #c9cfdc; }
+.podium-static__col--3 .podium-static__block { height: 30px; background: #e0a070; }
+
+/* 16.3: ตัวละครโหมดฝึกเดี่ยว */
+.verdict__me {
+  display: inline-grid;
+  place-items: center;
+  width: 50px;
+  height: 50px;
+  border: 2.5px solid var(--ink);
+  border-radius: 14px;
+  background: #fff;
+  overflow: hidden;
+}
+.verdict__me.react-happy {
+  animation: bounce 0.7s ease-out;
+}
+.verdict__me.react-sad {
+  animation: shake 0.45s;
+}
+.verdict__me.react-sad > * {
+  filter: saturate(0.6) brightness(0.92);
+  transform: rotate(-6deg) translateY(3px);
+}
+.result__me {
+  position: relative;
+  inset: auto;
+  width: 170px;
+  height: 200px;
+  margin: 0 auto;
+}
+
+/* 16.3: สวิตช์ลดเอฟเฟกต์ 3D */
+.toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+}
+.toggle-row__icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 42px;
+  height: 42px;
+  border: 3px solid var(--ink);
+  border-radius: 12px;
+  background: var(--primary);
+  font-size: 1.4rem;
+  color: var(--ink);
+}
+.toggle-row__text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.3;
+}
+.toggle-row__text small {
+  color: var(--muted, #6b6290);
+  font-size: 0.78rem;
+}
+.switch {
+  appearance: none;
+  flex: none;
+  position: relative;
+  width: 50px;
+  height: 30px;
+  border: 3px solid var(--ink);
+  border-radius: 999px;
+  background: #e4e0f0;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.switch::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  border: 2.5px solid var(--ink);
+  border-radius: 50%;
+  background: #fff;
+  box-sizing: border-box;
+  transition: transform 0.2s;
+}
+.switch:checked {
+  background: var(--primary);
+}
+.switch:checked::after {
+  transform: translateX(20px);
+}
+.switch:disabled {
+  opacity: 0.6;
+  cursor: default;
+}

@@ -1,7 +1,9 @@
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { createChibi, type Chibi, type ChibiLook } from '../three/chibi';
+import { createChibi, type Chibi, type ChibiLook, type Pose } from '../three/chibi';
+import { use3D } from '../lib/perf';
+import { PlayerAvatar } from './PlayerAvatar';
 
 interface Props {
   look: ChibiLook;
@@ -12,14 +14,32 @@ interface Props {
   className?: string;
   /** มุมกล้อง: เต็มตัว หรือครึ่งตัว (เห็นหน้าชัด) */
   framing?: 'full' | 'bust';
+  /** ท่าหลัก (ดีใจ ปรบมือ เสียใจ โบกมือ) */
+  pose?: Pose;
+  /** รหัสหน้าตา: ใช้แสดงภาพนิ่งแทนบนเครื่องสเปกต่ำ / ปิด 3D */
+  code?: string;
 }
 
 /** แสดงตัวละคร 3D ในกรอบ (ปรับขนาดตามกล่องที่ครอบ) */
-export function Avatar3D({ look, interactive = false, cheer = 0, className, framing = 'full' }: Props) {
+/** เครื่องสเปกต่ำหรือปิด 3D: ใช้ภาพนิ่งจากโมเดลเดียวกัน */
+export function Avatar3D(props: Props) {
+  if (props.code && !use3D()) {
+    return (
+      <div className={`${props.className ?? 'avatar3d'} avatar3d--static`}>
+        <PlayerAvatar code={props.code} size={props.framing === 'bust' ? 120 : 200} framing={props.framing ?? 'full'} className="is-bare" />
+      </div>
+    );
+  }
+  return <Avatar3DLive {...props} />;
+}
+
+function Avatar3DLive({ look, interactive = false, cheer = 0, className, framing = 'full', pose = 'idle' }: Props) {
   const hostRef = useRef<HTMLDivElement>(null);
   const chibiRef = useRef<Chibi | null>(null);
   const cheerRef = useRef(cheer);
   cheerRef.current = cheer;
+  const poseRef = useRef<Pose>(pose);
+  poseRef.current = pose;
 
   useEffect(() => {
     const host = hostRef.current!;
@@ -83,7 +103,7 @@ export function Avatar3D({ look, interactive = false, cheer = 0, className, fram
       raf = requestAnimationFrame(loop);
       if (!visible || document.hidden) return;
       const t = clock.getElapsedTime();
-      chibi.update(t, cheerRef.current);
+      chibi.update(t, cheerRef.current, poseRef.current);
       if (!interactive) chibi.root.rotation.y = -0.35 + Math.sin(t * 0.5) * 0.25;
       controls?.update();
       renderer.render(scene, camera);
