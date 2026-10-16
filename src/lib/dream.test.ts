@@ -51,3 +51,14 @@ describe('mock scores and gaps', () => {
     expect(gaps[2].needAlone).toBeNull(); // 80 + 55 > 100
   });
 });
+
+describe('dreamFocus', () => {
+  it('weights by weight x missing points and lists off-site subjects', async () => {
+    const { dreamFocus } = await import('./dream');
+    const g: DreamGoal = { university: '', faculty: 'Eng', target: 70, weights: { tgat: 30, tpat3: 20, a_math1: 25, a_phy: 25 } };
+    // math 25*(0.6)=15, physics 25*0.2=5, english 30*0.5/3=5 (tgat ไม่มีคะแนน)
+    const f = dreamFocus(g, { a_math1: 40, a_phy: 80, tpat3: 50 });
+    expect(f.weights).toEqual({ english: 20, math: 60, physics: 20 });
+    expect(f.offsite).toEqual(['tgat', 'tpat3']);
+  });
+});

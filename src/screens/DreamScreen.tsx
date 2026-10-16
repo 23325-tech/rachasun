@@ -17,17 +17,24 @@ import {
   scoreValues,
   subjectGaps,
   type MockScore,
+  dreamFocus,
 } from '../lib/dream';
+import { DreamFocusBars } from '../components/DreamFocusBars';
+import { fetchChapterStats } from '../lib/analysis';
+import { loadPlan, rebuildPlan } from '../lib/studyPlan';
 
 interface Props {
   onBack: () => void;
+  /** เปิดหน้าแผนการฝึก (วิเคราะห์ ม.ปลาย) */
+  onOpenPlan: () => void;
 }
 
 const subjectName = (key: string) => TCAS_BY_KEY[key]?.name() ?? key;
 const fmtDate = (d: Date) => d.toLocaleDateString(t('th-TH', 'en-GB'), { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Bangkok' });
 
 /** เป้าหมายคณะในฝัน: ค่าน้ำหนักที่นักเรียนกรอกเอง คะแนนรวมเทียบเป้า และนับถอยหลังถึงวันสอบ */
-export function DreamScreen({ onBack }: Props) {
+export function DreamScreen({ onBack, onOpenPlan }: Props) {
+  const [planMsg, setPlanMsg] = useState('');
   const [plan, setPlan] = useState<DreamPlan | null>(null);
   const [mock, setMock] = useState<Record<string, MockScore>>({});
   const [open, setOpen] = useState<number | null>(0);
@@ -317,6 +324,58 @@ export function DreamScreen({ onBack }: Props) {
           </ul>
         </section>
       )}
+
+      {plan.goals[0] &&
+        (() => {
+          const g = plan.goals[0];
+          const focus = dreamFocus(g, scoreValues(effectiveScores(plan.scores, mock, Object.keys(g.weights))));
+          return (
+            <section className="settings-card dream-plan">
+              <h2 className="section-title section-title--dark">{t('แผนฝึกตามเป้าอันดับ 1', 'Practice plan for goal #1')}</h2>
+              <p className="muted dream__note">
+                {t(
+                  'แบ่งรอบฝึกต่อสัปดาห์ตามค่าน้ำหนัก x คะแนนที่ยังขาด วิชาที่น้ำหนักสูงและยังห่างเป้าได้ฝึกมากกว่า จัดใหม่ให้อัตโนมัติทุกสัปดาห์',
+                  'Weekly rounds are split by weight x points still missing, so heavy subjects far from target get more practice. Rebuilt automatically every week.',
+                )}
+              </p>
+              {Object.keys(focus.weights).length ? (
+                <>
+                  <DreamFocusBars focus={focus} />
+                  <button
+                    type="button"
+                    className="btn btn--primary btn--block"
+                    disabled={busy}
+                    onClick={async () => {
+                      setBusy(true);
+                      setError('');
+                      setPlanMsg('');
+                      try {
+                        const [old, stats] = await Promise.all([loadPlan('upper'), fetchChapterStats('upper')]);
+                        const p = await rebuildPlan('upper', old?.prefs ?? { sessionsPerDay: 1, daysPerWeek: 5, subjects: ['math'] }, stats);
+                        setPlanMsg(t(`จัดแผนสัปดาห์นี้แล้ว ${p.items.length} รอบ`, `This week's plan is ready: ${p.items.length} rounds`));
+                      } catch (e) {
+                        setError(e instanceof Error ? e.message : String(e));
+                      } finally {
+                        setBusy(false);
+                      }
+                    }}
+                  >
+                    {t('จัดแผนสัปดาห์นี้ตามเป้า', "Build this week's plan")}
+                  </button>
+                  {planMsg && (
+                    <button type="button" className="btn btn--ghost btn--block" onClick={onOpenPlan}>
+                      {planMsg} · {t('ดูแผน', 'Open plan')}
+                    </button>
+                  )}
+                </>
+              ) : (
+                <p className="dream-goal__missing">
+                  {t('วิชาในเป้านี้ยังไม่มีให้ฝึกในเว็บ', 'None of these subjects can be practised here yet')}
+                </p>
+              )}
+            </section>
+          );
+        })()}
 
       {saved && !error && <p className="dream__saved">{saved}</p>}
       {error && <p className="form-error">{error}</p>}

@@ -1,6 +1,8 @@
 import { ensureSession } from './supabase';
 import { t } from './i18n';
 import { TCAS_BY_KEY } from '../data/tcas';
+import type { Subject } from '../types';
+import type { SubjectFocus } from './planBuilder';
 
 export interface DreamGoal {
   university: string;
@@ -150,4 +152,65 @@ export function subjectGaps(goal: DreamGoal, scores: Record<string, number>): Su
       };
     })
     .sort((a, b) => b.room - a.room);
+}
+
+/** วิชาสอบ -> วิชาที่ฝึกในเว็บได้ (สัดส่วน) ที่ไม่อยู่ในนี้ = ยังฝึกในเว็บไม่ได้ */
+const PRACTICE_MAP: Record<string, Partial<Record<Subject, number>>> = {
+  a_math1: { math: 1 },
+  a_math2: { math: 1 },
+  a_phy: { physics: 1 },
+  a_chem: { chemistry: 1 },
+  a_bio: { biology: 1 },
+  a_eng: { english: 1 },
+  tgat1: { english: 1 },
+  // TGAT รวม: พาร์ตภาษาอังกฤษ 1 ใน 3
+  tgat: { english: 1 / 3 },
+  // วิทย์ประยุกต์: ฟิสิกส์ เคมี ชีวะ อย่างละเท่ากัน
+  a_sci: { physics: 1 / 3, chemistry: 1 / 3, biology: 1 / 3 },
+};
+
+export interface DreamFocus {
+  faculty: string;
+  /** สัดส่วนรอบฝึกต่อวิชาในเว็บ (%) */
+  weights: SubjectFocus;
+  /** วิชาสอบที่ยังฝึกในเว็บไม่ได้ (ทั้งวิชาหรือบางส่วน) */
+  offsite: string[];
+}
+
+/**
+ * แผนตามเป้าอันดับ 1: ความสำคัญของแต่ละวิชาสอบ = ค่าน้ำหนัก x คะแนนที่ยังขาด (ยังไม่มีคะแนนคิดครึ่งทาง)
+ * ขั้นต่ำ 10% ของค่าน้ำหนัก วิชาที่เก่งแล้วยังได้ทวนบ้าง
+ */
+export function dreamFocus(goal: DreamGoal, scores: Record<string, number>): DreamFocus {
+  const raw: Partial<Record<Subject, number>> = {};
+  const offsite: string[] = [];
+  for (const [key, w] of Object.entries(goal.weights)) {
+    const s = scores[key];
+    const priority = w * Math.max(0.1, s === undefined ? 0.5 : (100 - s) / 100);
+    const map = PRACTICE_MAP[key];
+    if (!map) {
+      offsite.push(key);
+      continue;
+    }
+    let share = 0;
+    for (const [subject, k] of Object.entries(map) as [Subject, number][]) {
+      raw[subject] = (raw[subject] ?? 0) + priority * k;
+      share += k;
+    }
+    if (share < 1) offsite.push(key);
+  }
+  const sum = Object.values(raw).reduce((n, v) => n + (v ?? 0), 0);
+  const weights: SubjectFocus = {};
+  if (sum > 0) for (const [s, v] of Object.entries(raw) as [Subject, number][]) weights[s] = Math.round((v / sum) * 100);
+  return { faculty: goal.faculty, weights, offsite };
+}
+
+/** โหลดเป้าอันดับ 1 + คะแนน แล้วคิดสัดส่วนแผน (ไม่มีเป้า หรือไม่มีวิชาที่ฝึกในเว็บได้ = null) */
+export async function loadDreamFocus(): Promise<DreamFocus | null> {
+  const [plan, mock] = await Promise.all([fetchDream(), fetchMockScores().catch(() => ({}))]);
+  const goal = plan.goals[0];
+  if (!goal) return null;
+  const eff = effectiveScores(plan.scores, mock, Object.keys(goal.weights));
+  const focus = dreamFocus(goal, scoreValues(eff));
+  return Object.keys(focus.weights).length ? focus : null;
 }

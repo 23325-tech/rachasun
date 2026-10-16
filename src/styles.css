@@ -5763,3 +5763,60 @@ html[lang="en"] .checkin__label {
   color: #4b2fd6;
   font-size: 0.7rem;
 }
+
+/* 25.3: แผนตามเป้า */
+.dream-plan {
+  display: grid;
+  gap: 8px;
+}
+.dream-focus {
+  display: grid;
+  gap: 6px;
+}
+.dream-focus__bars {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.dream-focus__bars li {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr) 40px;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+}
+.dream-focus__name {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.dream-focus__track {
+  height: 12px;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: #f4f0ff;
+  overflow: hidden;
+}
+.dream-focus__track span {
+  display: block;
+  height: 100%;
+}
+.dream-focus__bars b {
+  text-align: right;
+}
+.dream-focus__off {
+  margin: 0;
+  font-size: 0.76rem;
+}
+.plan__dream {
+  background: #fff8ec;
+}
+.plan__dream-note {
+  margin: 0;
+  font-size: 0.82rem;
+}

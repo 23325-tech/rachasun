@@ -7,6 +7,8 @@ import { bangkokWeek, DAY_NAMES, PLAN_DAYS, REASON_TEXT, type PlanItem, type Pla
 import { loadPlan, rebuildPlan, requestAdvice, type StudyPlan } from '../lib/studyPlan';
 import { ArrowsClockwise,CalendarBlank,CalendarDots,CheckCircle,Gear,Lightbulb,Moon,Sparkle,WarningCircle } from '@phosphor-icons/react';
 import { t } from '../lib/i18n';
+import { loadDreamFocus, type DreamFocus } from '../lib/dream';
+import { DreamFocusBars } from './DreamFocusBars';
 
 interface Props {
   level: Level;
@@ -27,6 +29,12 @@ export function PlanPanel({ level, stats, onPractice }: Props) {
   const [busy, setBusy] = useState<'save' | 'advice' | null>(null);
   const [error, setError] = useState('');
   const { weekStart, today } = bangkokWeek();
+  const [focus, setFocus] = useState<DreamFocus | null>(null);
+
+  useEffect(() => {
+    if (level === 'upper') loadDreamFocus().then(setFocus).catch(() => {});
+    else setFocus(null);
+  }, [level]);
 
   useEffect(() => {
     let alive = true;
@@ -84,6 +92,12 @@ export function PlanPanel({ level, stats, onPractice }: Props) {
   const settingsForm = (
     <section className="settings-card plan__settings">
       <h2 className="section-title section-title--dark"><Gear weight="fill" className="ico" /> {t('ตั้งค่าแผนการฝึก', 'Plan settings')}</h2>
+      {focus ? (
+        <div className="setting">
+          <span className="setting__label">{t('วิชาที่จะโฟกัส', 'Focus subject')}</span>
+          <p className="muted plan__dream-note">{t(`จัดตามเป้าคณะในฝันอันดับ 1 (${focus.faculty}) อัตโนมัติ เปลี่ยนได้ที่หน้าคณะในฝัน`, `Set automatically from dream goal #1 (${focus.faculty}). Change it on the Dream faculty page.`)}</p>
+        </div>
+      ) : (
       <div className="setting">
         <span className="setting__label">{t('วิชาที่จะโฟกัส', 'Focus subject')}</span>
         <div className="chapter-picker">
@@ -98,6 +112,7 @@ export function PlanPanel({ level, stats, onPractice }: Props) {
           })}
         </div>
       </div>
+      )}
       <div className="setting">
         <span className="setting__label">{t('ฝึกกี่วันต่อสัปดาห์', 'Days per week')}</span>
         <div className="segmented">
@@ -193,6 +208,12 @@ export function PlanPanel({ level, stats, onPractice }: Props) {
 
   return (
     <>
+      {focus && (
+        <section className="settings-card plan__dream">
+          <h2 className="section-title section-title--dark">{t(`แผนนี้จัดตามเป้า: ${focus.faculty}`, `Planned for: ${focus.faculty}`)}</h2>
+          <DreamFocusBars focus={focus} />
+        </section>
+      )}
       <section className="settings-card">
         <div className="plan__head">
           <h2 className="section-title section-title--dark"><CalendarBlank weight="fill" className="ico" /> {t(`วันนี้ (วัน${DAY_NAMES[today]})`, `Today (${DAY_NAMES[today]})`)}</h2>

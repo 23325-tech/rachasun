@@ -54,3 +54,21 @@ describe('bangkokWeek', () => {
     expect(bangkokWeek(Date.parse('2026-10-18T17:30:00Z'))).toEqual({ weekStart: '2026-10-19', today: 0 });
   });
 });
+
+describe('buildPlan with dream focus', () => {
+  it('splitSessions: largest remainder, at least 1 each', async () => {
+    const { splitSessions } = await import('./planBuilder');
+    expect(splitSessions({ math: 60, physics: 30, english: 10 }, 10)).toEqual([['math', 6], ['physics', 3], ['english', 1]]);
+    expect(splitSessions({ math: 90, english: 10 }, 5)).toEqual([['math', 4], ['english', 1]]);
+    expect(splitSessions({ math: 1, physics: 1, english: 1 }, 2).reduce((n, [, k]) => n + k, 0)).toBe(2);
+  });
+
+  it('gives each subject its share and spreads them through the week', () => {
+    const plan = buildPlan('upper', { sessionsPerDay: 2, daysPerWeek: 5, subjects: ['biology'] }, [], { math: 60, physics: 40 });
+    const count = (s: string) => plan.filter((p) => p.chapter.startsWith(`upper.${s}.`)).length;
+    expect(plan).toHaveLength(10);
+    expect([count('math'), count('physics'), count('biology')]).toEqual([6, 4, 0]);
+    // วันแรกมีทั้งสองวิชา ไม่กองวิชาเดียวไว้ต้นสัปดาห์
+    expect(new Set(plan.filter((p) => p.day === 0).map((p) => p.chapter.split('.')[1]))).toEqual(new Set(['math', 'physics']));
+  });
+});

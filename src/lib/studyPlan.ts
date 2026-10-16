@@ -3,6 +3,7 @@ import { ensureSession } from './supabase';
 import { bangkokWeek, buildPlan, type PlanItem, type PlanPrefs } from './planBuilder';
 import type { ChapterStat } from './analysis';
 import { getLang, t } from './i18n';
+import { loadDreamFocus } from './dream';
 
 export interface StudyPlan {
   level: Level;
@@ -40,16 +41,19 @@ export async function loadPlan(level: Level): Promise<StudyPlan | null> {
   return data ? fromRow(data as Row) : null;
 }
 
-/** จัดแผนสัปดาห์นี้ใหม่จากสถิติล่าสุด แล้วบันทึก (คำแนะนำ AI เดิมยังอยู่) */
+/** จัดแผนสัปดาห์นี้ใหม่จากสถิติล่าสุด แล้วบันทึก (คำแนะนำ AI เดิมยังอยู่)
+ *  ม.ปลายที่ตั้งเป้าคณะในฝันไว้: วิชาและสัดส่วนรอบตามเป้าอันดับ 1 */
 export async function rebuildPlan(level: Level, prefs: PlanPrefs, stats: ChapterStat[]): Promise<StudyPlan> {
   const sb = await ensureSession();
   const { weekStart } = bangkokWeek();
+  const focus = level === 'upper' ? await loadDreamFocus().catch(() => null) : null;
+  const subjects = focus ? (Object.keys(focus.weights) as Subject[]) : prefs.subjects;
   const fields = {
     week_start: weekStart,
     sessions_per_day: prefs.sessionsPerDay,
     days_per_week: prefs.daysPerWeek,
-    subjects: prefs.subjects,
-    items: buildPlan(level, prefs, stats),
+    subjects,
+    items: buildPlan(level, { ...prefs, subjects }, stats, focus?.weights),
     updated_at: new Date().toISOString(),
   };
   // มีแผนอยู่แล้ว -> แก้ไข / ยังไม่มี -> สร้าง (คอลัมน์คำแนะนำ AI แก้จากหน้าเว็บไม่ได้)

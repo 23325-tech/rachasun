@@ -83,7 +83,7 @@ type Screen =
   | { name: 'challenge'; code: string; autoPlay?: boolean }
   | { name: 'groups'; initialCode?: string }
   | { name: 'group'; groupId: string }
-  | { name: 'analysis' }
+  | { name: 'analysis'; level?: Level }
   | { name: 'dressing' }
   | { name: 'shop' }
   | { name: 'season' }
@@ -498,7 +498,7 @@ export default function App() {
     case 'analysis':
       return (
         <AnalysisScreen
-          initialLevel={settings.level}
+          initialLevel={screen.level ?? settings.level}
           onBack={goHome}
           onPracticePlan={(level, item, index) => {
             planRunRef.current = { level, index };
@@ -580,7 +580,7 @@ export default function App() {
         <LoadingScreen message={t('กำลังโหลดฤดูกาล...', 'Loading season...')} onCancel={goHome} />
       );
     case 'dream':
-      return <DreamScreen onBack={goHome} />;
+      return <DreamScreen onBack={goHome} onOpenPlan={() => setScreen({ name: 'analysis', level: 'upper' })} />;
     case 'photo':
       return <PhotoTutorScreen onBack={goHome} />;
     case 'mistakes':
